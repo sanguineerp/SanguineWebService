@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:security="http://www.springframework.org/schema/security"
+		xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+	 
+	 
+	<context:annotation-config />
+	<!-- <mvc:annotation-driven /> -->
+	<tx:annotation-driven/>
+	<context:property-placeholder location="classpath:resources/database.properties" />
+	<context:component-scan base-package="com" />
+	<tx:annotation-driven transaction-manager="webPOSTransactionManager"/>
+    
+    <bean id="posDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="${database.driver}" />
+		<property name="url" value="${database.urlPOS}" />
+		<property name="username" value="${database.user}" />
+		<property name="password" value="${database.password}" />
+	</bean>
+    
+   <bean id="webPOSSessionFactory" class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="posDataSource" />		
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<!-- <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop> -->            
+            </props>
+        </property>
+        
+        <property name="annotatedClasses">
+            <list>                                                    
+                <value>com.apos.model.clsGroupMasterModel</value>                     
+                <value>com.apos.model.clsAreaMasterModel</value>
+                <value>com.apos.model.clsMenuHeadMasterModel</value>
+                <value>com.apos.model.clsSubMenuHeadMasterModel</value>
+                <value>com.apos.model.clsReasonMasterModel</value>
+                <value>com.apos.model.clsMenuItemMasterModel</value>                
+                <value>com.apos.model.clsSubGroupMasterHdModel</value>
+            	<value>com.apos.model.clsTableMasterModel</value>
+                <value>com.apos.model.clsCustomerTypeMasterModel</value>
+                <value>com.apos.model.clsModifierGroupMasterHdModel</value>
+                <value>com.apos.model.clsZoneMasterModel</value>
+                <value>com.apos.model.clsWaiterMasterModel</value>
+                <value>com.apos.model.clsPOSMasterModel</value>
+                <value>com.apos.model.clsShiftMasterModel</value>
+				<value>com.apos.model.clsMenuItemPricingHdModel</value>
+                <value>com.apos.model.clsModifierMasterHdModel</value>
+                <value>com.apos.model.clsItemModifierMasterModel</value>
+                <value>com.apos.model.clsPosSettlementDetailsModel</value>
+                <value>com.apos.model.clsReorderTimeModel</value>
+                <value>com.apos.model.clsPosSettlementDetailsModel</value>
+                <value>com.apos.model.clsReorderTimeModel</value>
+                <value>com.apos.model.clsTaxMasterModel</value>
+                <value>com.apos.model.clsTaxPosDetailsModel</value>
+                <value>com.apos.model.clsTaxSettlementDetailsModel</value>
+                <value>com.apos.model.clsCustomerMasterModel</value>
+				<value>com.apos.model.clsCustomerAreaMasterModel</value>
+				<value>com.apos.model.clsCustomerAreaMasterAmountModel</value>
+				<value>com.apos.model.clsCostCenterMasterModel</value>
+                <value>com.apos.model.clsPricingMasterHdModel</value>
+				<value>com.apos.model.clsSettlementMasterModel</value>
+				<value>com.apos.model.clsAdvanceOrderMasterModel</value>
+				<value>com.apos.model.clsDeliveryBoyMasterModel</value>
+				<value>com.apos.model.clsDeliveryBoyChargesModel</value>
+				<value>com.apos.model.clsOrderMasterModel</value>
+				<value>com.apos.model.clsRecipeMasterModel</value>
+				<value>com.apos.model.clsRecipeDtlModel</value>
+				<value>com.apos.model.clsPOSPromationMasterHdModel</value>
+				<value>com.apos.model.clsBuyPromotionDtlHdModel</value>
+				<value>com.apos.model.clsGetPromotionDtlHdModel </value>
+				<value>com.apos.model.clsPromotionDayTimeDtlHdModel</value>
+               	<value>com.apos.model.clsUserDetailModel</value>
+				<value>com.apos.model.clsSuperUserDetailHdModel</value>
+				<value>com.apos.model.clsPosCounterDetailsModel</value>
+				<value>com.apos.model.clsDebitCardMasterHdModel</value>
+				<value>com.apos.model.clsDebitCardSettlementDetailsModel</value>
+				<value>com.apos.model.clsPOSRegisterDebitCardHdModel</value>
+				<value>com.apos.model.clsPOSConfigSettingHdModel</value>
+				<value>com.apos.model.clsSetupHdModel</value>      
+                <value>com.apos.model.clsPrinterSetupHdModel</value>      
+                <value>com.apos.model.clsBillSeriesHdModel</value>  
+                <value>com.apos.model.clsUserDetailHdModel</value>  
+                <value>com.apos.model.clsSuperUserDetailHdModel</value> 
+                <value>com.apos.model.clsMakeKOTHdModel</value>      
+                <value>com.apos.model.clsNonChargableKOTHdModel</value>
+                <value>com.apos.model.clsFactoryMasterHdModel</value>
+				<value>com.apos.model.clsCounterMasterHdModel</value> 
+				<value>com.apos.model.clsTableReservationModel</value>     
+				<value>com.apos.model.clsPOSTDHModel</value>
+				<value>com.apos.model.clsPOSWiseItemIncentiveModel</value>
+				<value>com.apos.model.clsTaxOnGroupModel</value>
+				<value>com.apos.model.clsPOSWiseItemIncentiveModel</value> 
+  				<value>com.apos.model.clsmasteroperationstatusModel</value> 
+  				
+               
+               
+            </list>
+        </property>
+    </bean>    
+ 
+  <bean id="webPOSTransactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="webPOSSessionFactory" />
+	</bean>
+
+	
+	
+	<!--  <bean id="test" class="com.test.clsTestPOSApplicationContext">
+        <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean> -->
+</beans>

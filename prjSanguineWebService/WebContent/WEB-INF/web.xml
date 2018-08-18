@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <display-name>prjSanguineWebService</display-name>
+  <servlet>
+    <servlet-name>Jersey REST Service</servlet-name>
+    <!-- <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class> -->
+    <servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
+    <init-param>
+      <param-name>com.sun.jersey.config.property.packages</param-name>
+      <param-value>com</param-value>
+    </init-param>
+    <!--  <init-param>
+       <param-name>posApplicationContext</param-name>
+ 		<param-value>/WEB-INF/config/POSApplicationContext.xml</param-value>
+    </init-param> -->
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <context-param>
+ 		 <param-name>posApplicationContext</param-name>
+ 		<!-- <param-value>/src/POSApplicationContext.xml</param-value> -->
+ 		<param-value>classpath:applicationContext.xml</param-value>
+  </context-param>
+  <listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+  <servlet-mapping>
+    <servlet-name>Jersey REST Service</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+</web-app>
