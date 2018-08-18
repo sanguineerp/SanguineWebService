@@ -55,7 +55,7 @@ public class clsBaseDaoImpl implements intfBaseDao{
 		return query.list(); 
 	}
 	
-	
+// Gel list through sql query	
 	public List funGetList(StringBuilder strQuery,String queryType) throws Exception
 	{
 		Query query;
