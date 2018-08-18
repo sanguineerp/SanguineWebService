@@ -20,6 +20,8 @@ public class clsBaseDaoImpl implements intfBaseDao{
 	@Autowired
 	private SessionFactory webPOSSessionFactory;
 	
+	
+// Function to save dataobject into db 	
 	@Override
 	public String funSave(clsBaseModel objBaseModel)
 	{
