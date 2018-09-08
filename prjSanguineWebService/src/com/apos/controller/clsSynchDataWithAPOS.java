@@ -68,6 +68,7 @@ import com.apos.bean.clsSalesFlashColumns;
 import com.apos.listener.intfSynchDataWithAPOS;
 import com.apos.util.clsKOTJasperFileGenerationForMakeKOT;
 import com.apos.util.clsTextFileGenerator;
+import com.apos.util.clsTextFormatVoidKOT;
 import com.cmsws.controller.clsCMSIntegration;
 import com.webservice.controller.clsDatabaseConnection;
 import com.webservice.util.clsBillDtl;
@@ -91,7 +92,9 @@ public class clsSynchDataWithAPOS implements intfSynchDataWithAPOS
 	
 	@Autowired
 	clsTextFileGenerator obTextFileGenerator;
-		
+	
+	@Autowired
+	clsTextFormatVoidKOT objTextFormatVoidKOT;
 	/*@Autowired
 	private clsJasperBillPrinting objJasperBillPrinting;*/
 	
@@ -17761,7 +17764,7 @@ private String funGenerateConsolidatedKOTTextFileForDirectBiller(String AreaCode
 	            while (rsPrint.next())
                {
                    String costCenterCode = rsPrint.getString(2);
-                   obTextFileGenerator.funGenerateVoidKOT(KOTTableNo, KotNo, "VoidKOT", costCenterCode,POSCode,deviceName);
+                   objTextFormatVoidKOT.funGenerateVoidKOT(KOTTableNo, KotNo, "VoidKOT", costCenterCode,POSCode,deviceName);
 	           }
 	            rsPrint.close();
 	        }
