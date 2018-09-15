@@ -7274,7 +7274,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ " `intShiftCode`, `intPaxNo`, `strDataPostFlag`, "
 				+ "`strReasonCode`, `strRemarks`, `dblTipAmount`, "
 				+ "`dteSettleDate`, `strCounterCode`, `dblDeliveryCharges`, "
-				+ "`strCouponCode`,`strAreaCode`,`strDiscountRemark`,`strTakeAwayRemarks`,`strCardNo`,`dblRoundOff`,`dtBillDate`) "
+				+ "`strCouponCode`,`strAreaCode`,`strDiscountRemark`,`strTakeAwayRemarks`,`strCardNo`,`dblRoundOff`,`dtBillDate`,`dblUSDConverionRate`) "
 				+ "VALUES";
 			
 			
@@ -7294,7 +7294,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				billNo=mJsonObject.get("BillNo").toString();
 				String clientCode=mJsonObject.get("ClientCode").toString();
 				POSCode=mJsonObject.get("POSCode").toString();
-			    double gRoundOffTo=0.00,grandTotalRoundOffBy=0.00;
+			    double gRoundOffTo=0.00,grandTotalRoundOffBy=0.00,dblUSDConverionRate=0.00;
 				
 				
 				deleteSql="delete from tblbillhd "
@@ -7304,15 +7304,16 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				double grandTotal=Double.parseDouble(mJsonObject.get("GrandTotal").toString());
 				
 				
-				String sqlRoundOff=" SELECT a.dblRoundOff FROM tblsetup a  WHERE a.strPOSCode='"+POSCode+"'  or a.strPOSCode='All' ";
+				String sqlRoundOff=" SELECT a.dblRoundOff,a.dblUSDConverionRate FROM tblsetup a  WHERE a.strPOSCode='"+POSCode+"'  or a.strPOSCode='All' ";
 		    	System.out.println(sqlRoundOff);
 		    	
 		    	 ResultSet rsGlobal=st.executeQuery(sqlRoundOff);
 		 	     if(rsGlobal.next())
 		 	      {
 		 	    	gRoundOffTo=rsGlobal.getDouble(1);
+		 	    	dblUSDConverionRate=rsGlobal.getDouble(2);
 		 	      }
-				
+		 	    rsGlobal.close();
 				
 				
 				 //start code to calculate roundoff amount and round off by amt
@@ -7359,6 +7360,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				String takeAwayRemark=mJsonObject.get("TakeAwayRemark").toString();
 				String cardNo=mJsonObject.get("CardNo").toString();
 				String billDateOnly=mJsonObject.get("BillDt").toString();
+				
 				    
 				sql+=",('"+billNo+"','"+advBookingNo+"','"+billDate+"','"+POSCode+"','"+settelmentMode+"',"
 					+ "'"+discountAmt+"','"+discountPer+"','"+taxAmt+"','"+subTotal+"','"+grandTotal+"',"
@@ -7366,7 +7368,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     				+ "'"+currentDate+"','"+clientCode+"','"+tableNo+"','"+waiterNo+"','"+customerCode+"',"
 					+ "'"+manualBillNo+"','"+shiftCode+"','"+paxNo+"','N','"+reasonCode+"',"
 					+ "'"+remarks+"','"+tipAmount+"','"+settleDate+"','"+counterCode+"','"+deliveryCharges+"',"
-					+ "'"+couponCode+"','"+areaCode+"','"+discRemark+"','"+takeAwayRemark+"','"+cardNo+"','"+grandTotalRoundOffBy+"','"+billDateOnly+"')";
+					+ "'"+couponCode+"','"+areaCode+"','"+discRemark+"','"+takeAwayRemark+"',"
+					+ "'"+cardNo+"','"+grandTotalRoundOffBy+"','"+billDateOnly+"','"+dblUSDConverionRate+"')";
 				flgData=true;	
 				
 				res=billNo+"#"+"NotHomeDelivery";

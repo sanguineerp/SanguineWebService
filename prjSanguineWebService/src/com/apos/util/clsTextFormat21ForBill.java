@@ -30,7 +30,7 @@ public class clsTextFormat21ForBill {
 		
 		try
 		{
-			DecimalFormat gDecimalFormat = new DecimalFormat("0.00");;
+			
 			Date dteBillDate;
 			SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
 			SimpleDateFormat sdf=new SimpleDateFormat("dd-MM-yyyy");
@@ -72,6 +72,7 @@ public class clsTextFormat21ForBill {
 		    String userName="";
 		    String line="----------------------------------------";
 		    double dblUSDConverionRate=0;
+		    int noOfDecimalPlace=2;
 		    sql = "select strPosName from tblPOSMaster where strPosCode='" + posCode + "'";
 		    rs = st.executeQuery(sql);
 		    if (rs.next())
@@ -99,12 +100,13 @@ public class clsTextFormat21ForBill {
 				operationType = rs.getString(9);
 				customerCode = rs.getString(10);
 				userName= rs.getString(11);
+				
 		    }
 		    rs.close();
 		    dteBillDate=format1.parse(strBillDate);
 		    
 		    
-			    sql = " select a.strClientName,a.strAddressLine1,a.strAddressLine2, a.strAddressLine3,a.strCityName,a.intTelephoneNo, a.strEmail,a.strVatNo,a.strServiceTaxNo,a.strBillFooter,a.strPrintServiceTaxNo,a.strPrintVatNo,a.strMultipleBillPrinting ,a.strPrintInclusiveOfAllTaxesOnBill,a.dblUSDConverionRate from tblsetup a where a.strClientCode='"+clientCode+"' ;";
+			    sql = " select a.strClientName,a.strAddressLine1,a.strAddressLine2, a.strAddressLine3,a.strCityName,a.intTelephoneNo, a.strEmail,a.strVatNo,a.strServiceTaxNo,a.strBillFooter,a.strPrintServiceTaxNo,a.strPrintVatNo,a.strMultipleBillPrinting ,a.strPrintInclusiveOfAllTaxesOnBill,a.dblUSDConverionRate,a.dblNoOfDecimalPlace from tblsetup a where a.strClientCode='"+clientCode+"' ;";
 			    // System.out.println(sql);
 			    st.close();
 			    st = cmsCon.createStatement();
@@ -125,9 +127,10 @@ public class clsTextFormat21ForBill {
 					printVatNo = rs.getString(12);
 					printInclusiveOfAllTaxesOnBill= rs.getString(14);
 					dblUSDConverionRate=rs.getDouble(15);
+					noOfDecimalPlace=rs.getInt(16);
 			    }
 			    rs.close();
-				    
+			    DecimalFormat gDecimalFormat = clsGlobalFunctions.funGetGlobalDecimalFormatter(noOfDecimalPlace);    
 			    sql = "select b.strCustomerCode,b.strCustomerName " + " from tblbillhd a,tblcustomermaster b " + " where a.strCustomerCode=b.strCustomerCode " + " and a.strBillNo='" + billNo + "'";
 			    rs = st.executeQuery(sql);
 			    while (rs.next())

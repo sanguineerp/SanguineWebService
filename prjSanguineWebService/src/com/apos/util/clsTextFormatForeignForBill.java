@@ -16,13 +16,13 @@ import org.springframework.stereotype.Controller;
 import com.webservice.controller.clsDatabaseConnection;
 
 @Controller
-public class clsTextFormat5ForBill {
+public class clsTextFormatForeignForBill {
 
 	@Autowired
 	clsTextFileGenerator objTextFileGenerator;
 	
 	 
-   public void funGenerateTextFileForBillFormat5(String billNo, String posCode, String clientCode,String reprint)
+   public void funGenerateTextFileForForeignBill(String billNo, String posCode, String clientCode,String reprint)
     {
 	clsDatabaseConnection objDb = new clsDatabaseConnection();
 	Connection cmsCon = null;
@@ -108,12 +108,12 @@ public class clsTextFormat5ForBill {
 			printServiceTaxNo = rs.getString(11);
 			printVatNo = rs.getString(12);
 			printInclusiveOfAllTaxesOnBill= rs.getString(14);
-			dblUSDConverionRate= rs.getDouble(15);
+			//dblUSDConverionRate= rs.getDouble(15);
 			noOfDecimalPlace=rs.getInt(16);
 	    }
 	    rs.close();
 	    DecimalFormat gDecimalFormat = clsGlobalFunctions.funGetGlobalDecimalFormatter(noOfDecimalPlace);
-	    sql = " select a.strBillNo,ifnull(b.strTableName,''),ifnull(c.strWShortName,''),a.dblGrandTotal,a.dblSubTotal,a.dblDiscountAmt,a.dteBillDate,a.intPaxNo,a.strOperationType,a.strCustomerCode " + ",a.strUserCreated from tblbillhd a left outer join tbltablemaster b " + " on a.strTableNo=b.strTableNo " + " left outer join tblwaitermaster c " + " on a.strWaiterNo=c.strWaiterNo " + " where a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
+	    sql = " select a.strBillNo,ifnull(b.strTableName,''),ifnull(c.strWShortName,''),a.dblGrandTotal,a.dblSubTotal,a.dblDiscountAmt,a.dteBillDate,a.intPaxNo,a.strOperationType,a.strCustomerCode " + ",a.strUserCreated,a.dblUSDConverionRate from tblbillhd a left outer join tbltablemaster b " + " on a.strTableNo=b.strTableNo " + " left outer join tblwaitermaster c " + " on a.strWaiterNo=c.strWaiterNo " + " where a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
 	    // System.out.println(sql);
 	    
 	    rs = st.executeQuery(sql);
@@ -130,7 +130,7 @@ public class clsTextFormat5ForBill {
 		operationType = rs.getString(9);
 		customerCode = rs.getString(10);
 		userName= rs.getString(11);
-		
+		dblUSDConverionRate= rs.getDouble(12);
 	    }
 	    rs.close();
 	    dteBillDate=format1.parse(strBillDate);
@@ -584,5 +584,5 @@ public class clsTextFormat5ForBill {
 	    arrSettleBillDtl = null;
 	}
     }
-  
+
 }

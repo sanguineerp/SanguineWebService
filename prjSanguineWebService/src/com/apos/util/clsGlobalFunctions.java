@@ -1,8 +1,6 @@
 package com.apos.util;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -10,11 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONObject;
-
 import com.apos.bean.clsSalesFlashColumns;
-import com.webservice.controller.clsDatabaseConnection;
 
 public class clsGlobalFunctions
 {
@@ -47,15 +41,37 @@ public class clsGlobalFunctions
     
     
     public static Comparator<clsSalesFlashColumns> COMPARATOR = new Comparator<clsSalesFlashColumns>()
-    	    {
-    	        // This is where the sorting happens.
-    	        public int compare(clsSalesFlashColumns o1, clsSalesFlashColumns o2)
-    	        {
-    	         return (int) (o2.getSeqNo() - o1.getSeqNo());
-    	        }
-    	    };
+    {
+        // This is where the sorting happens.
+        public int compare(clsSalesFlashColumns o1, clsSalesFlashColumns o2)
+        {
+         return (int) (o2.getSeqNo() - o1.getSeqNo());
+        }
+    };
     
     
-    
+    public static DecimalFormat funGetGlobalDecimalFormatter(int noOfDecimalPlace)
+    {
+	
+		DecimalFormat gDecimalFormat = new DecimalFormat(funGetGlobalDecimalFormatString(noOfDecimalPlace));
+		return gDecimalFormat;
+    }
+
+    public static String funGetGlobalDecimalFormatString(int noOfDecimalPlace)
+    {
+		StringBuilder decimalFormatBuilderForDoubleValue = new StringBuilder("0");
+		for (int i = 0; i < noOfDecimalPlace; i++)
+		{
+		    if (i == 0)
+		    {
+			decimalFormatBuilderForDoubleValue.append(".0");
+		    }
+		    else
+		    {
+			decimalFormatBuilderForDoubleValue.append("0");
+		    }
+	}
+	return decimalFormatBuilderForDoubleValue.toString();
+    }
     
 }
