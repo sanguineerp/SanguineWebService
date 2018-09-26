@@ -66,6 +66,7 @@ import com.apos.bean.clsBillSeriesBillDtl;
 import com.apos.bean.clsBillSettlementDtl;
 import com.apos.bean.clsSalesFlashColumns;
 import com.apos.listener.intfSynchDataWithAPOS;
+import com.apos.util.clsAPOSUtility;
 import com.apos.util.clsKOTJasperFileGenerationForMakeKOT;
 import com.apos.util.clsTextFileGenerator;
 import com.apos.util.clsTextFormatVoidKOT;
@@ -101,6 +102,8 @@ public class clsSynchDataWithAPOS implements intfSynchDataWithAPOS
 	@Autowired 
 	private clsKOTJasperFileGenerationForMakeKOT objKOTJasperFileGenerationForMakeKOT;
 	
+	@Autowired
+	clsAPOSUtility objAPOSUtility;
 	
 	Map<String, List<Map<String, clsBillSettlementDtl>>> mapPOSDtlForSettlement;
 	Map<String, Map<String, clsBillItemDtl>> mapPOSItemDtl;
@@ -250,7 +253,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         ResultSet rsLogin=st.executeQuery(sql);
         if(rsLogin.next())
         {
-        	sql="select strUserName,strSuperType from tbluserhd "
+        	sql="select strUserName,strSuperType,strWaiterNo from tbluserhd "
         		+ "WHERE strUserCode = '" + userCode+"' and strPassword='" + encPassword + "' "
         		+ "AND dteValidDate>='" + currentDate + "'";
         	ResultSet rsLogin1=st.executeQuery(sql);
@@ -259,12 +262,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 jObj.put("Status", "OK");
         		jObj.put("UserName", rsLogin1.getString(1));
                 jObj.put("SuperType", rsLogin1.getString(2));
+                jObj.put("WaiterNo", rsLogin1.getString(3));
         	}
         	else
         	{
         		jObj.put("Status", "Expired");
         		jObj.put("UserName", "");
                 jObj.put("SuperType","");
+                jObj.put("WaiterNo", "");
         	}
         	rsLogin1.close();
         }
@@ -273,6 +278,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         	jObj.put("Status", "Invalid");
         	jObj.put("UserName", "");
             jObj.put("SuperType","");
+            jObj.put("WaiterNo", "");
         }
         
         System.out.println(jObj);
@@ -514,102 +520,83 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     }
 	
 	@GET 
-	@Path("/funGetTableStatus")
+	@Path("/funGetTableListUserWise")
 	@Produces(MediaType.APPLICATION_JSON)
-	public JSONArray funGetTableStatus(@QueryParam("POSCode") String POSCode,@QueryParam("Type") String status,@QueryParam("AreaCode") String areaCode)
-	{
-		return funGetTableStatusData(POSCode,status,areaCode);
-
-	}
-	
-	private JSONArray funGetTableStatusData(String posCode,String status,String areaCode)
-	{
-		JSONArray jsArrTableDetails=new JSONArray();
-		switch(status)
-		{
-			case "All":
-				jsArrTableDetails=funGetAllTableData(posCode,areaCode);
-			break;
-				
-			case "Normal":
-				jsArrTableDetails=funGetNormalTableData(posCode,areaCode);
-                break;
-                
-            case "Occupied":
-            	jsArrTableDetails=funGetOccupiedTableData(posCode,areaCode);
-              
-                break;
-                
-            case "Billed":
-            	jsArrTableDetails=funGetBilledTableData(posCode,areaCode);
-              
-                break;
-		}
-		
-		return jsArrTableDetails;
-	}
-	
-	
-	private JSONArray funGetAllTableData(String posCode,String areaCode) 
+	public JSONArray funGetTableListUserWise(@QueryParam("POSCode") String POSCode,@QueryParam("CMSIntegration") boolean flgCMSIntegration
+			,@QueryParam("memberAsTable") boolean flgMemAsTable,@QueryParam("userCode") String userCode)
 	{
 		clsDatabaseConnection objDb=new clsDatabaseConnection();
         Connection cmsCon=null;
         Statement st=null;
-        JSONObject jObj=new JSONObject();
+        //JSONObject jObj=new JSONObject();
         JSONArray arrObj=new JSONArray();
         try {
         	cmsCon=objDb.funOpenAPOSCon("mysql","master");
             st = cmsCon.createStatement();
             String sql="";
-           
-            sql = " select a.strTableNo, a.strTableName, a.strStatus,a.intPaxNo"
-               	+ " from tbltablemaster a left outer join tblitemrtemp b on a.strTableNo=b.strTableNo "
-               	+ " where a.strOperational='Y' ";
-	            if(!posCode.equals("All"))
-	            {
-	                sql+= " and a.strPOSCode='" + posCode + "' ";
-	            }
-	            if(!areaCode.equals("All"))
-	            {
-	                sql+= " and a.strAreaCode='" + areaCode + "' ";
-	            }
-	            sql=sql+ " group by a.strTableNo "
-               	+ "	order by a.intSequence, a.strTableName  ";
+            
+            if(flgCMSIntegration)
+            {
+                if(flgMemAsTable)
+                {
+                    sql = "select strTableNo, strTableName, intSequence, strStatus, strAreaCode from tbltablemaster "
+                        + " where (strPOSCode='" + POSCode + "' or strPOSCode='All') "
+                        + " and strOperational='Y' and strStatus!='Normal' "
+                        + " order by strTableName";
+                }
+                else
+                {
+                    sql = "select strTableNo, strTableName, intSequence, strStatus, strAreaCode from tbltablemaster "
+                        + " where (strPOSCode='" + POSCode + "' or strPOSCode='All') "
+                        + " and strOperational='Y' "
+                        + " order by intSequence";
+                }
+            }
+            else
+            {
+                sql = " select a.strTableNo, a.strTableName, a.intSequence, a.strStatus, a.strAreaCode ,ifnull(b.strWaiterNo,'')"
+                	+ ",ifnull(c.strWShortName,''), ifnull(sum(b.dblAmount) ,0.00),ifnull(b.dblRedeemAmt,0),ifnull(b.strCardType,''),ifnull(b.intPaxNo,1),ifnull(b.strCardNo,'') ,ifnull(d.strWaiterNo ,'') "
+                	+ " from tbltablemaster a left outer join tblitemrtemp b "
+                	+ "	on a.strTableNo=b.strTableNo "
+                	+ " left outer join tblwaitermaster c "
+                	+ " left outer join tbluserhd d on c.strWaiterNo=d.strWaiterNo "
+                	+ "	on b.strWaiterNo=c.strWaiterNo "
+                	+ " where (a.strPOSCode='" + POSCode + "' or a.strPOSCode='All' ) "
+                	+ "	and a.strOperational='Y' "
+                	+ "	group by a.strTableNo "
+                	+ "	order by a.intSequence ";
+            }
             //System.out.println(sql);
-            
-            
+            String linkedWaiter="";
+            String sqluserWaiter="select a.strWaiterNo from tbluserhd a where a.strUserCode='"+userCode+"'";
+            ResultSet rsuserWaiter = st.executeQuery(sqluserWaiter);
+            while (rsuserWaiter.next()) 
+            {
+            	linkedWaiter=rsuserWaiter.getString(1);
+            }
+            rsuserWaiter.close();
             ResultSet rsTableInfo = st.executeQuery(sql);
             while (rsTableInfo.next()) 
             {
             	JSONObject obj=new JSONObject();
-            	obj.put("TableName",rsTableInfo.getString(2));
-            	obj.put("TableNo",rsTableInfo.getString(1));
-            	obj.put("TableStatus",rsTableInfo.getString(3));
-            	obj.put("PaxNo",rsTableInfo.getString(4));
-            	String timeDifference="";
-            	if(rsTableInfo.getString(3).equals("Occupied"))
-            	{
-            		 timeDifference = funGetTimeDiffInFirstKOTAndCurrentTime(rsTableInfo.getString(1));
-                     if (timeDifference.startsWith("-"))
-                     {
-                    	 timeDifference = "";
-                     }
+            	if(rsTableInfo.getString(13).equals(linkedWaiter) || rsTableInfo.getString(13).equals("") ){
+            		obj.put("TableName",rsTableInfo.getString(2));
+                	obj.put("TableNo",rsTableInfo.getString(1));
+                	obj.put("TableStatus",rsTableInfo.getString(4));
+                	obj.put("AreaCode",rsTableInfo.getString(5));
+                	obj.put("WaiterNo",rsTableInfo.getString(6));
+                	obj.put("WaiterName",rsTableInfo.getString(7));
+                	obj.put("KOTAmt",rsTableInfo.getString(8));
+                	obj.put("CardBalance",rsTableInfo.getString(9));
+                	obj.put("CardType",rsTableInfo.getString(10));
+                	obj.put("PaxNo",rsTableInfo.getString(11));
+                	obj.put("CardNo",rsTableInfo.getString(12));
+                	obj.put("linkedWaiterNo",rsTableInfo.getString(13));
+                	arrObj.put(obj);	
             	}
-            	else if(rsTableInfo.getString(3).equals("Billed"))
-            	{
-            		timeDifference = funGetTimeDiffInBilledAndCurrentTime(rsTableInfo.getString(1),posCode);
-                    if (timeDifference.startsWith("-"))
-                    {
-                    	timeDifference = "";
-                    }
-            	}
-            	
-            	obj.put("Time",timeDifference);
-            	
-		        arrObj.put(obj);
             }
             rsTableInfo.close();
-            jObj.put("AllTableList", arrObj);
+          //  jObj.put("TableList", arrObj);
             st.close();
             cmsCon.close();
             
@@ -620,252 +607,19 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         {
         	return arrObj;//jObj.toString();
         }
-	}
-	
-	
-	private JSONArray funGetNormalTableData(String posCode,String areaCode) 
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null;
-        JSONObject jObj=new JSONObject();
-        JSONArray arrjObjNormal= new JSONArray();
-        try {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-        	String sql=" select strTableNo,strTableName,intPaxNo "
-        		+ " from tbltablemaster "
-         		+ " where strStatus='Normal' ";
-        	
-	        	if(!posCode.equals("All"))
-	            {
-	                sql+= " and strPOSCode='" + posCode + "' ";
-	            }
-	            if(!areaCode.equals("All"))
-	            {
-	                sql+= " and strAreaCode='" + areaCode + "' ";
-	            }
-	            sql+= " order by intSequence,strTableName";
-            //System.out.println(sql);
-        	
-            ResultSet rsNormal= st.executeQuery(sql);
-            while (rsNormal.next()) 
-		    {
-            	JSONObject jObjNormalTable=new JSONObject();
-		        jObjNormalTable.put("TableNo",rsNormal.getString(1));
-		        jObjNormalTable.put("TableName",rsNormal.getString(2));
-		        jObjNormalTable.put("PaxNo",rsNormal.getString(3));
-		        jObjNormalTable.put("Time","");
-		        arrjObjNormal.put(jObjNormalTable);
-		    }
-            rsNormal.close();
-            jObj.put("NormalTableList",arrjObjNormal);
-            st.close();
-            cmsCon.close();
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally
-        {
-        	return arrjObjNormal;//jObj.toString();
-        }
-	}
-	
-	
-	
-	private JSONArray funGetOccupiedTableData(String posCode,String areaCode) 
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null;
-        JSONObject jObj=new JSONObject();
-        JSONArray arrjObjOccupied= new JSONArray();
-        try {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-            String sql=" select strTableNo,strTableName,intPaxNo "
-            	+ " from tbltablemaster "
-         		+ " where strStatus='Occupied' ";
-         		if(!posCode.equals("All"))
-	            {
-	                sql+= " and strPOSCode='" + posCode + "' ";
-	            }
-	            if(!areaCode.equals("All"))
-	            {
-	                sql+= " and strAreaCode='" + areaCode + "' ";
-	            }
-	            sql+= " order by intSequence,strTableName";
-            
-	        ResultSet rsOccupied= st.executeQuery(sql);
-	        while (rsOccupied.next()) 
-			{
-	        	JSONObject jObjOccupiedTable=new JSONObject();	
-	        	jObjOccupiedTable.put("TableNo",rsOccupied.getString(1));
-			    jObjOccupiedTable.put("TableName",rsOccupied.getString(2));
-			    jObjOccupiedTable.put("PaxNo",rsOccupied.getString(3));
-			    String timeDiffInFirstKOTAndCurrentTime = funGetTimeDiffInFirstKOTAndCurrentTime(rsOccupied.getString(1));
-                if (timeDiffInFirstKOTAndCurrentTime.startsWith("-"))
-                {
-                    timeDiffInFirstKOTAndCurrentTime = "";
-                }
-                jObjOccupiedTable.put("Time",timeDiffInFirstKOTAndCurrentTime);
-			    arrjObjOccupied.put(jObjOccupiedTable);
-			}
-	        rsOccupied.close();
-	        jObj.put("OccupiedTableList",arrjObjOccupied);
-            st.close();
-            cmsCon.close();
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally
-        {
-        	return arrjObjOccupied;//jObj.toString();
-        }
-	}
-	
-	 private String funGetTimeDiffInFirstKOTAndCurrentTime(String tableNo)
-	    {
-		    clsDatabaseConnection objDb=new clsDatabaseConnection();
-	        Connection aposCon=null;
-	        Statement st=null;
-	        String timeDiffInFirstKOTAndCurrentTime = "";
-	        try
-	        {
-	        	aposCon=objDb.funOpenAPOSCon("mysql","master");
-	            st = aposCon.createStatement();
-	            
-	            String sqlKot = "select TIME_FORMAT(TIMEDIFF(CURRENT_TIME(),time(dteDateCreated)),'%i:%s'),strKOTNo "
-	                    + "from tblitemrtemp  "
-	                    + "where strTableNo='" + tableNo + "' "
-	                    + "group by strKOTNo asc "
-	                    + "limit 1 ";
-	            ResultSet rsKOTTime = st.executeQuery(sqlKot);
-	            if (rsKOTTime.next())
-	            {
-	                timeDiffInFirstKOTAndCurrentTime = rsKOTTime.getString(1);
-	            }
-	            rsKOTTime.close();
-	            st.close();
-	            aposCon.close();
-	        }
-	        catch (Exception e)
-	        {
-	            
-	            e.printStackTrace();
-	        }
-	        finally
-	        {
-	            return timeDiffInFirstKOTAndCurrentTime;
-	        }
-	    }
-	
-
-	
-	private JSONArray funGetBilledTableData(String posCode,String areaCode) 
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null;
-        JSONObject jObj=new JSONObject();
-        JSONArray arrjObjBilled= new JSONArray();
-        try {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-            String posDate="";
-            
-            // Billed Table
-        	String sql="select strTableNo,strTableName,intPaxNo "
-        			+ " from tbltablemaster "
-        			+ " where strStatus='Billed' ";
-	        	if(!posCode.equals("All"))
-	            {
-	                sql+= " and strPOSCode='" + posCode + "' ";
-	            }
-	            if(!areaCode.equals("All"))
-	            {
-	                sql+= " and strAreaCode='" + areaCode + "' ";
-	            }
-	            sql+= " order by intSequence,strTableName";
-            
-            
-            ResultSet rsBilled= st.executeQuery(sql);
-            while (rsBilled.next()) 
-		    {
-            	JSONObject jObjBilledTable=new JSONObject();
-		        jObjBilledTable.put("TableNo",rsBilled.getString(1));
-		        jObjBilledTable.put("TableName",rsBilled.getString(2));
-		        jObjBilledTable.put("PaxNo",rsBilled.getString(3));
-		        String timeDiffInLastBilledAndCurrentTime = funGetTimeDiffInBilledAndCurrentTime(rsBilled.getString(1),posCode);
-                if (timeDiffInLastBilledAndCurrentTime.startsWith("-"))
-                {
-                    timeDiffInLastBilledAndCurrentTime = "";
-                }
-		        jObjBilledTable.put("Time",timeDiffInLastBilledAndCurrentTime);
-		        arrjObjBilled.put(jObjBilledTable);
-		    }
-            rsBilled.close();
-            jObj.put("BilledTableList",arrjObjBilled);
-            st.close();
-            cmsCon.close();
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally
-        {
-        	return arrjObjBilled;//jObj.toString();
-        }
-	}
-	
-	
-	private String funGetTimeDiffInBilledAndCurrentTime(String tableNo,String posCode)
-    {
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection aposCon=null;
-        Statement st=null;
-        String timeDiffInLastBilledAndCurrentTime = "",posDate="";
-        try
-        {
-        	aposCon=objDb.funOpenAPOSCon("mysql","master");
-            st = aposCon.createStatement();
-            String sql="select date(dtePOSDate) from tbldayendprocess where strPOSCode='"+posCode+"' and strDayEnd='N'";
-            ResultSet rs= st.executeQuery(sql);
-            if(rs.next())
-            {
-            	posDate=rs.getString(1);
-            }
-            rs.close();
-            
-            
-            String sqlKot = "select TIME_FORMAT(TIMEDIFF(CURRENT_TIME(),time(dteBillDate)),'%i:%s'),a.strBillNo "
-                    + "from tblbillhd a "
-                    + "where date(a.dteBillDate)='" + posDate + "' "
-                    + "and a.strTableNo='" + tableNo + "' "
-                    + "and a.strBillNo not in(select strBillNo from tblbillsettlementdtl) "
-                    + "order by a.dteBillDate desc "
-                    + "limit 1; ";
-            ResultSet rsKOTTime = st.executeQuery(sqlKot);
-            if (rsKOTTime.next())
-            {
-                timeDiffInLastBilledAndCurrentTime = rsKOTTime.getString(1);
-            }
-            rsKOTTime.close();
-            st.close();
-            aposCon.close();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        finally
-        {
-            return timeDiffInLastBilledAndCurrentTime;
-        }
     }
+	
+	@GET 
+	@Path("/funGetTableStatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONArray funGetTableStatus(@QueryParam("POSCode") String POSCode,@QueryParam("Type") String status,@QueryParam("AreaCode") String areaCode)
+	{
+		return objAPOSUtility.funGetTableStatusData(POSCode,status,areaCode);
 
+	}
+	
+
+	
 	@GET 
 	@Path("/funGetWaiterList")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -1004,6 +758,74 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	obj.put("TableName",rsTableInfo.getString(2));
             	obj.put("TableNo",rsTableInfo.getString(1));
             	arrObj.put(obj);
+            }
+            rsTableInfo.close();
+            jObj.put("TableList", arrObj);
+            st.close();
+            cmsCon.close();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally
+        {
+        	return arrObj;// jObj.toString();
+        }
+    }
+	
+	
+	
+	@GET 
+	@Path("/funGetBusyTableListUserWise")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONArray funGetBusyTableListUserWise(@QueryParam("POSCode") String POSCode,@QueryParam("CMSIntegration") boolean flgCMSIntegration,
+			@QueryParam("userCode") String userCode)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+        JSONObject jObj=new JSONObject();
+        JSONArray arrObj=new JSONArray();
+        try {
+        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="";
+            
+            if(flgCMSIntegration)
+            {
+            	sql = "select b.strTableNo,a.strTableName "
+            		+ "from tbltablemaster a,tblitemrtemp b "
+                    + "where a.strTableNo=b.strTableNo and b.strPOSCode='"+POSCode+"' "
+                    + "group by b.strTableNo order by a.strTableNo;";
+            }
+            else
+            {
+            	sql = "select b.strTableNo,a.strTableName,b.strWaiterNo "
+            		+ "from tbltablemaster a,tblitemrtemp b "
+                    + "where a.strTableNo=b.strTableNo and b.strPOSCode='"+POSCode+"' "
+                    + "group by b.strTableNo order by a.strTableNo;";
+            }
+            //System.out.println(sql);
+            
+            String linkedWaiter="";
+            String sqluserWaiter="select a.strWaiterNo from tbluserhd a where a.strUserCode='"+userCode+"'";
+            ResultSet rsuserWaiter = st.executeQuery(sqluserWaiter);
+            while (rsuserWaiter.next()) 
+            {
+            	linkedWaiter=rsuserWaiter.getString(1);
+            }
+            rsuserWaiter.close();
+            
+            ResultSet rsTableInfo = st.executeQuery(sql);
+            while (rsTableInfo.next()) 
+            {
+            	if(rsTableInfo.getString(3).equals(linkedWaiter)){
+            		JSONObject obj=new JSONObject();
+                	obj.put("TableName",rsTableInfo.getString(2));
+                	obj.put("TableNo",rsTableInfo.getString(1));
+                	arrObj.put(obj);
+            	}
+            	
             }
             rsTableInfo.close();
             jObj.put("TableList", arrObj);
@@ -1996,239 +1818,6 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         	return jObj;
         }
     }
-	
-/*	
-	@GET 
-	@Path("/funGetTableBillData")
-	@Produces(MediaType.APPLICATION_JSON)
-	public String funGetTableBillData(@QueryParam("POSCode") String POSCode
-			,@QueryParam("TableNo") String tableNo
-			,@QueryParam("ClientCode") String clientCode)
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null;
-        double subTotalForTax=0;
-        String operationTypeForTax="Dine In";
-        String areaCode="";;
-        
-        JSONObject jObj=new JSONObject();
-		
-        try {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-            String sql="";
-            
-            sql = " select a.strTableNo,a.strWaiterNo,LEFT(a.strItemCode,7),a.strItemName,a.dblItemQuantity, "
-            	+ " a.dblAmount,a.dblRate,a.strKOTNo,a.strPOSCode,a.strCounterCode,b.strAreaCode,a.strCardNo, "
-            	+ " a.strHomeDelivery,a.strTakeAwayYesNo,a.strCustomerCode  "
-            	+ " from tblitemrtemp a,tblmenuitempricingdtl b,tblitemmaster c "
-            	+ " where LEFT(a.strItemCode,7)=b.strItemCode "
-            	+ " and a.strItemCode=c.strItemCode "; 
-              	
-            System.out.println("sql="+sql);
-            if(!POSCode.equals("All"))
-            {
-                sql+= " and a.strPOSCode='" + POSCode + "'";
-            }
-            if(!tableNo.equals("All"))
-            {
-                sql+=" and a.strTableNo='"+tableNo+"'";
-            }
-            sql+= "group by a.strKOTNo,a.strItemCode "
-            	+ "order by a.strItemName ";
-            System.out.println("sql="+sql);
-            
-            List<clsItemDtlForTax> arrListItemDtls=new ArrayList<clsItemDtlForTax>();
-            JSONArray arrObj=new JSONArray();
-            ResultSet rsTableBillData = st.executeQuery(sql);
-            while (rsTableBillData.next()) 
-            {
-            	JSONObject obj=new JSONObject();
-            	
-            	
-            	
-            	obj.put("TableNo",rsTableBillData.getString(1));
-            	obj.put("WaiterNo",rsTableBillData.getString(2));
-            	obj.put("ItemCode",rsTableBillData.getString(3));
-            	obj.put("ItemName",rsTableBillData.getString(4));
-            	obj.put("ItemQty",rsTableBillData.getString(5));
-            	obj.put("Amount",rsTableBillData.getString(6));
-            	obj.put("Rate",rsTableBillData.getString(7));
-            	obj.put("KOTNo",rsTableBillData.getString(8));
-            	obj.put("POSCode",rsTableBillData.getString(9));
-            	obj.put("CounterCode",rsTableBillData.getString(10));
-            	obj.put("AreaCode",rsTableBillData.getString(11));
-            	obj.put("CardNo",rsTableBillData.getString(12)); 
-            	
-            	
-            
-            	arrObj.put(obj);
-            	
-            	Statement st2 = cmsCon.createStatement();
-	        	sql=" select a.strItemCode,a.strItemName,sum(a.dblItemQuantity),sum(a.dblAmount) "
-	        	   + " from tblitemrtemp a  "
-	        	   + " where a.strItemCode like '"+rsTableBillData.getString(3)+"M%' and a.strKOTNo='"+rsTableBillData.getString(8)+"'  "
-	        	   + " group by a.strItemCode,a.strItemName ";
-	        	
-	        	System.out.println(sql);
-	        	ResultSet rsKOTModItemDtl=st2.executeQuery(sql);
-	        	while(rsKOTModItemDtl.next())
-	        	{
-	        		JSONObject jObjKOTItemModDtl=new JSONObject();
-	        		
-	        		jObjKOTItemModDtl.put("TableNo",rsTableBillData.getString(1));
-	        		jObjKOTItemModDtl.put("WaiterNo",rsTableBillData.getString(2));
-	        		jObjKOTItemModDtl.put("ItemCode",rsKOTModItemDtl.getString(1));
-	        		jObjKOTItemModDtl.put("ItemName",rsKOTModItemDtl.getString(2));
-	            	jObjKOTItemModDtl.put("ItemQty",rsKOTModItemDtl.getString(3));
-	            	jObjKOTItemModDtl.put("Amount",rsKOTModItemDtl.getString(4));
-	            	jObjKOTItemModDtl.put("Rate",rsTableBillData.getString(7));
-	            	jObjKOTItemModDtl.put("KOTNo",rsTableBillData.getString(8));
-	            	jObjKOTItemModDtl.put("POSCode",rsTableBillData.getString(9));
-	            	jObjKOTItemModDtl.put("CounterCode",rsTableBillData.getString(10));
-	            	jObjKOTItemModDtl.put("AreaCode",rsTableBillData.getString(11));
-	            	jObjKOTItemModDtl.put("CardNo",rsTableBillData.getString(12)); 
-	        		
-	            	arrObj.put(jObjKOTItemModDtl);
-	        	}
-	        	
-	        	rsKOTModItemDtl.close();
-	        	st2.close();
-            	areaCode=rsTableBillData.getString(11);
-            	if(rsTableBillData.getString(13).equals("Yes"))
-            	{
-            		operationTypeForTax="HomeDelivery";
-            	}
-            	else if(rsTableBillData.getString(14).equals("Yes"))
-            	{
-            		operationTypeForTax="TakeAway";
-            	}
-            	clsItemDtlForTax objItemDtl=new clsItemDtlForTax();
-                objItemDtl.setItemCode(rsTableBillData.getString(3));
-                objItemDtl.setItemName(rsTableBillData.getString(4));
-                objItemDtl.setAmount(rsTableBillData.getDouble(6));
-                objItemDtl.setDiscAmt(0);
-                objItemDtl.setDiscPer(0);
-                arrListItemDtls.add(objItemDtl);
-                subTotalForTax+=rsTableBillData.getDouble(6);
-            }
-            rsTableBillData.close();
-            jObj.put("BillItemDetails", arrObj);
-            System.out.println(arrListItemDtls);
-            JSONArray jArrBilTaxDtl=new JSONArray();
-                        
-            Date dt=new Date();            
-            String date=(dt.getYear()+1900)+"-"+(dt.getMonth()+1)+"-"+dt.getDate();            
-            clsTaxCalculation objTaxCalculation=new clsTaxCalculation();
-            List <clsTaxCalculationDtls> arrListTaxDtl=objTaxCalculation.funCalculateTax(arrListItemDtls,POSCode
-                , date, areaCode, operationTypeForTax, subTotalForTax, 0,"");
-            
-            for(int cnt=0;cnt<arrListTaxDtl.size();cnt++)
-            {
-            	clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
-            	System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+obj.getTaxAmount());
-            	JSONObject jObjTaxDtl=new JSONObject();
-            	jObjTaxDtl.put("TaxCode", obj.getTaxCode());
-            	jObjTaxDtl.put("TaxName", obj.getTaxName());
-            	jObjTaxDtl.put("TaxType", obj.getTaxCalculationType());
-            	jObjTaxDtl.put("TaxableAmount",obj.getTaxableAmount());
-            	jObjTaxDtl.put("TaxAmount", Math.rint(obj.getTaxAmount()));
-            	jArrBilTaxDtl.put(jObjTaxDtl);
-            	
-            }
-            jObj.put("BillTaxDetails", jArrBilTaxDtl);
-            
-            st.close();
-            cmsCon.close();
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally
-        {
-        	return jObj.toString();
-        }
-    }
-	*/
-	
-
-	
-/*	@SuppressWarnings("rawtypes")
-	@POST
-	@Path("/funCalculateTax")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response funCalculateTax(JSONObject objKOTTaxData)
-	{
-    	clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null;
-        Statement st2=null;
-		String taxAmt="";
-	    double subTotalForTax=0;
-		double taxAmount=0.0;
-		
-		try {
-			
-			String tableNo="",posCode="",areaCode="",operationType="";
-			cmsCon=objDb.funOpenAPOSCon("mysql","master");
-	        st = cmsCon.createStatement();
-	        st2 = cmsCon.createStatement();
-	        List<clsItemDtlForTax> arrListItemDtls=new ArrayList<clsItemDtlForTax>();
-			JSONArray mJsonArray=(JSONArray)objKOTTaxData.get("TaxDtl");
-			String sql="";
-		    String insertQuery1="";
-		    int paxNo=0;
-			boolean flgData=false;
-			String posDate="";
-		
-			JSONObject mJsonObject = new JSONObject();
-			for (int i = 0; i < mJsonArray.length(); i++) 
-			{
-				clsItemDtlForTax objItemDtl=new clsItemDtlForTax();
-			    mJsonObject =(JSONObject) mJsonArray.get(i);
-			    String itemName=mJsonObject.get("strItemName").toString();
-			    String itemCode=mJsonObject.get("strItemCode").toString();
-			    System.out.println(itemName);
-			    double amt=Double.parseDouble(mJsonObject.get("dblAmount").toString());
-			    operationType=mJsonObject.get("OperationType").toString();
-			    areaCode=mJsonObject.get("AreaCode").toString();
-			    posDate=mJsonObject.get("POSDate").toString();
-                objItemDtl.setItemCode(itemCode);
-                objItemDtl.setItemName(itemName);
-                objItemDtl.setAmount(amt);
-                objItemDtl.setDiscAmt(0);
-                objItemDtl.setDiscPer(0);
-                arrListItemDtls.add(objItemDtl);
-                subTotalForTax+=amt;
-			   // tableNo=mJsonObject.get("strTableNo").toString();
-			    posCode=mJsonObject.get("strPOSCode").toString();
-			}
-			
-			   Date dt=new Date();            
-	            String date=(dt.getYear()+1900)+"-"+(dt.getMonth()+1)+"-"+dt.getDate();            
-	            clsTaxCalculation objTaxCalculation=new clsTaxCalculation();
-	            List <clsTaxCalculationDtls> arrListTaxDtl=objTaxCalculation.funCalculateTax(arrListItemDtls,posCode
-	                , posDate, areaCode, operationType, subTotalForTax, 0,"");
-	            
-	            for(int cnt=0;cnt<arrListTaxDtl.size();cnt++)
-	            {
-	            	clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
-	            	System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+obj.getTaxAmount());
-	            	taxAmount+=obj.getTaxAmount();
-	            	taxAmt=String.valueOf(taxAmount);
-	            }
-				 
-            
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-			return Response.status(201).entity(taxAmt).build();		
-	}
-	
-	*/
-	
 
 	@SuppressWarnings("rawtypes")
 	@POST
@@ -2913,188 +2502,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     	, @QueryParam("menuHeadCode") String menuHeadCode, @QueryParam("fromDate") String fromDate
     	, @QueryParam("toDate") String toDate ,@QueryParam("flgAllItems") boolean flgAllItems,@QueryParam("menuType") String menuType)
 	{
-		return funFetchItemPriceDtlForCustomerOrder(areaWisePricing, menuHeadCode, areaCode, POSCode, fromDate, toDate,flgAllItems,menuType);
+		return objAPOSUtility.funFetchItemPriceDtlForCustomerOrder(areaWisePricing, menuHeadCode, areaCode, POSCode, fromDate, toDate,flgAllItems,menuType);
 	}
-	
-	private JSONArray funFetchItemPriceDtlForCustomerOrder(String areaWisePricing, String menuHeadCode, String areaCode, String POSCode
-			, String fromDate, String toDate, boolean flgAllItems,String menuType)
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null,st1=null;
-        JSONObject jObj=new JSONObject();
-        String gAreaCodeForTrans="";
-        
-        System.out.println("flg="+flgAllItems);
-        System.out.println("FD="+fromDate);
-        System.out.println("TD="+toDate);
-        System.out.println("menuhd="+menuHeadCode);
-        System.out.println("AreaWisePricing="+areaWisePricing);
-        System.out.println("Areacode="+areaCode);
-        System.out.println("POS="+POSCode);
-        
-        JSONArray arrObj=new JSONArray();
-        try
-        {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-            st1 = cmsCon.createStatement();
-            
-        	String sqlArea = "select strAreaCode from tblareamaster where strAreaName='All'";
-	        ResultSet rsArea=st.executeQuery(sqlArea);
-	        if (rsArea.next())
-	        {
-	            gAreaCodeForTrans = rsArea.getString(1);
-	        }
-	        rsArea.close();
-	        
-		String sql="",sqlImg="";
-		if (areaWisePricing.equals("N")) {
-			sql = "SELECT a.strItemCode,b.strItemName,a.strTextColor,a.strPriceMonday,a.strPriceTuesday,"
-	                + " a.strPriceWednesday,a.strPriceThursday,a.strPriceFriday, "
-	                + " a.strPriceSaturday,a.strPriceSunday,a.tmeTimeFrom,a.strAMPMFrom,a.tmeTimeTo,a.strAMPMTo,"
-	                + " a.strCostCenterCode,a.strHourlyPricing,a.strSubMenuHeadCode,a.dteFromDate,a.dteToDate,b.strExternalCode,b.imgImage  "
-	                + " FROM tblmenuitempricingdtl a ,tblitemmaster b "
-	                + " WHERE a.strItemCode=b.strItemCode and (a.strAreaCode='"+areaCode+"' or a.strAreaCode='"+gAreaCodeForTrans+"' ) "
-	                + " and (a.strPosCode='" + POSCode + "' or a.strPosCode='All') "
-	                + " and date(a.dteFromDate)<='"+fromDate+"' and date(a.dteToDate)>='"+toDate+"' ";
-            
-            if(!flgAllItems)
-            {
-            	if(menuType.equals("MenuHead"))
-            	{
-            		sql+=" and a.strMenuCode = '" + menuHeadCode + "' ";
-            	}
-            	else
-            	{
-            		sql+=" and a.strSubMenuHeadCode = '" + menuHeadCode + "' ";
-            	
-            	}
-            	
-            }
-            sql+=" order by b.strItemName ";
-        }
-		else 
-        {
-			sql = "SELECT a.strItemCode,b.strItemName,a.strTextColor,a.strPriceMonday,a.strPriceTuesday,"
-	                + " a.strPriceWednesday,a.strPriceThursday,a.strPriceFriday,"
-	                + " a.strPriceSaturday,a.strPriceSunday,a.tmeTimeFrom,a.strAMPMFrom,a.tmeTimeTo,a.strAMPMTo,"
-	                + " a.strCostCenterCode,a.strHourlyPricing,a.strSubMenuHeadCode,a.dteFromDate,a.dteToDate,b.strExternalCode,b.imgImage  "
-	                + " FROM tblmenuitempricingdtl a ,tblitemmaster b "
-	                + " WHERE  (a.strAreaCode='"+areaCode+"' or a.strAreaCode='"+gAreaCodeForTrans+"' ) and a.strItemCode=b.strItemCode "
-	                + " and (a.strPosCode='" + POSCode + "' or a.strPosCode='All') "
-	                + " and date(a.dteFromDate)<='"+fromDate+"' and date(a.dteToDate)>='"+toDate+"' ";
-			
-			if(!flgAllItems)
-	        {
-				sql+=" and a.strMenuCode = '" + menuHeadCode + "' ";
-	        }
-	        sql+=" order by b.strItemName ";
-        }
-		
-		System.out.println(sql);
-		
-		
-       
-		    
-            
-            ResultSet rsMasterData=st.executeQuery(sql);
-            while(rsMasterData.next())
-            {
-            	JSONObject obj=new JSONObject();
-            	
-            	obj.put("ItemCode",rsMasterData.getString(1));
-            	obj.put("ItemName",rsMasterData.getString(2));
-            	obj.put("TextColor",rsMasterData.getString(3));
-            	obj.put("PriceMonday",rsMasterData.getString(4));
-            	obj.put("PriceTuesday",rsMasterData.getString(5));
-            	obj.put("PriceWenesday",rsMasterData.getString(6));
-            	obj.put("PriceThursday",rsMasterData.getString(7));
-            	obj.put("PriceFriday",rsMasterData.getString(8));
-            	obj.put("PriceSaturday",rsMasterData.getString(9));
-            	obj.put("PriceSunday",rsMasterData.getString(10));
-            	obj.put("TimeFrom",rsMasterData.getString(11));
-            	obj.put("AMPMFrom",rsMasterData.getString(12));
-            	obj.put("TimeTo",rsMasterData.getString(13));
-            	obj.put("AMPMTo",rsMasterData.getString(14));
-            	obj.put("CostCenterCode",rsMasterData.getString(15));
-            	obj.put("HourlyPricing",rsMasterData.getString(16));
-            	obj.put("SubMenuHeadCode",rsMasterData.getString(17));
-            	obj.put("FromDate",rsMasterData.getString(18));
-            	obj.put("ToDate",rsMasterData.getString(19));
-            	obj.put("ExternalCode",rsMasterData.getString(20));
-            	
-            	String filePath = funCreateItemTempFolder();
-    		    File file = new File(filePath + "/" + rsMasterData.getString(1) + ".jpg");
-    		    Blob blob = rsMasterData.getBlob(21);
-                //InputStream inImg = blob.getBinaryStream();
-
-                if (blob.length() > 0)
-                {
-                    InputStream inImg = blob.getBinaryStream(1, blob.length());
-                    byte[] imageBytes = blob.getBytes(1, (int) blob.length());
-                    //BufferedImage image = ImageIO.read(inImg);
-                    OutputStream outImg = new FileOutputStream(file);
-                    int c = 0;
-                    while ((c = inImg.read()) > -1)
-                    {
-                        outImg.write(c);
-                    }
-                    outImg.close();
-                    inImg.close();
-                }if (file.exists())
-                {
-                    FileInputStream fis=new FileInputStream(file);
-                	  byte[] bytes = Files.readAllBytes(file .toPath());
-                      String encodedImage = Base64.getEncoder().encodeToString(bytes);
-                      obj.put("itemImage",encodedImage);
-                }
-                else
-                {
-               	 obj.put("itemImage","Image Not Found"); 
-                }
-            	
-            	arrObj.put(obj);
-            }
-            rsMasterData.close();
-            
-            jObj.put("tblmenuitempricingdtl", arrObj);
-            st.close();
-            cmsCon.close();
-            
-        }catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        return arrObj;
-	}
-	
-	private String funCreateItemTempFolder()
-    {
-	String fileName = "Item Image";
-	File theDir = new File(fileName);
-	if (!theDir.exists())
-	{
-	    System.out.println("creating directory: " + "Item Image");
-	    boolean result = false;
-	    
-	    try
-	    {
-		theDir.mkdir();
-		result = true;
-	    }
-	    catch (SecurityException se)
-	    {
-		// handle it
-	    }
-	    if (result)
-	    {
-		System.out.println("DIR created");
-	    }
-	}
-	return fileName;
-    }
-	
 	
 	
 	
@@ -3212,88 +2621,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	@Produces(MediaType.APPLICATION_JSON)
     public JSONArray funGetMenuHeadListForCustomerOrder(@QueryParam("POSCode") String POSCode,@QueryParam("clientCode") String clientCode )
 	{
-		return funFetchMenuHeadListForCustomerOrder(POSCode, clientCode);
-	}
-	
-	private JSONArray funFetchMenuHeadListForCustomerOrder(String posCode,String clientCode)
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null,st1=null;
-        JSONObject jObj=new JSONObject();
-		//String sql="select strMenuCode,strMenuName from tblmenuhd where strClientCode='"+clientCode+"'";
-        String sql="select distinct(a.strMenuCode),b.strMenuName,b.imgImage "
-        		+ " from tblmenuitempricingdtl a left outer join tblmenuhd b on a.strMenuCode=b.strMenuCode "
-        		+ " where a.strPosCode='"+posCode+"' "
-        		+ " and b.strOperational='Y' "
-        		+ " and b.strClientCode='"+clientCode+"' ";
-		
-		JSONArray arrObj=new JSONArray();
-        try
-        {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-            st1 = cmsCon.createStatement();
-            
-            ResultSet rsMasterData=st.executeQuery(sql);
-            while(rsMasterData.next())
-            {
-            	JSONObject obj=new JSONObject();
-            	
-            	obj.put("strMenuItemCode",rsMasterData.getString(1));
-            	obj.put("strMenuItemName",rsMasterData.getString(2));
-            	obj.put("strMenuType","MenuHead");
-            	
-            	//String filePath="E://project//SPOS//prjSPOSStartUp//itemImages//I001261.jpg";
-            	//File file = new File(filePath);
-            	String filePath = funCreateItemTempFolder();
-    		    File file = new File(filePath + "/" + rsMasterData.getString(1) + ".jpg");
-    		    Blob blob = rsMasterData.getBlob(3);
-                //InputStream inImg = blob.getBinaryStream();
-
-                if (blob.length() > 0)
-                {
-                    InputStream inImg = blob.getBinaryStream(1, blob.length());
-                    byte[] imageBytes = blob.getBytes(1, (int) blob.length());
-                    //BufferedImage image = ImageIO.read(inImg);
-                    OutputStream outImg = new FileOutputStream(file);
-                    int c = 0;
-                    while ((c = inImg.read()) > -1)
-                    {
-                        outImg.write(c);
-                    }
-                    outImg.close();
-                    inImg.close();
-                }
-            	
-            	
-            	
-            	if(file.exists())
-                {
-              	  FileInputStream fis=new FileInputStream(file);
-              	  byte[] bytes = Files.readAllBytes(file .toPath());
-                    String encodedImage = Base64.getEncoder().encodeToString(bytes);
-                    obj.put("strItemImage",encodedImage);
-                 
-                }
-                else
-                {
-               	 obj.put("strItemImage","Image Not Found"); 
-                }
-            	
-            	arrObj.put(obj);
-            }
-            rsMasterData.close();
-            
-            jObj.put("MenuHeadList", arrObj);
-            st.close();
-            cmsCon.close();
-            
-        }catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        return arrObj;//jObj.toString();
+		return objAPOSUtility.funFetchMenuHeadListForCustomerOrder(POSCode, clientCode);
 	}
 	
 	@GET
@@ -3346,52 +2674,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	@Produces(MediaType.APPLICATION_JSON)
     public JSONArray funGetModifierList(@QueryParam("ItemCode") String itemCode,@QueryParam("clientCode") String clientCode )
 	{
-		return funFetchModifierList(itemCode, clientCode);
-	}
-	
-	private JSONArray funFetchModifierList(String itemCode,String clientCode)
-	{
-		clsDatabaseConnection objDb=new clsDatabaseConnection();
-        Connection cmsCon=null;
-        Statement st=null;
-        JSONObject jObj=new JSONObject();
-		String sql="select a.strModifierCode,a.strModifierName,b.strItemCode,b.dblRate "
-			+ " from tblmodifiermaster a,tblitemmodofier b "
-			+ " where a.strModifierCode=b.strModifierCode and b.strItemCode='"+itemCode+"' "
-			+ " and b.strApplicable='Y'";
-		
-		JSONArray arrObj=new JSONArray();
-        try
-        {
-        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
-            st = cmsCon.createStatement();
-            
-            ResultSet rsMasterData=st.executeQuery(sql);
-            while(rsMasterData.next())
-            {
-            	JSONObject obj=new JSONObject();
-            	
-            	obj.put("ModifierCode",rsMasterData.getString(1));
-            	obj.put("ModifierName",rsMasterData.getString(2));
-            	obj.put("ItemCode",rsMasterData.getString(3));
-            	obj.put("Rate",rsMasterData.getString(4));
-            	
-            	arrObj.put(obj);
-            }
-            rsMasterData.close();
-            
-           // jObj.put("ModifierList", arrObj);
-            st.close();
-            cmsCon.close();
-            
-        }catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        return arrObj;//jObj.toString();
+		return objAPOSUtility.funFetchModifierList(itemCode, clientCode);
 	}
 
-	
 	
 	@GET
 	@Path("/funGetPosMaster")
@@ -3523,8 +2808,33 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     		 		            rsTax.close();
     		 		            obj.put("TaxRows",arrjObjTax);
     		 		            obj.put("Status","Success");
-    	    		 	        arrObj.put(obj);
+    	    		 	       
+    	    		 	        
+    	    		 	        //pos date
+    	    		 	        String posDate="StartDay";
+    	    		            sql = "select date(max(dtePOSDate)),intShiftCode,strShiftEnd,strDayEnd "
+    	    		                + " from tbldayendprocess "
+    	    		                + " where strPOSCode='"+ rsMasterData.getString(1) + "' and strDayEnd='N' and (strShiftEnd='' or strShiftEnd='N')";
+    	    		            //System.out.println(sql);
+    	    		            ResultSet rsDay=st1.executeQuery(sql);
+    	    		            if(rsDay.next())
+    	    		            {
+    	    		            	String shiftEnd=rsDay.getString(3);
+    	    		            	String dayEnd=rsDay.getString(4);
+    	    		            	if(shiftEnd.equals("") && dayEnd.equals("N"))
+    	    		            	{
+    	    		            		posDate="StartDay";
+    	    		            	}
+    	    		            	else
+    	    		            	{
+    	    		            		posDate=rsDay.getString(1);
+    	    		            	}
+    	    		            }
+    	    		            obj.put("POSDate",posDate);
     		 		            
+    	    		            rsDay.close();
+    	    		            
+    	    		            arrObj.put(obj);
     		 	        }
     		 	        rsMasterData.close();
     		 	        
@@ -5022,8 +4332,6 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     }
 	
 	
-	
-	
 	@GET
 	@Path("/funGetCustomerDetail")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -5160,9 +4468,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		}
 	}
 
-	
-	
-	  
+  
     private String getCustomercode(String clientCode)
     {
     	clsDatabaseConnection objDb=new clsDatabaseConnection();
@@ -5217,9 +4523,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         }
         return customerCode;
     }
-    
-
-	
+ 	
 	
 	@GET
 	@Path("/funGetCustomerType")
@@ -6300,10 +5604,40 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        st = cmsCon.createStatement();
 	        st2 = cmsCon.createStatement();
 	        st3 = cmsCon.createStatement();
-	        
-	       // JSONObject jobj=(JSONObject)objKOTData.get("nameValuePairs");
+	        String sql="";
+	       
 			JSONArray mJsonArray=(JSONArray)objKOTData.get("KOTDtl");
-			String sql="";
+			String lockTable=objKOTData.getString("lockTable");
+			boolean isKOTSave=false;
+			if(lockTable.equalsIgnoreCase("Y")){
+				if(mJsonArray.length()>0){
+					JSONObject mJsonObject =(JSONObject) mJsonArray.get(0);
+					tableNo=mJsonObject.get("strTableNo").toString();
+					String waiterNo=mJsonObject.get("strWaiterNo").toString();
+					sql="select distinct b.strStatus,a.strWaiterNo from tblitemrtemp a,tbltablemaster b " 
+							+" where a.strTableNo=b.strTableNo and a.strTableNo='"+tableNo+"';";
+					ResultSet rs=st.executeQuery(sql);
+					String tableStatus="",oldWaiter="";
+					if(rs.next()){
+						if(rs.getString(1).equalsIgnoreCase("Occupied")){
+							if(rs.getString(2).equals(waiterNo)){
+								isKOTSave=true;
+							}
+						}
+					}else{
+						isKOTSave=true;
+					}
+					
+					
+				}
+				if(!isKOTSave){
+					jObj.put("kotNO", " Not Punched.. Table Already Busy");
+					jObj.put("printingResult", printingResult);
+					return jObj;
+				}
+			}
+			
+			
 		    String insertQuery1="";
 		    int paxNo=0;
 			boolean flgData=false;
@@ -16477,6 +15811,14 @@ private String funGenerateConsolidatedKOTTextFileForDirectBiller(String AreaCode
             	obj.put("strWERAAuthenticationAPIKey",rsTableInfo.getString(217));
             	obj.put("strFireCommunication",rsTableInfo.getString(218));
             	
+            	obj.put("dblUSDConverionRate",rsTableInfo.getString(219));
+            	obj.put("strDBBackupMailReceiver",rsTableInfo.getString(220));
+            	obj.put("strPrintMoveTableMoveKOTYN",rsTableInfo.getString(221));
+            	obj.put("strPrintQtyTotal",rsTableInfo.getString(222));
+            	obj.put("strShowReportsInCurrency",rsTableInfo.getString(223));
+            	obj.put("strPOSToMMSPostingCurrency",rsTableInfo.getString(224));
+            	obj.put("strPOSToWebBooksPostingCurrency",rsTableInfo.getString(225));
+            	obj.put("strLockTableForWaiter",rsTableInfo.getString(226));
             	
             	
             	obj.put("Status","Success");
@@ -19520,4 +18862,62 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 		
 		return jsonRes;
 	}
+	
+/*	
+	@SuppressWarnings("finally")
+    @GET 
+	@Path("/funCheckKOTTableStatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response funCheckTableStatus(@QueryParam("tableNo") String tableNo,@QueryParam("posCode") String posCode
+			,@QueryParam("waiterNo") String waiterNo,@QueryParam("clientCode") String clientCode)
+	{
+		String tableStatus="not selected";
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+		try{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="select a.strStatus from tblkottablestatus a "
+            		+ "where a.strTableNo='"+tableNo+"' and a.strWaiterNo='"+waiterNo+"' and a.strPOSCode='"+posCode+"' and a.strClientCode='"+clientCode+"';";
+            ResultSet rs =st.executeQuery(sql);
+            if(rs.next()){
+            	tableStatus=rs.getString(1);
+            }
+    	    rs.close();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		 return Response.status(200).entity(tableStatus).build();
+	}
+	
+	@GET
+	@Path("/funUpdateKOTTableStatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response funUpdateKOTTableStatus(@QueryParam("tableNo") String tableNo,@QueryParam("waiterNo") String waiterNo
+			,@QueryParam("posCode") String posCode,@QueryParam("clientCode") String clientCode)
+	{
+		String res="";
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+		try{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="INSERT INTO `tblkottablestatus` (`strTableNo`, `strWaiterNo`, `strStatus`, `strPOSCode`, `strClientCode`)"
+            		+ " VALUES ('"+tableNo+"', '"+waiterNo+"', 'selected', '"+posCode+"', '"+clientCode+"');";
+           
+            st.executeUpdate(sql);
+            res="Success";
+        }
+		catch(Exception e){
+			res="fail";
+			e.printStackTrace();
+		}
+		return Response.status(200).entity(res).build();
+	}
+*/
+
 }

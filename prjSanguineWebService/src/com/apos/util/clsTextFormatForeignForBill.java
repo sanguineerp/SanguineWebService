@@ -171,7 +171,7 @@ public class clsTextFormatForeignForBill {
 	    }
 	    rs.close();
 	    
-	    sql = " select a.strBillNo ,c.strTaxDesc,b.dblTaxAmount from tblbillhd a,tblbilltaxdtl b,tbltaxhd c " + " where b.strTaxCode=c.strTaxCode " + "	and a.strBillNo=b.strBillNo " + " and a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
+	    sql = " select a.strBillNo ,c.strTaxDesc,b.dblTaxAmount,c.strTaxCalculation from tblbillhd a,tblbilltaxdtl b,tbltaxhd c " + " where b.strTaxCode=c.strTaxCode " + "	and a.strBillNo=b.strBillNo " + " and a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
 	    // System.out.println(sql);
 	    
 	    st.close();
@@ -182,6 +182,7 @@ public class clsTextFormatForeignForBill {
 		ArrayList<String> arrTaxListItem = new ArrayList<String>();
 		arrTaxListItem.add(rs.getString(2));
 		arrTaxListItem.add(gDecimalFormat.format(rs.getDouble(3)));
+		arrTaxListItem.add(rs.getString(4));
 		arrTaxtBillDtl.add(arrTaxListItem);
 	    }
 	    rs.close();
@@ -427,7 +428,12 @@ public class clsTextFormatForeignForBill {
 	    for (int cnt = 0; cnt < arrTaxtBillDtl.size(); cnt++)
 	    {
 			ArrayList<String> items = arrTaxtBillDtl.get(cnt);
-			pw.print(objTextFileGenerator.funPrintTextWithAlignment("" + items.get(0) + " ", 32, "Left"));
+			if(items.get(2).equalsIgnoreCase("Backward")){
+				double taxble=gdTotal-Double.parseDouble(items.get(1));
+				pw.print(objTextFileGenerator.funPrintTextWithAlignment("" + items.get(0) + "     "+taxble, 32, "Left"));
+			}else{
+				pw.print(objTextFileGenerator.funPrintTextWithAlignment("" + items.get(0) + " ", 32, "Left"));
+			}
 			pw.print(objTextFileGenerator.funPrintTextWithAlignment("" + items.get(1), 8, "RIGHT"));
 			pw.println(" ");
 	    }
