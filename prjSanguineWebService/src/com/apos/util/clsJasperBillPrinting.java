@@ -77,7 +77,7 @@ public class clsJasperBillPrinting {
      
      String Linefor5 = "  --------------------------------------";
 	
-	 public void funCredateJasper(ResponseBuilder resp,String billNo, String posCode, String clientCode,String reprint){
+	 public void funCredateJasper(ResponseBuilder resp,String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName){
 		 //String billNo, String reprint, String formName, String transType, String billDate, String posCode, String viewORprint
 		 strPOSCode=posCode;
 		 Date dteBillDate;
@@ -87,7 +87,7 @@ public class clsJasperBillPrinting {
 			 SimpleDateFormat sdf=new SimpleDateFormat("dd-MM-yyyy");
 			 cmsCon = objDb.funOpenAPOSCon("mysql", "Master");
 			 st = cmsCon.createStatement();
-			 funGetPrinterDetails();
+			 funGetPrinterDetails(strServerBillPrinterName);
 			 
 			 	String billno = " ",operationType = " ", waiterNo = "",tablName = "",billType="";
 			    Double gdTotal = 0.0, sbTotal = 0.0,dis = 0.0;
@@ -1115,15 +1115,18 @@ public class clsJasperBillPrinting {
 	 
     }
 	 	 
-	 public void funGetPrinterDetails(){
+	 public void funGetPrinterDetails(String strServerBillPrinterName){
 		 try{
 			 
 			 String sql = "select strBillPrinterPort,strAdvReceiptPrinterPort from tblposmaster where strPOSCode='" + strPOSCode + "'";
 			 rs = st.executeQuery(sql);
 			    if (rs.next())
 			    {
-			    	strBillPrinterPort=rs.getString(1);
-			    
+			    	if(strServerBillPrinterName.equalsIgnoreCase("") || strServerBillPrinterName.equalsIgnoreCase("No Printer Installed") ){
+			    		strBillPrinterPort=rs.getString(1);
+			    	}else{
+			    		strBillPrinterPort=strServerBillPrinterName;
+			    	}
 			    }
 			 
 		 }catch(Exception e){

@@ -22,7 +22,7 @@ public class clsTextFormat5ForBill {
 	clsTextFileGenerator objTextFileGenerator;
 	
 	 
-   public void funGenerateTextFileForBillFormat5(String billNo, String posCode, String clientCode,String reprint)
+   public void funGenerateTextFileForBillFormat5(String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName)
     {
 	clsDatabaseConnection objDb = new clsDatabaseConnection();
 	Connection cmsCon = null;
@@ -567,7 +567,12 @@ public class clsTextFormat5ForBill {
 	    rs = st.executeQuery(sql);
 	    if (rs.next())
 	    {
-	    	objTextFileGenerator.funPrintTextFile(rs.getString(1), rs.getString(1), "Bill", "", "", multiBillPrint,"");
+	    	if(strServerBillPrinterName.equalsIgnoreCase("") || strServerBillPrinterName.equalsIgnoreCase("No Printer Installed") ){
+	    		objTextFileGenerator.funPrintTextFile(rs.getString(1), rs.getString(1), "Bill", "", "", multiBillPrint,"");
+	    	}else{
+	    		objTextFileGenerator.funPrintTextFile(strServerBillPrinterName, strServerBillPrinterName, "Bill", "", "", multiBillPrint,"");
+	    	}
+	    	//objTextFileGenerator.funPrintTextFile(rs.getString(1), rs.getString(1), "Bill", "", "", multiBillPrint,"",strServerBillPrinterName);
 	    }
 	    rs.close();
 	    

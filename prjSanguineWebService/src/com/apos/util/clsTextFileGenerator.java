@@ -73,7 +73,7 @@ public class clsTextFileGenerator
 	}
     }
     
-    public void funGenerateAndPrintBill(ResponseBuilder resp,String billNo, String posCode, String clientCode,String reprint) throws Exception
+    public void funGenerateAndPrintBill(ResponseBuilder resp,String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName) throws Exception
     {
 		clsDatabaseConnection objDb = new clsDatabaseConnection();
 		Connection cmsCon = null;
@@ -92,29 +92,29 @@ public class clsTextFileGenerator
 		rs.close();
 		if (billFormat.equalsIgnoreCase("Text 1"))
 		{
-			objTextFormat1ForBill.funGenerateTextFileForBill(billNo, posCode, clientCode,reprint);
+			objTextFormat1ForBill.funGenerateTextFileForBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 5"))
 		{
-			objTextFormat5ForBill.funGenerateTextFileForBillFormat5(billNo, posCode, clientCode,reprint);
+			objTextFormat5ForBill.funGenerateTextFileForBillFormat5(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 11"))
 		{
-			objTextFormat11ForBill.funGenerateTextFileForBillFormat11(billNo, posCode, clientCode,reprint);
+			objTextFormat11ForBill.funGenerateTextFileForBillFormat11(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 12"))
 		{
-			objTextFormat12ForBill.funGenerateTextFileForBillFormat12(billNo, posCode, clientCode,reprint);
+			objTextFormat12ForBill.funGenerateTextFileForBillFormat12(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
 		else if(billFormat.equalsIgnoreCase("Jasper 5")){
-			obJasperPrint.funCredateJasper(resp,billNo, posCode, clientCode,reprint);
+			obJasperPrint.funCredateJasper(resp,billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 21"))
 		{
-			objTextFormat21ForBill.funGenerateTextFileForBillFormat21(billNo, posCode, clientCode,reprint);
+			objTextFormat21ForBill.funGenerateTextFileForBillFormat21(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}else if(billFormat.equalsIgnoreCase("Text Foreign"))
 		{
-			objTextFormatForeignForBill.funGenerateTextFileForForeignBill(billNo, posCode, clientCode,reprint);
+			objTextFormatForeignForBill.funGenerateTextFileForForeignBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
     }
     
@@ -218,7 +218,7 @@ public class clsTextFileGenerator
     
     
     
-    public String funPrintKOTTextFile(String primaryPrinterName, String secPrinterName, String type, String multipleKOTPrint, String printKOTYN, String multiBillPrint,String KOTType)
+    public String funPrintKOTTextFile(String primaryPrinterName, String secPrinterName, String type, String multipleKOTPrint, String printKOTYN, String multiBillPrint,String KOTType,int noOfCopies)
     {
     	String result="";
 	    
@@ -231,7 +231,14 @@ public class clsTextFileGenerator
 				    result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
 				    if (multipleKOTPrint.equals("Y"))
 				    {
-				      result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
+				    	if(noOfCopies>1){
+				    		for(int i=0;i<noOfCopies-1;i++){
+				    			result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
+				    		}
+				    	}else{
+				    		result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
+				    	}
+				      
 				    }
 				}
 				else
@@ -1076,7 +1083,8 @@ public class clsTextFileGenerator
     	    rs = st.executeQuery(sql);
     	    if (rs.next())
     	    {
-    		funPrintTextFile(rs.getString(1), rs.getString(1), "Bill", "", "", multiBillPrint,"");
+    	    	String strServerBillPrinterName="";
+    	    	funPrintTextFile(rs.getString(1), rs.getString(1), "Bill", "", "", multiBillPrint,"");
     	    }
     	    rs.close();
     	    

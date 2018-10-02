@@ -76,7 +76,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
     public void funGenerateJasperForTableWiseKOT(String tableNo, 
     		String CostCenterCode, String AreaCode, String KOTNO, String Reprint,
     		String primaryPrinterName, String secondaryPrinterName, String CostCenterName,
-    		String printYN, String NCKotYN, String labelOnKOT,String posName,String posCode)
+    		String printYN, String NCKotYN, String labelOnKOT,String posName,String posCode,int noOfCopies)
     {
         HashMap hm = new HashMap();
         List<List<clsBillDtl>> listData = new ArrayList<>();
