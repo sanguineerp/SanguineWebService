@@ -264,6 +264,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         	if(rsLogin1.next())
         	{  
                 jObj.put("Status", "OK");
+                jObj.put("UserCode", userCode);
         		jObj.put("UserName", rsLogin1.getString(1));
                 jObj.put("SuperType", rsLogin1.getString(2));
                 jObj.put("WaiterNo", rsLogin1.getString(3));
@@ -271,6 +272,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         	else
         	{
         		jObj.put("Status", "Expired");
+        		jObj.put("UserCode", userCode);
         		jObj.put("UserName", "");
                 jObj.put("SuperType","");
                 jObj.put("WaiterNo", "");
@@ -280,6 +282,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         else
         {
         	jObj.put("Status", "Invalid");
+        	jObj.put("UserCode", userCode);
         	jObj.put("UserName", "");
             jObj.put("SuperType","");
             jObj.put("WaiterNo", "");
@@ -3123,6 +3126,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        jObj.put("POSDate",posDate);
 	        jObj.put("MainMenuList", arrObj);
 	        
+	        /*if(clientCode.equals("240.001")){
+	        	JSONObject obj=new JSONObject();            	
+	        	obj.put("ModuleName","Item Voice Capture");
+	        	obj.put("ImageName", "imgItemVoiceSave");
+	        	obj.put("FormName", "Item Voice Capture");
+	        	obj.put("RequestMapping", "ItemVoiceCapture");
+	        	arrObj.put(obj);
+	        }*/
 	        rsMasterData.close();
 	        st1.close();
 	        st.close();
@@ -16634,14 +16645,23 @@ private String funGetBillSeriesDtlBillNos(List<clsBillSeriesBillDtl> listBillSer
 					{
 						String keyValue = itr.next().toString();
 						JSONArray mJsonSubArray=null;
-						mJsonSubArray = (JSONArray) mJsonOb.get(key);	
-						
-						if (funInsertBillPromotionDtlData(mJsonSubArray) > 0) 
-						{
-							response = "true";
-						} else{
-							response = "false";
+						mJsonSubArray = (JSONArray) mJsonOb.get(keyValue);	
+						if(keyValue.equals("BillDiscountDtl")){
+							if (funInsertBillDiscountDetail(mJsonSubArray) > 0) 
+							{
+								response = "true";
+							} else{
+								response = "false";
+							}
+						}else{
+							if (funInsertBillPromotionDtlData(mJsonSubArray) > 0) 
+							{
+								response = "true";
+							} else{
+								response = "false";
+							}
 						}
+						
 					}
 				}
 				else if (key.equalsIgnoreCase("BillDiscountDtl") && mJsonArray !=null) 
@@ -17250,5 +17270,40 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
+	@POST
+	@Path("/funUpdateitemVoicetext")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String funUpdateitemVoicetext(JSONArray jsArray,@QueryParam("itemCode") String itemCode)
+	{
+		JSONArray arrPrinterList=new JSONArray(); 
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+		try{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="select strItemVoiceCaptureText from tblitemmaster  where strItemCode='"+itemCode+"'";
+            ResultSet rs =st.executeQuery(sql);
+            String strItemVoiceCaptureText="";
+            if(rs.next()){
+            	strItemVoiceCaptureText=rs.getString(1);
+            	
+            }
+            rs.close();
+            for(int i=0;i<jsArray.length();i++){
+            	if(strItemVoiceCaptureText.length()>0){
+            		strItemVoiceCaptureText=strItemVoiceCaptureText+","+jsArray.getString(i);
+            	}else{
+            		strItemVoiceCaptureText=jsArray.getString(i);
+            	}
+            }
+            sql="update tblitemmaster a set a.strItemVoiceCaptureText='"+strItemVoiceCaptureText+"' where a.strItemCode='"+itemCode+"'"; 
+            st.executeUpdate(sql);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return "";
+	}
 
 }

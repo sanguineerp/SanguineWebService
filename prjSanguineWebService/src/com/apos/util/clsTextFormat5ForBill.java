@@ -52,7 +52,7 @@ public class clsTextFormat5ForBill {
 	    Double gdTotal = 0.0;
 	    Double sbTotal = 0.0;
 	    Double dis = 0.0;
-	    String strBillDate = "";
+	    String strBillDate = "",remark="";
 	    String clientName = "";
 	    String addressLine1 = "";
 	    String addressLine2 = "";
@@ -113,7 +113,7 @@ public class clsTextFormat5ForBill {
 	    }
 	    rs.close();
 	    DecimalFormat gDecimalFormat = clsGlobalFunctions.funGetGlobalDecimalFormatter(noOfDecimalPlace);
-	    sql = " select a.strBillNo,ifnull(b.strTableName,''),ifnull(c.strWShortName,''),a.dblGrandTotal,a.dblSubTotal,a.dblDiscountAmt,a.dteBillDate,a.intPaxNo,a.strOperationType,a.strCustomerCode " + ",a.strUserCreated from tblbillhd a left outer join tbltablemaster b " + " on a.strTableNo=b.strTableNo " + " left outer join tblwaitermaster c " + " on a.strWaiterNo=c.strWaiterNo " + " where a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
+	    sql = " select a.strBillNo,ifnull(b.strTableName,''),ifnull(c.strWShortName,''),a.dblGrandTotal,a.dblSubTotal,a.dblDiscountAmt,a.dteBillDate,a.intPaxNo,a.strOperationType,a.strCustomerCode " + ",a.strUserCreated,ifnull(a.strRemarks,'') from tblbillhd a left outer join tbltablemaster b " + " on a.strTableNo=b.strTableNo " + " left outer join tblwaitermaster c " + " on a.strWaiterNo=c.strWaiterNo " + " where a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
 	    // System.out.println(sql);
 	    
 	    rs = st.executeQuery(sql);
@@ -130,7 +130,7 @@ public class clsTextFormat5ForBill {
 		operationType = rs.getString(9);
 		customerCode = rs.getString(10);
 		userName= rs.getString(11);
-		
+		remark= rs.getString(12);
 	    }
 	    rs.close();
 	    dteBillDate=format1.parse(strBillDate);
@@ -374,6 +374,15 @@ public class clsTextFormat5ForBill {
 	    pw.print(objTextFileGenerator.funPrintTextWithAlignment(":", 2, "Left"));
 	    pw.print(objTextFileGenerator.funPrintTextWithAlignment(sdf.format(dteBillDate), 26, "Left"));
 	    
+	    if(remark.length()>0)
+	    {
+	    	pw.println(" ");
+	    	pw.print(objTextFileGenerator.funPrintTextWithAlignment("Remarks.", 12, "Left"));
+		    pw.print(objTextFileGenerator.funPrintTextWithAlignment(":", 2, "Left"));
+		    pw.print(objTextFileGenerator.funPrintTextWithAlignment(remark, 26, "Left"));
+		    
+	    }
+	    
 	    if (!memberCode.isEmpty())
 	    {
 	    	pw.println(" ");
@@ -418,12 +427,63 @@ public class clsTextFormat5ForBill {
 	    pw.print(objTextFileGenerator.funPrintTextWithAlignment("SUB TOTAL", 32, "Left"));
 	    pw.print(objTextFileGenerator.funPrintTextWithAlignment("" + gDecimalFormat.format(sbTotal), 8, "RIGHT"));
 	    pw.println(" ");
-	    if(dis>0)
+	   /* if(dis>0)
 	    {
 	    	pw.print(objTextFileGenerator.funPrintTextWithAlignment("DISCOUNT  ", 32, "Left"));
 		    pw.print(objTextFileGenerator.funPrintTextWithAlignment("" +gDecimalFormat.format( dis), 8, "RIGHT"));
 		    pw.println(" "); 	
-	    }
+	    }*/
+	    
+	    sql = "select a.dblDiscPer,a.dblDiscAmt,a.strDiscOnType,a.strDiscOnValue,b.strReasonName,a.strDiscRemarks "
+			    + " from tblbilldiscdtl a ,tblreasonmaster b,tblbillhd c "
+			    + " where  a.strDiscReasonCode=b.strReasonCode "
+			    + " and a.strBillNo=c.strBillNo "
+			    + " and a.strClientCode=c.strClientCode "
+			    + " and date(a.dteBillDate)=date(c.dteBillDate) "
+			    + " and a.strBillNo='" + billNo + "' "
+			    + " and c.strposCode='" + posCode + "' "
+			    + " and date(c.dteBillDate)='" + strBillDate.split(" ")[0] + "' ";
+	    
+		    st = cmsCon.createStatement();
+		    ResultSet rsDisc  = st.executeQuery(sql);
+		    boolean flag = true;
+		    while (rsDisc.next())
+		    {
+			if (flag)
+			{
+			    flag = false;
+			    pw.print(objTextFileGenerator.funPrintTextWithAlignment("DISCOUNT  ", 32, "Left"));
+			    pw.println(" "); 	
+			}
+			double dbl = Double.parseDouble(rsDisc.getString("dblDiscPer"));
+			String dbl2 = gDecimalFormat.format(dbl);
+//	                String discText = String.format("%.1f", dbl) + "%" + " On " + rsDisc.getString("strDiscOnValue") + "";
+			String discText = dbl2 + "%" + " On " + rsDisc.getString("strDiscOnValue") + "";
+			if (discText.length() > 30)
+			{
+			    discText = discText.substring(0, 30);
+			}
+			else
+			{
+			    discText = String.format("%-30s", discText);
+			}
+			pw.print(objTextFileGenerator.funPrintTextWithAlignment(discText, 32, "Left"));
+			
+			pw.print(objTextFileGenerator.funPrintTextWithAlignment(gDecimalFormat.format(rsDisc.getDouble("dblDiscAmt")), 8, "Right"));
+			pw.println(" "); 	
+			 
+			pw.print(objTextFileGenerator.funPrintTextWithAlignment("Reason  :", 12, "Left"));
+			pw.print(objTextFileGenerator.funPrintTextWithAlignment(rsDisc.getString(5), 20, "Left"));
+			pw.println(" "); 	
+			 
+			pw.print(objTextFileGenerator.funPrintTextWithAlignment("Remarks :", 12, "Left"));
+			pw.print(objTextFileGenerator.funPrintTextWithAlignment(rsDisc.getString(6), 20, "Left"));
+			pw.println(" "); 	
+			
+
+		    }
+	    
+	    
 	    for (int cnt = 0; cnt < arrTaxtBillDtl.size(); cnt++)
 	    {
 			ArrayList<String> items = arrTaxtBillDtl.get(cnt);
