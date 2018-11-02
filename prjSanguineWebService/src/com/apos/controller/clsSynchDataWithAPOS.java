@@ -6,14 +6,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Files;
-import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -21,7 +17,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -3126,14 +3121,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        jObj.put("POSDate",posDate);
 	        jObj.put("MainMenuList", arrObj);
 	        
-	        /*if(clientCode.equals("240.001")){
+	        if(true){
 	        	JSONObject obj=new JSONObject();            	
 	        	obj.put("ModuleName","Item Voice Capture");
 	        	obj.put("ImageName", "imgItemVoiceSave");
 	        	obj.put("FormName", "Item Voice Capture");
 	        	obj.put("RequestMapping", "ItemVoiceCapture");
 	        	arrObj.put(obj);
-	        }*/
+	        }
 	        rsMasterData.close();
 	        st1.close();
 	        st.close();
@@ -10169,7 +10164,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		                   }
 		                   
 		                   sql="SELECT a.strItemName,d.strCostCenterCode,d.strPrimaryPrinterPort,d.strSecondaryPrinterPort,d.strCostCenterName,a.strNCKotYN, "
-		                   		+ " ifnull(e.strLabelOnKOT,'KOT') strLabelOnKOT ,sum(a.dblPrintQty),e.intCostCenterWiseNoOfCopies FROM tblitemrtemp a "
+		                   		+ " ifnull(e.strLabelOnKOT,'KOT') strLabelOnKOT ,sum(a.dblPrintQty),e.intPrimaryPrinterNoOfCopies,e.intSecondaryPrinterNoOfCopies,e.strPrintOnBothPrinters FROM tblitemrtemp a "
 		                   		+ " LEFT OUTER JOIN tblmenuitempricingdtl c ON a.strItemCode = c.strItemCode "
 		                   		+ " left outer join tblprintersetup d on c.strCostCenterCode=d.strCostCenterCode "
 		                   		+ " LEFT OUTER JOIN tblcostcentermaster e ON c.strCostCenterCode=e.strCostCenterCode "
@@ -10184,25 +10179,56 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		                   while (rsPrint.next()) 
 		                   {
 		                	   
-		                	sql="select a.strPrintType, a.strConsolidatedKOTPrinterPort from tblsetup a where a.strPOSCode='"+POSCode+"' ";
+		                	sql="select a.strPrintType, a.strConsolidatedKOTPrinterPort from tblsetup a where a.strPOSCode='"+POSCode+"'  or a.strPOSCode='All' ";
 		                   	ResultSet rsPrinterType=st2.executeQuery(sql);
 		   			    	if(rsPrinterType.next())
 		   			    	{
 		   			    		strConsolidatePrint=rsPrinterType.getString(2);
 		   			    		if(rsPrinterType.getString(1).equalsIgnoreCase("Jasper")){
-		   			    			objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
-		   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "N", 
-		   			    					rsPrint.getString(3), rsPrint.getString(4), rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
-		   			    					POSName,POSCode,rsPrint.getInt(9));
+		   			    			int noOfCopiesPrimaryPrinter=rsPrint.getInt(9);
+		   			    			int noOfCopiesSecPrinter=rsPrint.getInt(10);
+		   			    			if(rsPrint.getString(11).equalsIgnoreCase("Y")){// both printer
+		   			    				if(noOfCopiesSecPrinter>0){
+		   			    					// single print on secondary
+		   			    					objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
+				   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, reprint, 
+				   			    					"Not", rsPrint.getString(4), rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
+				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+		   			    					for(int k=0;k<noOfCopiesSecPrinter-1;k++){
+		   			    						// remaining reprint on secondary
+		   			    						objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
+					   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "Reprint", 
+					   			    					"Not", rsPrint.getString(4), rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
+					   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+		   			    					}
+		   			    				}
+		   			    			}
+		   			    				
+		   			    			//single print on Primary
+	   			    				objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
+		   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, reprint, 
+		   			    					rsPrint.getString(3), "Not", rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
+		   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+	   			    				
+		   			    				for(int k=0;k<noOfCopiesPrimaryPrinter-1;k++){
+	   			    						// remaining reprint on Primary
+	   			    						objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
+				   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "Reprint", 
+				   			    					rsPrint.getString(3), "Not", rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
+				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+	   			    					}
+		   			    				
+		   			    			
+		   			    			
 		   			    		}
 		   			    		else{
 		   			    		 result=objAPOSKOTPrint.funWriteKOTDetailsToTextFile(tableNo, rsPrint.getString(2), "", AreaCodeForAll, KOTNo, reprint,rsPrint.getString(3), rsPrint.getString(4)
-			                    		   , rsPrint.getString(5),printYN,POSCode,POSName,rsPrint.getString(6),deviceName,macAddress,rsPrint.getString(7),fireCommunication,rsPrint.getInt(9));
+			                    		   , rsPrint.getString(5),printYN,POSCode,POSName,rsPrint.getString(6),deviceName,macAddress,rsPrint.getString(7),fireCommunication,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
 			                	  
 		   			    		}
 		   			    	}else{
 		   			    	 result=objAPOSKOTPrint.funWriteKOTDetailsToTextFile(tableNo, rsPrint.getString(2), "", AreaCodeForAll, KOTNo, reprint,rsPrint.getString(3), rsPrint.getString(4)
-		                    		   , rsPrint.getString(5),printYN,POSCode,POSName,rsPrint.getString(6),deviceName,macAddress,rsPrint.getString(7),fireCommunication,rsPrint.getInt(9));
+		                    		   , rsPrint.getString(5),printYN,POSCode,POSName,rsPrint.getString(6),deviceName,macAddress,rsPrint.getString(7),fireCommunication,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
 		                	  
 		   			    	}
 		                	  
@@ -13733,11 +13759,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			           {
 			        	   if(kotType.equals("CHECK KOT"))
 				           {
-			        		   result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "", printKOTYN, "N","CheckKOT",0);
+			        		   result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "", printKOTYN, "N","CheckKOT",0,0,"N",Reprint);
 				           }
 				           else
 				           {
-				        	   result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "",printKOTYN, "N","ConsolidateKOT",0);
+				        	   result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "",printKOTYN, "N","ConsolidateKOT",0,0,"N",Reprint);
 				           }
 			        	   
 			           }
@@ -15788,7 +15814,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			sql = "SELECT a.strItemCode,b.strItemName,a.strTextColor,a.strPriceMonday,a.strPriceTuesday, a.strPriceWednesday, "
 				+ " a.strPriceThursday,a.strPriceFriday, a.strPriceSaturday,a.strPriceSunday,a.tmeTimeFrom,a.strAMPMFrom,a.tmeTimeTo,a.strAMPMTo, "
 				+ " a.strCostCenterCode,a.strHourlyPricing,a.strSubMenuHeadCode,a.dteFromDate,a.dteToDate,b.strExternalCode,b.strItemImage,a.strAreaCode "
-				+ " ,a.strMenuCode "
+				+ " ,a.strMenuCode,b.strItemVoiceCaptureText "
 				+ " FROM tblmenuitempricingdtl a,tblitemmaster b "
 				+ " WHERE a.strItemCode=b.strItemCode  AND (a.strPosCode='"+POSCode+"' OR a.strPosCode='All') "
 				+ " AND DATE(a.dteFromDate)<='"+fromDate+"' AND DATE(a.dteToDate)>='"+toDate+"' "
@@ -15823,6 +15849,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	obj.put("ExternalCode",rsMasterData.getString(20));
             	obj.put("AreaCode",rsMasterData.getString(22));
             	obj.put("MenuCode",rsMasterData.getString(23));
+            	obj.put("strVoiceTextSaved",rsMasterData.getString(24));
             	
             	arrObj.put(obj);
             }
@@ -17269,7 +17296,6 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 		return arrPrinterList;
 	}
 	
-	
 	@POST
 	@Path("/funUpdateitemVoicetext")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -17279,31 +17305,89 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 		clsDatabaseConnection objDb=new clsDatabaseConnection();
         Connection cmsCon=null;
         Statement st=null;
+        String strRes="N";
 		try{
 			cmsCon=objDb.funOpenAPOSCon("mysql","master");
             st = cmsCon.createStatement();
+            StringBuilder sbSql=new StringBuilder();  
+            ResultSet rs =null;
+           
             String sql="select strItemVoiceCaptureText from tblitemmaster  where strItemCode='"+itemCode+"'";
-            ResultSet rs =st.executeQuery(sql);
+            rs =st.executeQuery(sql);
             String strItemVoiceCaptureText="";
             if(rs.next()){
             	strItemVoiceCaptureText=rs.getString(1);
             	
             }
-            rs.close();
+           
             for(int i=0;i<jsArray.length();i++){
-            	if(strItemVoiceCaptureText.length()>0){
-            		strItemVoiceCaptureText=strItemVoiceCaptureText+","+jsArray.getString(i);
-            	}else{
-            		strItemVoiceCaptureText=jsArray.getString(i);
+            	sbSql.setLength(0);
+            	String itemName=jsArray.getString(i);
+            	if(itemName.contains("'")){
+            		itemName=itemName.replace("'", "");
             	}
+            	sbSql.append("select strItemVoiceCaptureText from tblitemmaster where strItemVoiceCaptureText like '%"+itemName+"%' ");
+            	rs =st.executeQuery(sbSql.toString());
+            	if(rs.next()){
+            		
+            	}else{
+            		if(strItemVoiceCaptureText.length()>0){
+                		strItemVoiceCaptureText=strItemVoiceCaptureText+","+itemName;
+                	}else{
+                		strItemVoiceCaptureText=itemName;
+                	}
+            	}
+            	
             }
-            sql="update tblitemmaster a set a.strItemVoiceCaptureText='"+strItemVoiceCaptureText+"' where a.strItemCode='"+itemCode+"'"; 
+           sql="update tblitemmaster a set a.strItemVoiceCaptureText='"+strItemVoiceCaptureText+"' where a.strItemCode='"+itemCode+"'"; 
             st.executeUpdate(sql);
+            strRes="Y";
 		}
 		catch(Exception e){
 			e.printStackTrace();
+			strRes="N";
 		}
-		return "";
+		return strRes;
 	}
+	
+	@GET
+	@Path("/funGetPOSWiseItemList")
+	@Produces(MediaType.APPLICATION_JSON)
+    public JSONArray funGetPOSWiseItemList(@QueryParam("strClientCode") String strClientCode,@QueryParam("fromDate") String fromDate
+    	, @QueryParam("toDate") String toDate )
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null,st1=null;
+        JSONArray arrObj=new JSONArray();
+        try
+        {
+        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            st1 = cmsCon.createStatement();
+        	String sql="";
+			sql = " select a.strItemCode,a.strItemName,a.strItemVoiceCaptureText from tblitemmaster a " 
+					+" where a.strClientCode='"+strClientCode+"' group by a.strItemName;";
+            ResultSet rsMasterData=st.executeQuery(sql);
+            while(rsMasterData.next())
+            {
+            	JSONObject obj=new JSONObject();
+            	obj.put("ItemCode",rsMasterData.getString(1));
+            	obj.put("ItemName",rsMasterData.getString(2));
+            	obj.put("strVoiceTextSaved",rsMasterData.getString(3));
+            	arrObj.put(obj);
+            }
+            rsMasterData.close();
+            st.close();
+            cmsCon.close();
+            
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        return arrObj;
+	}
+	
+	
 
 }

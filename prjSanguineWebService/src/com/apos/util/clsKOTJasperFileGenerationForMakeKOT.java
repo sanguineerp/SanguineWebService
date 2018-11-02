@@ -76,7 +76,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
     public void funGenerateJasperForTableWiseKOT(String tableNo, 
     		String CostCenterCode, String AreaCode, String KOTNO, String Reprint,
     		String primaryPrinterName, String secondaryPrinterName, String CostCenterName,
-    		String printYN, String NCKotYN, String labelOnKOT,String posName,String posCode,int noOfCopies)
+    		String printYN, String NCKotYN, String labelOnKOT,String posName,String posCode,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter,String printOnBothPrinter)
     {
         HashMap hm = new HashMap();
         List<List<clsBillDtl>> listData = new ArrayList<>();
@@ -302,8 +302,8 @@ public class clsKOTJasperFileGenerationForMakeKOT {
         	   strAreaWiseCostCenterKOTPrintingYN=rsPrinter.getString(1);
            }
            rsPrinter.close();
-           String primary="",secondary="",printOnBothPrinters="";
-           if(strAreaWiseCostCenterKOTPrintingYN.equalsIgnoreCase("Y"))
+           //String primary="",secondary="",printOnBothPrinters="";
+          /* if(strAreaWiseCostCenterKOTPrintingYN.equalsIgnoreCase("Y"))
            {
         	    String areaCodeOfTable = "";
            	    String sqlArea = "select strTableName,intPaxNo,strAreaCode "
@@ -342,7 +342,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
                     printOnBothPrinters = rsPrinter.getString(3);
                }
                rsPrinter.close();   
-           }
+           }*/
             
            
             hm.put("listOfItemDtl", listOfKOTDetail);
@@ -355,8 +355,11 @@ public class clsKOTJasperFileGenerationForMakeKOT {
             JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(listData);
             //InputStream is = this.getClass().getClassLoader().getResourceAsStream(reportName);
             final JasperPrint mainJaperPrint = JasperFillManager.fillReport(jr1, hm, beanColDataSource);
-            
-            final String printer=primary;
+            String printerName=primaryPrinterName;
+            if(primaryPrinterName.equalsIgnoreCase("Not")){
+            	printerName=secondaryPrinterName;
+            }
+            final String printer=printerName;
             System.out.println("jasper printer "+printer);
             JRViewer viewer = new JRViewer(mainJaperPrint);
             JFrame jf = new JFrame();

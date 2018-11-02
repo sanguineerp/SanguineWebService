@@ -56,7 +56,7 @@ public class clsAPOSKOT {
 
 
                    sql = "select a.strItemName,c.strCostCenterCode,c.strPrinterPort"
-                       + ",c.strSecondaryPrinterPort,c.strCostCenterName ,c.intCostCenterWiseNoOfCopies "
+                       + ",c.strSecondaryPrinterPort,c.strCostCenterName ,c.intPrimaryPrinterNoOfCopies,c.intSecondaryPrinterNoOfCopies "
                        + " from tblbilldtl  a,tblmenuitempricingdtl b,tblcostcentermaster c "
                        + " where a.strBillNo='"+billNo+"' and  a.strItemCode=b.strItemCode "
                        + " and b.strCostCenterCode=c.strCostCenterCode and b.strPosCode='"+POSCode+"' "
@@ -66,7 +66,7 @@ public class clsAPOSKOT {
                    ResultSet rsPrintDirect = st.executeQuery(sql);
                    while (rsPrintDirect.next()) 
                    {
-                       funGenerateTextFileForKOTDirectBiller(rsPrintDirect.getString(2), "",areaCode, billNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5),POSCode,printYN,rsPrintDirect.getInt(6));
+                       funGenerateTextFileForKOTDirectBiller(rsPrintDirect.getString(2), "",areaCode, billNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5),POSCode,printYN,rsPrintDirect.getInt(6),rsPrintDirect.getInt(7));
                    }
                    rsPrintDirect.close();
                    st.close();
@@ -84,7 +84,7 @@ public class clsAPOSKOT {
        }
    }
    
-	public String funGenerateTextFileForKOTDirectBiller(String CostCenterCode, String ShowKOT, String AreaCode, String BillNo, String Reprint, String primaryPrinterName, String secondaryPrinterName, String CostCenterName,String posCode,String printYN,int noOfCopies)
+	public String funGenerateTextFileForKOTDirectBiller(String CostCenterCode, String ShowKOT, String AreaCode, String BillNo, String Reprint, String primaryPrinterName, String secondaryPrinterName, String CostCenterName,String posCode,String printYN,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter)
    {
 	   String result="";
 	   clsDatabaseConnection objDb=new clsDatabaseConnection();
@@ -296,7 +296,7 @@ public class clsAPOSKOT {
         
            if(printYN.equals("Y"))
            {
-        	   result=obTextFileGenerator.funPrintKOTTextFile(primaryPrinterName,secondaryPrinterName, "kot",multipleKOTPrint, printKOTYN, multipleBillPrint,"KOT",noOfCopies);
+        	   result=obTextFileGenerator.funPrintKOTTextFile(primaryPrinterName,secondaryPrinterName, "kot",multipleKOTPrint, printKOTYN, multipleBillPrint,"KOT", noOfCopiesPrimaryPrinter, noOfCopiesSecPrinter,"N",Reprint);
            }
            
        } 
@@ -547,7 +547,7 @@ public class clsAPOSKOT {
    
    public String funWriteKOTDetailsToTextFile(String tableNo, String costCenterCode, String showKOT, String areaCode, String KOTNo 
 		   , String Reprint, String primaryPrinterName, String secondaryPrinterName, String costCenterName,String printYN 
-		   , String POSCode, String POSName,String NCKOT,String deviceName,String macAddress,String labelOnKOT,String fireCommunication,int noOfCopies) 
+		   , String POSCode, String POSName,String NCKOT,String deviceName,String macAddress,String labelOnKOT,String fireCommunication,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter,String printOnBothPrinter) 
    {      
 	   String result="";
 	   clsDatabaseConnection objDb=new clsDatabaseConnection();
@@ -898,7 +898,7 @@ public class clsAPOSKOT {
                }
             	
         	   
-        	   result=obTextFileGenerator.funPrintKOTTextFile(primaryPrinterName,secondaryPrinterName, "kot",multipleKOTPrint, printKOTYN, multipleBillPrint,"KOT",noOfCopies);
+        	   result=obTextFileGenerator.funPrintKOTTextFile(primaryPrinterName,secondaryPrinterName, "kot",multipleKOTPrint, printKOTYN, multipleBillPrint,"KOT",noOfCopiesPrimaryPrinter,noOfCopiesSecPrinter,printOnBothPrinter,Reprint);
            }
            
        } 
@@ -1165,7 +1165,7 @@ public class clsAPOSKOT {
 		       	   rs = st.executeQuery(sql);
 		       	   if (rs.next())
 		       	   {
-		       		result=obTextFileGenerator.funPrintKOTTextFile(rs.getString(1), rs.getString(1), "kot", "", printKOTYN, multipleBillPrint,"MasterKOT",0);
+		       		result=obTextFileGenerator.funPrintKOTTextFile(rs.getString(1), rs.getString(1), "kot", "", printKOTYN, multipleBillPrint,"MasterKOT",0,0,"N",Reprint);
 		       	   }
 		       	   rs.close();
 	              
@@ -1405,7 +1405,7 @@ public class clsAPOSKOT {
 			        
 			           if(printYN.equals("Y"))
 			           {
-			        	   result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter,"", "kot",multipleKOTPrint, printKOTYN, multipleBillPrint,"ConsolidateKOT",0);
+			        	   result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter,"", "kot",multipleKOTPrint, printKOTYN, multipleBillPrint,"ConsolidateKOT",0,0,"N",Reprint);
 			           }
 				   }
 			       
@@ -1684,7 +1684,7 @@ public class clsAPOSKOT {
 			           
 			           if(printYN.equals("Y"))
 			           {
-			        	  result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "",printKOTYN, "N","ConsolidateKOT",0);
+			        	  result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "",printKOTYN, "N","ConsolidateKOT",0,0,"N",Reprint);
 			        	   
 			           }
 			    	   

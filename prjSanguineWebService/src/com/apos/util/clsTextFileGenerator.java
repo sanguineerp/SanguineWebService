@@ -1,10 +1,18 @@
 package com.apos.util;
 
+
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -54,6 +62,7 @@ public class clsTextFileGenerator
 	@Autowired
 	clsTextFormat12ForBill objTextFormat12ForBill;
     
+	
 	@Autowired
 	clsTextFormatForeignForBill objTextFormatForeignForBill;
 	public void funCreateTempFolder()
@@ -218,7 +227,7 @@ public class clsTextFileGenerator
     
     
     
-    public String funPrintKOTTextFile(String primaryPrinterName, String secPrinterName, String type, String multipleKOTPrint, String printKOTYN, String multiBillPrint,String KOTType,int noOfCopies)
+    public String funPrintKOTTextFile(String primaryPrinterName, String secPrinterName, String type, String multipleKOTPrint, String printKOTYN, String multiBillPrint,String KOTType,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter,String printOnBothPrinter,String reprint)
     {
     	String result="";
 	    
@@ -228,26 +237,58 @@ public class clsTextFileGenerator
 		    {
 				if (printKOTYN.equals("Y"))
 				{
-				    result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
-				    if (multipleKOTPrint.equals("Y"))
+					result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter, noOfCopiesSecPrinter,reprint);
+					//int pendingcopiesOfPrimaryPrinter = 0,pendingcopiesOfSecondaryPrinter=0;
+					/*if(printOnBothPrinter.equalsIgnoreCase("Y")){
+						
+					}else{
+						for(int i=0;i<noOfCopiesPrimaryPrinter-1;i++)
+					    {	
+					    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter-1, 0,"Reprint");
+					    }
+					}*/
+					
+					/*if(noOfCopiesPrimaryPrinter>1){
+						
+						pendingcopiesOfPrimaryPrinter=1;
+					    if(noOfCopiesSecPrinter>0)
+					    { 
+					    	pendingcopiesOfSecondaryPrinter=1;    
+					    result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, copiesOfPrimaryPrinter, copiesOfSecondaryPrinter,reprint);
+					    }
+					    else
+					    {
+					    	pendingcopiesOfSecondaryPrinter=0;    
+					      result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, copiesOfPrimaryPrinter, copiesOfSecondaryPrinter,reprint);    
+
+					    }    
+							
+					}else{
+						  result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, copiesOfPrimaryPrinter, copiesOfSecondaryPrinter,reprint);
+					}*/
+				    
+				    /*if (multipleKOTPrint.equals("Y"))
 				    {
-				    	if(noOfCopies>1){
-				    		for(int i=0;i<noOfCopies-1;i++){
-				    			result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
-				    		}
-				    	}else{
-				    		result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType);
-				    	}
-				      
-				    }
+				    	
+//				    	if (!isReprint)
+//					    {
+//						funAppendDuplicate(fileName);
+//					    }
+					    for(int i=0;i<noOfCopiesPrimaryPrinter-1;i++)
+					    {	
+					    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter-1, 0,"Reprint");
+					    }
+					    for(int i=0;i<noOfCopiesSecPrinter-1;i++)
+					    {	
+					    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, 0, noOfCopiesSecPrinter-1,"Reprint");
+					    }
+				    }*/
 				}
 				else
 				{
 					result="Kot Printing Not Available!!!";
 				}
 		    }
-		    
-		    
 		}
 		catch (Exception e)
 		{
@@ -257,12 +298,59 @@ public class clsTextFileGenerator
     }
     
     
+    /*if (type.equalsIgnoreCase("kot"))
+		{
+		    //System.out.println("G Print YN="+clsGlobalVarClass.gPrintKOTYN);
+		    if (clsGlobalVarClass.gPrintKOTYN)
+		    {
+			int copiesOfPrimaryPrinter = 0,copiesOfSecondaryPrinter=0;
+			String sql = "select a.intPrimaryPrinterNoOfCopies,a.intSecondaryPrinterNoOfCopies from tblcostcentermaster a where a.strCostCenterCode='"+costCenterCode+"'";
+			ResultSet rsNoOfCopies = clsGlobalVarClass.dbMysql.executeResultSet(sql);
+			if(rsNoOfCopies.next())
+			{
+			
+			if(rsNoOfCopies.getInt(1)>0)
+			{  
+			    copiesOfPrimaryPrinter=1;
+			    if(rsNoOfCopies.getInt(2)>0)
+			    { 
+			    copiesOfSecondaryPrinter=1;    
+			    funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,copiesOfPrimaryPrinter,copiesOfSecondaryPrinter);
+			    }
+			    else
+			    {
+			      copiesOfSecondaryPrinter=0;    
+			      funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,copiesOfPrimaryPrinter,copiesOfSecondaryPrinter);    
+
+			    }    
+			}
+			
+			if (clsGlobalVarClass.gMultipleKOTPrint)
+			{
+			    if (!isReprint)
+			    {
+				funAppendDuplicate(fileName);
+			    }
+			    for(int i=0;i<rsNoOfCopies.getInt(1)-1;i++)
+			    {	
+			    funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,rsNoOfCopies.getInt(1)-1,0);
+			    }
+			    for(int i=0;i<rsNoOfCopies.getInt(2)-1;i++)
+			    {	
+			    funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,0,rsNoOfCopies.getInt(2)-1);
+			    }
+			    
+			    
+			    }			    
+			}
+			   
+		    }
+		}*/
     
     
     
     
-    
-    private String funPrintKOTWindows(String primaryPrinterName, String secPrinterName,String KOTType)
+    private String funPrintKOTWindows(String primaryPrinterName, String secPrinterName,String KOTType,String printOnBothPrinter,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter,String reprint)
     {
     	String result="";
     	String filePath = System.getProperty("user.dir");
@@ -324,17 +412,59 @@ public class clsTextFileGenerator
 				FileInputStream fis = new FileInputStream(filename);
 				DocAttributeSet das = new HashDocAttributeSet();
 				Doc doc = new SimpleDoc(fis, flavor, das);
-				job.print(doc, pras);
+				
+				job.print(doc, pras);// 1 st print normal on primary
+				
+				if(printOnBothPrinter.equalsIgnoreCase("Y")){
+					if(noOfCopiesSecPrinter>0){
+						result=funPrintOnSecPrinter(secPrinterName, filename,result); //for printing single print
+						if(!reprint.equalsIgnoreCase("Reprint")){
+							reprint="Reprint";
+							funAppendDuplicate(filename);	
+						}
+						
+						for(int i=0;i<noOfCopiesSecPrinter-1;i++){
+							job = printService[printerIndex].createPrintJob();
+							fis = new FileInputStream(filename);
+							das = new HashDocAttributeSet();
+							doc = new SimpleDoc(fis, flavor, das);
+							result=funPrintOnSecPrinter(secPrinterName, filename,result); //for printing on both printer	
+						}
+							
+					}
+					 
+				}
+				if(noOfCopiesPrimaryPrinter>1){
+					if(!reprint.equalsIgnoreCase("Reprint")){
+						reprint="Reprint";
+						funAppendDuplicate(filename);
+					}
+					
+					for(int i=0;i<noOfCopiesPrimaryPrinter-1;i++){
+						job = printService[printerIndex].createPrintJob();
+						fis = new FileInputStream(filename);
+						das = new HashDocAttributeSet();
+						doc = new SimpleDoc(fis, flavor, das);
+						
+						job.print(doc, pras);	//All primary 
+					}	
+					
+				}
+				
 				System.out.println("Successfully Print on " + primaryPrinterName);
 				String printerInfo = "";
 				
 				 result="Primary Found";
-			
-				 result=funPrintOnSecPrinter(secPrinterName, filename,result); //for printing on both printer
+				
+				
 		    }
 		    else
 		    {
-		    	result=funPrintOnSecPrinter(secPrinterName, filename,result);
+		    	for(int j=0;j<noOfCopiesSecPrinter;j++){
+		    		//funAppendDuplicate(filename);
+			    	result=funPrintOnSecPrinter(secPrinterName, filename,result);	
+		    	}
+		    	
 		    }
 		    
 		}
@@ -1167,6 +1297,40 @@ public class clsTextFileGenerator
 	}
     }
 
+    
+    private void funAppendDuplicate(String fileName)
+    {
+	try
+	{
+	    File fileKOTPrint = new File(fileName);
+	    clsFileIOUtil objFileIOUtil=new clsFileIOUtil();
+	    String filePath = System.getProperty("user.dir");
+	    filePath += "/Temp/Temp_KOT2.txt";
+	    File fileKOTPrint2 = new File(filePath);
+	    BufferedWriter KotOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileKOTPrint2), "UTF8"));
+	    objFileIOUtil.funPrintBlankSpace("DUPLICATE", KotOut, 40);
+	    KotOut.write("[DUPLICATE]");
+	    KotOut.newLine();
+
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fileKOTPrint)));
+	    String line = null;
+	    while ((line = br.readLine()) != null)
+	    {
+		KotOut.write(line);
+		KotOut.newLine();
+	    }
+	    br.close();
+	    KotOut.close();
+
+	    String content = new String(Files.readAllBytes(Paths.get(filePath)));
+	    Files.write(Paths.get(fileName), content.getBytes(), StandardOpenOption.CREATE);
+
+	}
+	catch (Exception e)
+	{
+	    e.printStackTrace();
+	}
+    }
     
     
 }

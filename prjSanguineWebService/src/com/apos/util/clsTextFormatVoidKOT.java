@@ -159,7 +159,7 @@ public class clsTextFormatVoidKOT {
             KotOut.write("m");//windows
             KotOut.close();
             fstream.close();
-            objTextFileGenerator.funPrintKOTTextFile(primaryPrinterName, secondaryPrinterName, "kot", "N", "Y", "N","KOT",0);
+            objTextFileGenerator.funPrintKOTTextFile(primaryPrinterName, secondaryPrinterName, "kot", "N", "Y", "N","KOT",0,0,"N","N");
         }
         catch (Exception e)
         {
