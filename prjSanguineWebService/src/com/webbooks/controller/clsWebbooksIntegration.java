@@ -1413,6 +1413,50 @@ public class clsWebbooksIntegration
 		    }
 	 
 	 
-	 
+	 	@SuppressWarnings("finally")
+		@GET 
+		@Path("/funGetDebtorMaster")
+		@Produces(MediaType.APPLICATION_JSON)
+		public String funGetDebtorMaster(@QueryParam("ClientCode") String clientCode)
+		{
+			clsDatabaseConnection objDb=new clsDatabaseConnection();
+	        Connection webbookCon=null;
+	        Statement st=null;
+	        JSONObject jObj=new JSONObject();
+	        String response="";
+
+	        
+	        try {
+		        	webbookCon=objDb.funOpenWebbooksCon("mysql","master");
+		            st = webbookCon.createStatement();
+		            String sql="";
+		            
+		            sql=" select strDebtorCode,strDebtorFullName from tblsundarydebtormaster "  
+			            + " where strClientCode='" + clientCode + "' ";
+			           
+		            JSONArray arrObj=new JSONArray();
+		            ResultSet rsGLDebt=st.executeQuery(sql);
+	           
+		            while (rsGLDebt.next()) 
+		            {
+		            	JSONObject obj=new JSONObject();
+		            	obj.put("DebtorCode",rsGLDebt.getString(1));
+		            	obj.put("DebtorName",rsGLDebt.getString(2));
+		            	arrObj.put(obj);            	 
+		            }
+	           
+		            rsGLDebt.close();
+			        jObj.put("DebtorDtl", arrObj);
+			        st.close();
+			        webbookCon.close();
+		            
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        }
+		        finally
+		        {
+		        	return jObj.toString();
+		        }
+		    }
 	
 	}
