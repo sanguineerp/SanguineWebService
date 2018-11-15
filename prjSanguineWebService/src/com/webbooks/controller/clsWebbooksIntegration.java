@@ -163,7 +163,250 @@ public class clsWebbooksIntegration
 		}
 		return Response.status(201).entity(response).build();
 	}
+
+	@SuppressWarnings("finally")
+    private String funInsertRevenueData(JSONObject objBillData)
+    {
+	int res = 0;
+	clsDatabaseConnection objDb = new clsDatabaseConnection();
+	Connection webbookCon = null;
+	Statement st = null;
+	String sql = "";
+	String billDate = "";
+	String sql_insertRV = "";
+	String controlAccCode = "";
+	String billableAccCode = "";
+	String billableAccName = "";
+	String suspenceAccCode = "";
+	String debtSusoAcctCode = "";
+	String sancCode = "";
+	String ECSBankcode = "";
+	String currentDate = "";
+	String clientCode = "";
+	String POSCode = "";
+	String POSName = "";
+	String JVNo = "";
+	String userCode = "";
+	String propertyCode = "";
+	boolean flgData = false;
+	HashMap<String, clsJVDtlModel> hmJVDtlata = new HashMap<>();
+	try
+	{
+	    webbookCon = objDb.funOpenWebbooksCon("mysql", "master");
+	    st = webbookCon.createStatement();
+	    Date objDate = new Date();
+	    int day = objDate.getDate();
+	    int month = objDate.getMonth() + 1;
+	    int year = objDate.getYear() + 1900;
+	    currentDate = year + "-" + month + "-" + day;
+	    
+	    String sql_Code = " select strControlCode,strBillableCode,strSuspenceCode,strDbtrSuspAcctCode,strSancCode,strECSBankcode" + ",strClientCode,strBillableName from tblpropertysetup  ";
+	    ResultSet rs = st.executeQuery(sql_Code);
+	    while (rs.next())
+	    {
+		controlAccCode = rs.getString(1);
+		billableAccCode = rs.getString(2);
+		suspenceAccCode = rs.getString(3);
+		debtSusoAcctCode = rs.getString(4);
+		sancCode = rs.getString(5);
+		ECSBankcode = rs.getString(6);
+		clientCode = rs.getString(7);
+		billableAccName = rs.getString(8);
+	    }
+	    rs.close();
+	    
+	    Map<String, clsJVDtlModel> hmJVDtlModel = new HashMap<String, clsJVDtlModel>();
+	    
+	    clientCode = objBillData.getString("ClientCode");
+	    POSCode = objBillData.getString("POSCode");
+//	    POSName = objBillData.getString("POSName");
+	    billDate = objBillData.getString("POSDate");
+	    userCode = objBillData.getString("User");
+	    String billMonth=billDate.split("-")[1];
+	    
+	    JSONArray mJsonSubGroupArray = (JSONArray) objBillData.get("SubGroupwise");
+	    // System.out.println(mJsonSubGroupArray);
+	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Cr", mJsonSubGroupArray);
+	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+	    {
+	    	System.out.println("Key=="+entry.getKey()+"--"+entry.getValue().getDblCrAmt());
+		hmJVDtlModel.put(entry.getKey(), entry.getValue());
+	    }
+	    
+	    hmJVDtlata.clear();
+	    JSONArray mJsonTaxArray = (JSONArray) objBillData.get("Taxwise");
+	    // System.out.println(mJsonTaxArray);
+	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Cr", mJsonTaxArray);
+	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+	    {
+	    	System.out.println("Key=="+entry.getKey()+"--"+entry.getValue().getDblCrAmt());
+		hmJVDtlModel.put(entry.getKey(), entry.getValue());
+	    }
+	    
+	    hmJVDtlata.clear();
+	    JSONArray mJsonDiscountArray = (JSONArray) objBillData.get("Discountwise");
+	    // System.out.println(mJsonDiscountArray);
+	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Dr", mJsonDiscountArray);
+	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+	    {
+		hmJVDtlModel.put(entry.getKey(), entry.getValue());
+	    }
+	    
+	    hmJVDtlata.clear();
+	    double totalJVAmt = 0.0;
+	    JSONArray mJsonCashwiseArray = (JSONArray) objBillData.get("MemberSettlewise");
+	    System.out.println(mJsonCashwiseArray);
+	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Dr", mJsonCashwiseArray);
+	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+	    {
+		hmJVDtlModel.put(entry.getKey(), entry.getValue());
+		totalJVAmt += entry.getValue().getDblDrAmt();
+	    }
+	    
+	    hmJVDtlata.clear();
+//	    JSONArray mJsonMemberArray = (JSONArray) objBillData.get("CreditSettlewise");
+//	    // System.out.println(mJsonMemberArray);
+//	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Dr", mJsonMemberArray);
+//	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+//	    {
+//		clsJVDtlModel objJVDtlModel = entry.getValue();
+//		objJVDtlModel.setStrAccountCode(objJVDtlModel.getStrAccountCode());
+//		objJVDtlModel.setStrAccountName(objJVDtlModel.getStrAccountName());
+//		hmJVDtlModel.put(entry.getKey(), objJVDtlModel);
+//		totalJVAmt += entry.getValue().getDblDrAmt();
+//	    }
+//	    
+//	    hmJVDtlata.clear();
+	    JSONArray mJsonRoundOffArray = (JSONArray) objBillData.get("RoundOffDtl");
+	    // System.out.println(mJsonRoundOffArray);
+	  //  hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Cr", mJsonRoundOffArray);
+	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlDataForRounOff("Cr", mJsonRoundOffArray);
+	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+	    {
+	    	System.out.println("Key=="+entry.getKey()+"--"+entry.getValue().getDblCrAmt());
+		hmJVDtlModel.put(entry.getKey(), entry.getValue());
+	    }
+	    
+	    propertyCode = "01";
+	    
+	    String vouchNoToDel = "";
+	    sql = "select strVouchNo from tbljvhd where strMasterPOS='" + POSCode + "' and date(dteVouchDate)='" + billDate + "' ";
+	    rs = st.executeQuery(sql);
+	    if (rs.next())
+	    {
+		vouchNoToDel = rs.getString(1);
+	    }
+	    rs.close();
+	    
+	    sql = " delete from tbljvhd where strVouchNo='" + vouchNoToDel + "' and strClientCode='"+clientCode+"' ";
+	    st.execute(sql);
+	    
+	    sql = " delete from tbljvdtl where strVouchNo='" + vouchNoToDel + "' and strClientCode='"+clientCode+"'  ";
+	    st.execute(sql);
+	    
+	    sql = " delete from tbljvdebtordtl where strVouchNo='" + vouchNoToDel + "' and strClientCode='"+clientCode+"' ";
+	    st.execute(sql);
+	    
+	    String daydateonly=billDate.split("-")[2];
+	    if(daydateonly.length()==1)
+	    {
+	    	daydateonly = "0"+billDate.split("-")[2];
+	    }
+	   
+	    
+	    sql = "";
+	    String narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0] +" "+POSName;
+	    JVNo = funGenerateDocumentCode(currentDate, clientCode, propertyCode);
+	    String sql_insertJVHd = " insert into tblJVHd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";
+	    sql_insertJVHd += " ('" + JVNo + "','" + narration + "','" + sancCode + "','None','" + billDate + "','"+billMonth+"','" + totalJVAmt + "' " + ",'R','A','AR','" + POSCode + "','"+userCode+"','"+userCode+"','" + currentDate + "','" + currentDate + "','" + clientCode + "','" + propertyCode + "','')";
+	    res = st.executeUpdate(sql_insertJVHd);
+	    
+	    sql_insertRV = "insert into tblJVDtl (strVouchNo,strAccountCode,strAccountName,strCrDr,dblDrAmt,dblCrAmt,strNarration," + "strOneLine,strClientCode,strPropertyCode) values ";
+	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlModel.entrySet())
+	    {
+			clsJVDtlModel obj = entry.getValue();
+			System.out.println("KEY== "+entry.getKey());
+			sql += ",('" + JVNo + "','" + obj.getStrAccountCode() + "','" + obj.getStrAccountName() + "','" + obj.getStrCrDr() + "','" + obj.getDblDrAmt() + "'" + ",'" + obj.getDblCrAmt() + "','','','" + clientCode + "','" + propertyCode + "')";
+			flgData = true;
+			
+			if(obj.getDblCrAmt()==111526.62)
+			{
+				System.out.println("KEY== "+entry.getValue().getDblCrAmt());
+			}
+			
+	    }
+	    if (flgData)
+	    {
+			sql = sql.substring(1, sql.length());
+			sql_insertRV += " " + sql;
+			StringBuilder sqlJV = new StringBuilder(sql_insertRV);
+			res = st.executeUpdate(sqlJV.toString());
+	    }
+	    else
+	    {
+		res = 1;
+	    }
+	    
+	    flgData = false;
+	    
+	    JSONArray mJsonMemberCLDataArray = (JSONArray) objBillData.get("MemberCLData");
+	    String sql_insertDebtorDtl = "insert into tblJVDebtorDtl (strVouchNo,strDebtorCode,strDebtorName,strCrDr,dblAmt  " + ",strBillNo,strInvoiceNo,strNarration,strGuest,strAccountCode,strCreditNo,dteBillDate,dteInvoiceDate,dteDueDate " + ",strClientCode,strPropertyCode,StrPosCode,StrPosName,strRegistrationNo) values ";
+	    sql = "";
+	    JSONObject mJsonObject = new JSONObject();
+	    for (int i = 0; i < mJsonMemberCLDataArray.length(); i++)
+	    {
+		mJsonObject = (JSONObject) mJsonMemberCLDataArray.get(i);
+		String debtorCode = mJsonObject.get("DebtorCode").toString();
+		String debtorName = mJsonObject.get("DebtorName").toString();
+		String billNo = mJsonObject.get("BillNo").toString();
+		billDate = mJsonObject.get("BillDate").toString();
+		double billAmt = Double.parseDouble(mJsonObject.get("BillAmt").toString());
+		clientCode = mJsonObject.get("ClientCode").toString();
+		String cmsPOSCode = mJsonObject.get("CMSPOSCode").toString();
+		POSCode = mJsonObject.get("POSCode").toString();
+		String AccountCode = mJsonObject.get("AccountCode").toString();
+		String posName = mJsonObject.get("POSName").toString();
+		sql += ",('" + JVNo + "','" + debtorCode + "','" + debtorName + "','Dr','" + billAmt + "','" + billNo + "','','' " + ",'','" + AccountCode + "','','" + billDate + "','','" + billDate + "','" + clientCode + "','" + propertyCode + "'" + ",'" + POSCode + "','" + posName + "','')";
+		flgData = true;
+	    }
+	    
+	    if (flgData)
+	    {
+		sql = sql.substring(1, sql.length());
+		sql_insertDebtorDtl += " " + sql;
+		StringBuilder sqlJVDebtorDtl = new StringBuilder(sql_insertDebtorDtl);
+		res = st.executeUpdate(sqlJVDebtorDtl.toString());
+		return JVNo;
+	    }
+	    return JVNo;
+	}
+	catch (Exception e)
+	{
+		JVNo = "NA";
+	    e.printStackTrace();
+	    return JVNo;
+	}
+	finally
+	{
+	    try
+	    {
+		st.close();
+		webbookCon.close();
+	//	 return  JVNo ;
+	    }
+	    catch (SQLException e)
+	    {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		// return  JVNo ;
+	    }
+	 
+	}
+	 
+    }
 	
+	
+	/*	
 	@SuppressWarnings("finally")
     private String funInsertRevenueData(JSONObject objBillData)
     {
@@ -405,6 +648,7 @@ public class clsWebbooksIntegration
 	 
     }
 	
+*/	
 	private Map funGetJVDtlDataForRounOff(String CrDr,JSONArray mJsonJVDataArray)
 	{
 		Map hmSubgroupData=new HashMap<String, clsJVDtlModel>();
