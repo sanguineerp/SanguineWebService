@@ -1153,7 +1153,7 @@ public class clsSynchPOSDataWithMMSAuto {
     	    
     	    String itemCode =  (String) objCLData.get("itemCode");
     	    String itemName =  (String) objCLData.get("itemName");
-    	    
+    	    String wsProductCode =  (String) objCLData.get("wsProductCode");
     	    
     	    
     	    String clientCode =  (String) objCLData.get("clientCode");
@@ -1161,7 +1161,7 @@ public class clsSynchPOSDataWithMMSAuto {
     	    String createDate =  (String) objCLData.get("createDate");
     	    JSONObject mJsonObject = new JSONObject();
     	  
-    	    String sqlProd = " select strProdCode,strProdName from tblproductmaster  where strPartNo='"+itemCode+"' "
+    	    String sqlProd = " select strProdCode,strProdName from tblproductmaster  where strProdCode='"+wsProductCode+"' "
     	    		+ " and  strClientCode='"+clientCode+"' ";
     	    ResultSet rsProdCreated = st.executeQuery(sqlProd);
     	    if(rsProdCreated.next())
@@ -1169,7 +1169,7 @@ public class clsSynchPOSDataWithMMSAuto {
     	    	String prodCode=rsProdCreated.getString(1);
     	    	String prodName=rsProdCreated.getString(2);
     	    	
-    	    	String sqlUpdate = " update tblproductmaster  set strProdName='"+prodName+"',strUserModified='"+userCode+"',dtLastModified='"+createDate+"' "
+    	    	String sqlUpdate = " update tblproductmaster  set strProdName='"+itemName+"',strUserModified='"+userCode+"',dtLastModified='"+createDate+"' ,strPartNo='"+itemCode+"' "
     	    			+ "  where strProdCode='"+prodCode+"' and strClientCode='"+clientCode+"' ";
     	    	st.executeUpdate(sqlUpdate);
     	    	res=prodCode;
