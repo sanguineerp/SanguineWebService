@@ -1350,6 +1350,8 @@ public class clsSynchPOSDataWithMMS
 	return funGetUserMasterDetails(clientCode);
     }
     
+    
+    
     @SuppressWarnings("finally")
     private String funGetUserMasterDetails(String clientCode)
     {
@@ -1403,6 +1405,63 @@ public class clsSynchPOSDataWithMMS
 	    return jObjSearchData.toString();
 	}
     }
+    
+    @GET
+    @Path("/funGetSubGroupMaster")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public String funGetProductSubGroupData(@QueryParam("ClientCode") String clientCode)
+    {
+	return funGetSubGroupDetails(clientCode);
+    }
+    
+    @SuppressWarnings("finally")
+    private String funGetSubGroupDetails(String clientCode)
+    {
+	JSONObject jObjSubGroup = new JSONObject();
+	//clsDatabaseConnection objDb = new clsDatabaseConnection();
+	Connection cmsCon = null;
+	Statement st = null;
+	
+	try
+	{
+	    cmsCon = clsDatabaseConnection.DBMMSCONNECTION;
+	    st = cmsCon.createStatement();
+	    String sql = " select a.strSGCode,a.strSGName from tblsubgroupmaster a where a.strClientCode='"+clientCode+"' ";
+	    JSONArray arrObjSubGroup = new JSONArray();
+	    ResultSet rsProduct = st.executeQuery(sql);
+	    while (rsProduct.next())
+	    {
+		JSONObject objProduct = new JSONObject();
+		objProduct.put("SubGroupCode", rsProduct.getString(1));
+		objProduct.put("SubGroupName", rsProduct.getString(2));
+		arrObjSubGroup.put(objProduct);
+	    }
+	    rsProduct.close();
+	    jObjSubGroup.put("SubGroupDtls", arrObjSubGroup);
+	}
+	catch (Exception e)
+	{
+	    new clsUtilityFunctions().funWriteErrorLog(e);
+	    e.printStackTrace();
+	}
+	finally
+	{
+	    try
+	    {
+		if (null != st)
+		{
+		    st.close();
+		}
+
+	    }
+	    catch (SQLException e)
+	    {
+		e.printStackTrace();
+	    }
+	    return jObjSubGroup.toString();
+	}
+    }
+    
     
     
 }
