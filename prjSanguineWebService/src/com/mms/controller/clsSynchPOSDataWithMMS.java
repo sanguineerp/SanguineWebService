@@ -1405,7 +1405,7 @@ public class clsSynchPOSDataWithMMS
 	    return jObjSearchData.toString();
 	}
     }
-    
+    //by manisha
     @GET
     @Path("/funGetSubGroupMaster")
     @Consumes(MediaType.APPLICATION_JSON)
