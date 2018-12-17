@@ -9344,7 +9344,10 @@ public class clsPostPOSBillData
 					+ ",strEnableTableReservationForCustomer,strAutoShowPopItems,intShowPopItemsOfDays,strPostSalesCostOrLoc,strEffectOfSales  "// 195
 					+ ",strPOSWiseItemToMMSProductLinkUpYN,strEnableMasterDiscount,strEnableNFCInterface,strBenowIntegrationYN,strXEmail  "// 200
 					+ ",strMerchantCode,strAuthenticationKey,strSalt,strEnableLockTable,strHomeDeliveryAreaForDirectBiller  "// 205
-					+ ",strTakeAwayAreaForDirectBiller,strRoundOffBillFinalAmt,dblNoOfDecimalPlace ) "// 208
+					+ ",strTakeAwayAreaForDirectBiller,strRoundOffBillFinalAmt,dblNoOfDecimalPlace,strSendDBBackupOnClientMail,strPrintOrderNoOnBillYN,strPrintDeviceAndUserDtlOnKOTYN "//211
+					+ ",strRemoveSCTaxCode,strAutoAddKOTToBill,strAreaWiseCostCenterKOTPrintingYN,strWERAOnlineOrderIntegration,strWERAMerchantOutletId,strWERAAuthenticationAPIKey"//217
+					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
+					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS) "// 229
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9432,7 +9435,7 @@ public class clsPostPOSBillData
 					String CRMInterface = dataObject.get("strCRMInterface").toString().trim(); // 64
 					String getWebServiceURL = dataObject.get("strGetWebserviceURL").toString().trim(); // 65
 					String postWebServiceURL = dataObject.get("strPostWebserviceURL").toString().trim(); // 66
-					String outletUID = dataObject.get("strOutletUID").toString().trim(); // 67
+					String outletUID = dataObject.get("strOutletUID").toString().trim(); // 67 
 					String POSID = dataObject.get("strPOSID").toString().trim(); // 68
 					String stockInOption = dataObject.get("strStockInOption").toString().trim(); // 69
 					String customerSeries = dataObject.get("longCustSeries").toString().trim(); // 70
@@ -9580,7 +9583,28 @@ public class clsPostPOSBillData
 					String strTakeAwayAreaForDirectBiller = dataObject.get("strTakeAwayAreaForDirectBiller").toString().trim();// 206
 					String strRoundOffBillFinalAmt = dataObject.get("strRoundOffBillFinalAmt").toString().trim();// 207
 					String dblNoOfDecimalPlace = dataObject.get("dblNoOfDecimalPlace").toString().trim();// 208
-
+					String strSendDBBackupOnClientMail = dataObject.get("strSendDBBackupOnClientMail").toString().trim();// 209
+					String strPrintOrderNoOnBillYN = dataObject.get("strPrintOrderNoOnBillYN").toString().trim();// 210
+					String strPrintDeviceAndUserDtlOnKOTYN = dataObject.get("strPrintDeviceAndUserDtlOnKOTYN").toString().trim();// 211
+					String strRemoveSCTaxCode = dataObject.get("strRemoveSCTaxCode").toString().trim();// 212
+					String strAutoAddKOTToBill = dataObject.get("strAutoAddKOTToBill").toString().trim();// 213
+					String strAreaWiseCostCenterKOTPrintingYN = dataObject.get("strAreaWiseCostCenterKOTPrintingYN").toString().trim();// 214
+					String strWERAOnlineOrderIntegration = dataObject.get("strWERAOnlineOrderIntegration").toString().trim();// 215
+					String strWERAMerchantOutletId = dataObject.get("strWERAMerchantOutletId").toString().trim();// 216
+					String strWERAAuthenticationAPIKey = dataObject.get("strWERAAuthenticationAPIKey").toString().trim();// 217
+					String strFireCommunication = dataObject.get("strFireCommunication").toString().trim();// 218
+					String dblUSDConverionRate = dataObject.get("dblUSDConverionRate").toString().trim();// 219
+					String strDBBackupMailReceiver = dataObject.get("strDBBackupMailReceiver").toString().trim();// 220
+					String strPrintMoveTableMoveKOTYN = dataObject.get("strPrintMoveTableMoveKOTYN").toString().trim();// 221
+					String strPrintQtyTotal = dataObject.get("strPrintQtyTotal").toString().trim();// 222
+					String strShowReportsInCurrency = dataObject.get("strShowReportsInCurrency").toString().trim();// 223
+					String strPOSToMMSPostingCurrency = dataObject.get("strPOSToMMSPostingCurrency").toString().trim();// 224
+					String strPOSToWebBooksPostingCurrency = dataObject.get("strPOSToWebBooksPostingCurrency").toString().trim();// 225
+					String strLockTableForWaiter = dataObject.get("strLockTableForWaiter").toString().trim();// 226
+					String strReprintOnSettleBill = dataObject.get("strReprintOnSettleBill").toString().trim();// 227
+					String strTableReservationSMS = dataObject.get("strTableReservationSMS").toString().trim();// 228
+					String strSendTableReservationSMS = dataObject.get("strSendTableReservationSMS").toString().trim();// 229
+					
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -9604,7 +9628,9 @@ public class clsPostPOSBillData
 							+ ",'" + strEnableTableReservationForCustomer + "','" + strAutoShowPopItems + "','" + intShowPopItemsOfDays + "','" + strPostSalesCostOrLoc + "','" + strEffectOfSales + "' " // 195
 							+ ",'" + strPOSWiseItemToMMSProductLinkUpYN + "','" + strEnableMasterDiscount + "','" + strEnableNFCInterface + "','" + strBenowIntegrationYN + "','" + strXEmail + "' " // 200
 							+ ",'" + strMerchantCode + "','" + strAuthenticationKey + "','" + strSalt + "','" + strEnableLockTable + "','" + strHomeDeliveryAreaForDirectBiller + "' " // 205
-							+ ",'" + strTakeAwayAreaForDirectBiller + "','" + strRoundOffBillFinalAmt + "','" + dblNoOfDecimalPlace + "' )"); // 208
+							+ ",'" + strTakeAwayAreaForDirectBiller + "','" + strRoundOffBillFinalAmt + "','" + dblNoOfDecimalPlace + "','" + strSendDBBackupOnClientMail + "','" + strPrintOrderNoOnBillYN + "','" + strPrintDeviceAndUserDtlOnKOTYN + "','" + strRemoveSCTaxCode + "','" + strAutoAddKOTToBill + "'" // 213
+							+ ",'" + strAreaWiseCostCenterKOTPrintingYN + "','" + strWERAOnlineOrderIntegration + "','" + strWERAMerchantOutletId + "','" + strWERAAuthenticationAPIKey + "','" + strFireCommunication + "'" + ",'" + dblUSDConverionRate + "','" + strDBBackupMailReceiver + "','" + strPrintMoveTableMoveKOTYN + "','" + strPrintQtyTotal + "','" + strShowReportsInCurrency + "'" 
+							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "') "); // 229
 					flgData = true;
 				}
 			}
@@ -9616,7 +9642,7 @@ public class clsPostPOSBillData
 					sbSqlDelete.setLength(0);
 					sbSqlDelete.append("delete from tblsetup where strPOSCode='All'");
 					st.execute(sbSqlDelete.toString());
-
+					System.out.println(sbSqlInsert.toString());
 					res = st.executeUpdate(sbSqlInsert.toString());
 				}
 				catch (Exception e)
