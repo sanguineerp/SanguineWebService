@@ -1154,6 +1154,7 @@ public class clsSynchPOSDataWithMMSAuto {
     	    String itemCode =  (String) objCLData.get("itemCode");
     	    String itemName =  (String) objCLData.get("itemName");
     	    String wsProductCode =  (String) objCLData.get("wsProductCode");
+    	    String wsSGCode =  (String) objCLData.get("wsSGCode");
     	    
     	    
     	    String clientCode =  (String) objCLData.get("clientCode");
@@ -1169,7 +1170,7 @@ public class clsSynchPOSDataWithMMSAuto {
     	    	String prodCode=rsProdCreated.getString(1);
     	    	String prodName=rsProdCreated.getString(2);
     	    	
-    	    	String sqlUpdate = " update tblproductmaster  set strProdName='"+itemName+"',strUserModified='"+userCode+"',dtLastModified='"+createDate+"' ,strPartNo='"+itemCode+"' "
+    	    	String sqlUpdate = " update tblproductmaster  set strProdName='"+itemName+"',strUserModified='"+userCode+"',dtLastModified='"+createDate+"' ,strPartNo='"+itemCode+"', strSGCode='"+wsSGCode+"' "
     	    			+ "  where strProdCode='"+prodCode+"' and strClientCode='"+clientCode+"' ";
     	    	st.executeUpdate(sqlUpdate);
     	    	res=prodCode;
@@ -1186,7 +1187,7 @@ public class clsSynchPOSDataWithMMSAuto {
 	    	    String productCode = "P" + String.format("%07d", lastNo);
 	    	    
 	    		String sqlInsertIntoProd = "insert INTO tblproductmaster  (intId,strProdCode,strPartNo,strProdName,strUOM,strSGCode,  strProdType,strLocCode,strProductImage,strUserCreated,strUserModified,dtCreatedDate,"
-	    									  + "dtLastModified,strClientCode)values ('"+lastNo+"','"+productCode+"','"+itemCode+"','"+itemName+"','NOS','SG000001','Produced','','','"+userCode+"','"+userCode+"','"+createDate+"','"+createDate+"','"+clientCode+"') ";
+	    									  + "dtLastModified,strClientCode)values ('"+lastNo+"','"+productCode+"','"+itemCode+"','"+itemName+"','NOS','"+wsSGCode+"','Produced','','','"+userCode+"','"+userCode+"','"+createDate+"','"+createDate+"','"+clientCode+"') ";
 	    		st.executeUpdate(sqlInsertIntoProd);
 	    		res=productCode;
     		}
