@@ -1481,7 +1481,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         Connection cmsCon=null;
         Statement st=null,stArea=null,stSetup=null;
         double subTotalForTax=0,itemTotal=0,modItemTotal=0;
-        String operationTypeForTax="Dine In",promoItemWithAmtAndQty="",areaWisePromotions="";
+        String operationTypeForTax="Dine In",promoItemWithAmtAndQty="",areaWisePromotions="",strAreaWisePricing="N";
         String areaCode="",areaCodeForPromo="";
         List<clsDirectBillerItemDtl> arrDirectBillerListItemDtls=new ArrayList<clsDirectBillerItemDtl>();
         List <clsPromotionItems> arrListPromoItemDtl=new ArrayList<clsPromotionItems>();
@@ -1507,18 +1507,31 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             }
             rsAreaCode.close();
             
+            String sqlSetup="select strDirectAreaCode,strAreaWisePromotions,strAreaWisePricing "
+  				   + " from tblsetup where (strPOSCode='"+POSCode+"' or strPOSCode='All' ) ";
+  				   
+			System.out.println(sql);
+		    ResultSet rsSetupValues=stSetup.executeQuery(sqlSetup);
+		    if(rsSetupValues.next())
+	        {
+	    	   areaWisePromotions=rsSetupValues.getString(2);
+	    	   strAreaWisePricing=rsSetupValues.getString(3);
+	        }
+		    rsSetupValues.close(); 
+            
             sql = " select a.strTableNo,a.strWaiterNo,LEFT(a.strItemCode,7),a.strItemName,sum(a.dblItemQuantity),  "
                 	+ " sum(a.dblAmount),a.dblRate,a.strKOTNo,a.strPOSCode,a.strCounterCode,b.strAreaCode,a.strCardNo, "
                 	+ " a.strHomeDelivery,a.strTakeAwayYesNo,a.strCustomerCode,a.tmeOrderProcessing,a.tmeOrderPickup,a.intPaxNo  "
                 	+ " from tblitemrtemp a,tblmenuitempricingdtl b,tblitemmaster c "
                 	+ " where a.strItemCode=b.strItemCode "
                 	+ " and a.strItemCode=c.strItemCode and a.strPOSCode=b.strPosCode "
-                	+ " and (b.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' ) "
-                    + " OR b.strAreaCode ='"+AreaCodeForAll+"' ) ";
+                	+ " and (b.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' ) ";
+                	if(strAreaWisePricing.equalsIgnoreCase("N")){
+                		sql += " OR b.strAreaCode ='"+AreaCodeForAll+"' ";
+                	}
+                    
+                	sql += ")";
             
-            
-                  	
-                System.out.println("sql="+sql);
                 if(!POSCode.equals("All"))
                 {
                     sql+= " and a.strPOSCode='" + POSCode + "'";
@@ -1530,30 +1543,15 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 sql+=" and b.strHourlyPricing='No' ";
                 sql+= "group by a.strItemCode "
                 	+ "order by a.strSerialNo,a.strItemName  ";
-            System.out.println("sql="+sql);
-            
-            String sqlSetup="select strDirectAreaCode,strAreaWisePromotions "
- 				   + " from tblsetup where (strPOSCode='"+POSCode+"' or strPOSCode='All' ) ";
- 				   
- 				System.out.println(sql);
- 			    ResultSet rsSetupValues=stSetup.executeQuery(sqlSetup);
- 			    if(rsSetupValues.next())
- 			       {
- 			    	   areaWisePromotions=rsSetupValues.getString(2);
- 			       }
- 			    rsSetupValues.close(); 
- 			    
- 			   String sqlAreaCode = "select strAreaCode from tbltablemaster where strTableNo='" + tableNo + "'";
-               ResultSet rsArea= stArea.executeQuery(sqlAreaCode);
-               if (rsArea.next())
-               {
-            	   areaCodeForPromo = rsArea.getString(1);
-               }
-               rsArea.close();    
- 			    
- 				
-            
-            
+           System.out.println("sql="+sql);
+           String sqlAreaCode = "select strAreaCode from tbltablemaster where strTableNo='" + tableNo + "'";
+           ResultSet rsArea= stArea.executeQuery(sqlAreaCode);
+           if (rsArea.next())
+           {
+        	   areaCodeForPromo = rsArea.getString(1);
+           }
+           rsArea.close();    
+ 			
             List<clsItemDtlForTax> arrListItemDtls=new ArrayList<clsItemDtlForTax>();
             clsItemDtlForTax objItemDtl=null;
             JSONArray arrObj=new JSONArray();
@@ -5464,7 +5462,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        	ResultSet rs=st.executeQuery("select strPOSName from tblposmaster where strPOSCode='"+POSCode+"'");
 	        	if(rs.next())
 	        	{
-	        		funGenerateTextFileForKOT(POSCode, rs.getString(1), tableNo, KOTNo, "", "", "Dina", "Y",deviceName,"","");
+	        		funGenerateTextFileForKOT(POSCode, rs.getString(1), tableNo, KOTNo, "", "", "Dina", "Y",deviceName,"","",""); //strAreaWisePricing
 	        	}
 	        	rs.close();
 		        st.close();
@@ -5740,14 +5738,15 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             System.out.println(insertQuery);
             exe=st.executeUpdate(insertQuery);
             System.out.println("Exe= "+exe);
-            sql="select strFireCommunication from tblsetup where strClientCode='"+mJsonObject.get("strClientCode").toString()+"' ";
-        	String strFireComm="N";
+            sql="select strFireCommunication,strAreaWisePricing from tblsetup where strClientCode='"+mJsonObject.get("strClientCode").toString()+"' ";
+        	String strFireComm="N",strAreaWisePricing="N";
         	ResultSet rsFire=st.executeQuery(sql);
 	    	if(rsFire.next())
 	    	{
 	    		strFireComm=rsFire.getString(1);
+	    		strAreaWisePricing=rsFire.getString(2);
 	    	}
-            
+	    	rsFire.close();
             if(flgNCKOT)
             {
 	            StringBuilder sb1 = new StringBuilder(insertQuery1);
@@ -5757,7 +5756,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            st2.executeUpdate(insertQuery1);
 	            sql = "update tbltablemaster set strStatus='Normal',intPaxNo='0' where strTableNo='"+tableNo+"'";
 	            st3.executeUpdate(sql);
-	            printingResult=funGenerateTextFileForKOT(posCode, posName, tableNo, kotNO, "", "", "Dina", "Y",deviceName,macAddress,strFireComm);
+	            printingResult=funGenerateTextFileForKOT(posCode, posName, tableNo, kotNO, "", "", "Dina", "Y",deviceName,macAddress,strFireComm,strAreaWisePricing);
             }
             else{
             	if(exe>0)
@@ -5768,7 +5767,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 	
                 	
 			    	if(strFireComm.equals("N")){
-			    		printingResult=funGenerateTextFileForKOT(posCode, posName, tableNo, kotNO, "", "", "Dina", "Y",deviceName,macAddress,strFireComm);	
+			    		printingResult=funGenerateTextFileForKOT(posCode, posName, tableNo, kotNO, "", "", "Dina", "Y",deviceName,macAddress,strFireComm,strAreaWisePricing);	
 			    	}
                 }
             }
@@ -10133,7 +10132,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	    * @param type
 	    */
 	   private String funGenerateTextFileForKOT(String POSCode, String POSName, String tableNo, String KOTNo, String billNo, String reprint
-			   , String type, String printYN,String deviceName,String macAddress,String fireCommunication) 
+			   , String type, String printYN,String deviceName,String macAddress,String fireCommunication,String strAreaWisePricing) 
 	   {
            String result="";
 		   clsDatabaseConnection objDb=new clsDatabaseConnection();
@@ -10169,8 +10168,12 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		                   		+ " left outer join tblprintersetup d on c.strCostCenterCode=d.strCostCenterCode "
 		                   		+ " LEFT OUTER JOIN tblcostcentermaster e ON c.strCostCenterCode=e.strCostCenterCode "
 		                   		+ " WHERE a.strKOTNo='"+KOTNo+"' AND a.strTableNo='"+tableNo+"' AND (c.strPOSCode='"+POSCode+"' OR c.strPOSCode='All') "
-		                   		+ " AND (c.strAreaCode IN ( SELECT strAreaCode FROM tbltablemaster WHERE strTableNo='"+tableNo+"') OR c.strAreaCode ='"+AreaCodeForAll+"') "
-		                   		+ " group by d.strCostCenterCode ";
+		                   		+ " AND (c.strAreaCode IN ( SELECT strAreaCode FROM tbltablemaster WHERE strTableNo='"+tableNo+"') ";
+	                   			if(strAreaWisePricing.equalsIgnoreCase("N")){
+	                   				sql+= " OR c.strAreaCode ='"+AreaCodeForAll+"' ";
+	                   			}
+		                   		
+	                   			sql+= ") group by d.strCostCenterCode ";
 		                   
 		                   sql+=filter;
 		                   System.out.println(sql);
@@ -10193,13 +10196,13 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		   			    					objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
 				   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, reprint, 
 				   			    					"Not", rsPrint.getString(4), rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
-				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11),deviceName, macAddress);
 		   			    					for(int k=0;k<noOfCopiesSecPrinter-1;k++){
 		   			    						// remaining reprint on secondary
 		   			    						objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
 					   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "Reprint", 
 					   			    					"Not", rsPrint.getString(4), rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
-					   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+					   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11),deviceName, macAddress);
 		   			    					}
 		   			    				}
 		   			    			}
@@ -10208,14 +10211,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	   			    				objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
 		   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, reprint, 
 		   			    					rsPrint.getString(3), "Not", rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
-		   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+		   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11),deviceName, macAddress);
 	   			    				
 		   			    				for(int k=0;k<noOfCopiesPrimaryPrinter-1;k++){
 	   			    						// remaining reprint on Primary
 	   			    						objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
 				   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "Reprint", 
 				   			    					rsPrint.getString(3), "Not", rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
-				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
+				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11),deviceName, macAddress);
 	   			    					}
 		   			    				
 		   			    			
@@ -17180,7 +17183,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
             String strPOSName=objFireKOTDtl.getString("strPOSName");
             String deviceName=objFireKOTDtl.getString("deviceName");
             String macAddress=objFireKOTDtl.getString("macAddress");
-            
+            String strAreaWisePricing=objFireKOTDtl.getString("strAreaWisePricing");
             JSONArray arrFireKOTItems=(JSONArray)objFireKOTDtl.get("fireItems");
             JSONObject obitemdtl=new JSONObject();
             Set<String> setOfKOTs = new HashSet<String>();
@@ -17205,7 +17208,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
     		while (it.hasNext())
     		{
     		    String KOTNO = it.next();
-     		    String  printingResult=funGenerateTextFileForKOT(strPOSCode, strPOSName, tableNo, KOTNO, "", "", "Dina", "Y",deviceName,macAddress,"Y");
+     		    String  printingResult=funGenerateTextFileForKOT(strPOSCode, strPOSName, tableNo, KOTNO, "", "", "Dina", "Y",deviceName,macAddress,"Y",strAreaWisePricing);
      		    jArr.put(KOTNO+"#"+printingResult);
     		}
     		

@@ -76,7 +76,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
     public void funGenerateJasperForTableWiseKOT(String tableNo, 
     		String CostCenterCode, String AreaCode, String KOTNO, String Reprint,
     		String primaryPrinterName, String secondaryPrinterName, String CostCenterName,
-    		String printYN, String NCKotYN, String labelOnKOT,String posName,String posCode,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter,String printOnBothPrinter)
+    		String printYN, String NCKotYN, String labelOnKOT,String posName,String posCode,int noOfCopiesPrimaryPrinter,int noOfCopiesSecPrinter,String printOnBothPrinter,String deviceName,String macAddress)
     {
         HashMap hm = new HashMap();
         List<List<clsBillDtl>> listData = new ArrayList<>();
@@ -236,9 +236,9 @@ public class clsKOTJasperFileGenerationForMakeKOT {
             hm.put("DATE_TIME", ddMMyyyyAMPMDateFormat.format(rs_KOTDate.getObject(1)));
             rs_KOTDate.close();
             InetAddress ipAddress = InetAddress.getLocalHost();
-            String hostName = ipAddress.getHostName();
+            //String hostName = ipAddress.getHostName();
             if(strPrintDeviceAndUserDtlOnKOTYN.equalsIgnoreCase("Y")){
-            	hm.put("KOT From", hostName);
+            	hm.put("KOT From", deviceName);
                 hm.put("kotByUser", userName);	
             }
             

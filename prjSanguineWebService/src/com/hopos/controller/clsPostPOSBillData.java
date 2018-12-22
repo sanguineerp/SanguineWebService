@@ -589,7 +589,7 @@ public class clsPostPOSBillData
 
 				sbSql.setLength(0);
 				sbSql.append("INSERT INTO tblqbillhd (`strBillNo`,`strAdvBookingNo`, `dteBillDate`, `strPOSCode`" + ",`strSettelmentMode`, `dblDiscountAmt`,`dblDiscountPer`, `dblTaxAmt`, `dblSubTotal`,`dblGrandTotal`" + ", `strTakeAway`, `strOperationType`,`strUserCreated`, `strUserEdited`, `dteDateCreated`,`dteDateEdited`" + ", `strClientCode`, `strTableNo`,`strWaiterNo`, `strCustomerCode`, `strManualBillNo`,`intShiftCode`" + ", `intPaxNo`, `strDataPostFlag`,`strReasonCode`, `strRemarks`, `dblTipAmount`,`dteSettleDate`" + ", `strCounterCode`, `dblDeliveryCharges`,`strCouponCode`,`strAreaCode`,`strDiscountRemark`" + ",`strTakeAwayRemarks`,`strDiscountOn`,`strCardNo`,`strTransactionType`"
-						+ ",strJioMoneyRRefNo,strJioMoneyAuthCode,strJioMoneyTxnId,strJioMoneyTxnDateTime,strJioMoneyCardNo,strJioMoneyCardType,dblRoundOff,intBillSeriesPaxNo,dtBillDate) " + "VALUES");
+						+ ",strJioMoneyRRefNo,strJioMoneyAuthCode,strJioMoneyTxnId,strJioMoneyTxnDateTime,strJioMoneyCardNo,strJioMoneyCardType,dblRoundOff,intBillSeriesPaxNo,dtBillDate,strCRMRewardId,strNSCTax,strKOTToBillNote,dblUSDConverionRate) " + "VALUES");
 				JSONObject mJsonObject = new JSONObject();
 
 				for (int i = 0; i < jsonArrBillHd.length(); i++)
@@ -599,7 +599,7 @@ public class clsPostPOSBillData
 					String billNo = mJsonObject.get("BillNo").toString().trim();
 					String clientCode = mJsonObject.get("ClientCode").toString().trim();
 					String POSCode = mJsonObject.get("POSCode").toString().trim();
-					String billDate = mJsonObject.get("BillDate").toString();
+					String billDate = mJsonObject.get("BillDate").toString().split(" ")[0];
 
 					String propertyPOSCode = clientCode + "." + POSCode;
 					POSCode = hmPOSMaster.get(propertyPOSCode);
@@ -656,16 +656,21 @@ public class clsPostPOSBillData
 						String dblRoundOff = mJsonObject.get("dblRoundOff").toString();
 						String intBillSeriesPaxNo = mJsonObject.get("intBillSeriesPaxNo").toString();
 						String dtBillDate = mJsonObject.get("dtBillDate").toString();
-
+						String strCRMRewardId = mJsonObject.get("strCRMRewardId").toString();
+						String strNSCTax= mJsonObject.get("strNSCTax").toString();
+						String strKOTToBillNote= mJsonObject.get("strKOTToBillNote").toString();
+						String dblUSDConverionRate= mJsonObject.get("dblUSDConverionRate").toString();
 						if (cnt == 0)
 						{
 							sbSql.append("('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
-									+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "','" + dblRoundOff + "','" + intBillSeriesPaxNo + "','" + dtBillDate + "')");
+									+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "','" + dblRoundOff + "','" + intBillSeriesPaxNo + "',"
+											+ "'" + dtBillDate + "','" + strCRMRewardId + "','" + strNSCTax + "','" + strKOTToBillNote + "','" + dblUSDConverionRate + "')");
 						}
 						else
 						{
 							sbSql.append(",('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
-									+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "','" + dblRoundOff + "','" + intBillSeriesPaxNo + "','" + dtBillDate + "')");
+									+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "','" + dblRoundOff + "','" + intBillSeriesPaxNo + "'"
+											+ ",'" + dtBillDate + "','" + strCRMRewardId + "','" + strNSCTax + "','" + strKOTToBillNote + "','" + dblUSDConverionRate + "')");
 						}
 						cnt++;
 						flgData = true;
@@ -879,14 +884,15 @@ public class clsPostPOSBillData
 					String userEdited = mJsonObject.get("UserEdited").toString();
 					String dateCreated = mJsonObject.get("DateCreated").toString();
 					String dateEdited = mJsonObject.get("DateEdited").toString();
-
+					String strDataPostFlag = mJsonObject.get("strDataPostFlag").toString();
+					
 					if (cnt == 0)
 					{
-						sbSql.append("('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + clientCode + "','" + dteBillDate + "')");
+						sbSql.append("('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + clientCode + "','" + dteBillDate + "','"+strDataPostFlag+"')");
 					}
 					else
 					{
-						sbSql.append(",('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + clientCode + "','" + dteBillDate + "')");
+						sbSql.append(",('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + clientCode + "','" + dteBillDate + "','"+strDataPostFlag+"')");
 					}
 					cnt++;
 					flgData = true;
@@ -1469,14 +1475,14 @@ public class clsPostPOSBillData
 			}
 			rsPOS.close();
 
-			sbSql.append("INSERT INTO " + tableName + " (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`) VALUES");
+			sbSql.append("INSERT INTO " + tableName + " (`strPOSCode`, `strBillSeries`, `strHdBillNo`, `strDtlBillNos`, `dblGrandTotal`, `strClientCode`, `strDataPostFlag`, `strUserCreated`, `dteCreatedDate`, `strUserEdited`, `dteEditedDate`, `dteBillDate`) VALUES");
 
 			JSONObject mJsonObject = new JSONObject();
 			for (int i = 0; i < mJsonArray.length(); i++)
 			{
 				mJsonObject = (JSONObject) mJsonArray.get(i);
 
-				String billNo = mJsonObject.get("strHdBillNo").toString().trim();
+				String billNo = mJsonObject.get("HdBillNo").toString().trim();
 				String clientCode = mJsonObject.get("ClientCode").toString().trim();
 				String POSCode = mJsonObject.get("POSCode").toString().trim();
 
@@ -1494,14 +1500,15 @@ public class clsPostPOSBillData
 				String createdDate = mJsonObject.get("CreatedDate").toString().trim();
 				String userEdited = mJsonObject.get("UserEdited").toString().trim();
 				String editedDate = mJsonObject.get("EditedDate").toString().trim();
+				String billDate= mJsonObject.get("dteBillDate").toString().trim();
 
 				if (cnt == 0)
 				{
-					sbSql.append("('" + POSCode + "','" + billSeries + "','" + billNo + "','" + dtlBillNo + "','" + grandTotal + "'," + "'" + clientCode + "','N','" + userCreated + "','" + createdDate + "'," + "'" + userEdited + "','" + editedDate + "')");
+					sbSql.append("('" + POSCode + "','" + billSeries + "','" + billNo + "','" + dtlBillNo + "','" + grandTotal + "'," + "'" + clientCode + "','N','" + userCreated + "','" + createdDate + "'," + "'" + userEdited + "','" + editedDate + "','" + billDate + "')");
 				}
 				else
 				{
-					sbSql.append(",('" + POSCode + "','" + billSeries + "','" + billNo + "','" + dtlBillNo + "','" + grandTotal + "'," + "'" + clientCode + "','N','" + userCreated + "','" + createdDate + "'," + "'" + userEdited + "','" + editedDate + "')");
+					sbSql.append(",('" + POSCode + "','" + billSeries + "','" + billNo + "','" + dtlBillNo + "','" + grandTotal + "'," + "'" + clientCode + "','N','" + userCreated + "','" + createdDate + "'," + "'" + userEdited + "','" + editedDate + "','" + billDate + "')");
 				}
 				flgData = true;
 				cnt++;
@@ -5400,6 +5407,24 @@ public class clsPostPOSBillData
 			responseData = funGetPosWiseItemWiseIncentiveValuesDtl(masterName, propertyPOSCode, lastModifiedDate);
 			return responseData;
 		}
+		else if (masterName.equalsIgnoreCase("tblbillseries"))
+		{
+			//String clientCode = propertyPOSCode.substring(0, 7);
+			responseData = funGetBillSeriesMaster(masterName, propertyPOSCode, lastModifiedDate);
+			return responseData;
+		}
+		else if (masterName.equalsIgnoreCase("tblposmaster"))
+		{
+			String clientCode = propertyPOSCode.substring(0, 7);
+			responseData = funGetPOSMaster(masterName, clientCode, lastModifiedDate);
+			return responseData;
+		}
+		/*else if (masterName.equalsIgnoreCase("tblbillseriesbilldtl"))
+		{
+			String clientCode = propertyPOSCode.substring(0, 7);
+			responseData = funGetBillSeriesMasterDetail(masterName, clientCode, lastModifiedDate);
+			return responseData;
+		}*/
 		// else if (masterName.equalsIgnoreCase("tblitemmaster"))
 		// {
 		// String clientCode = propertyPOSCode.substring(0, 7);
@@ -5488,6 +5513,7 @@ public class clsPostPOSBillData
 					+ ",a.strDataPostFlag,right(b.strPropertyPOSCode,3) as strPOSCode,strMACAddress " + "from tblareamaster a,tblposmaster b "
 					+ "where  (a.strPOSCode=b.strPosCode or a.strPOSCode='All') "
 					+ "and a.dteDateEdited > '" + lastModifiedDate + "' "
+					+ " AND b.strPropertyPOSCode LIKE '"+propertyPOSCode+"%' "
 					+ "group by a.strAreaCode,a.strAreaName "
 					+ "order by a.dteDateEdited";
 			System.out.println(sql);
@@ -6136,9 +6162,9 @@ public class clsPostPOSBillData
 				String POSAccessCodes = rsUserMaster.getString(2);
 				String userCode = rsUserMaster.getString(1);
 				String[] arrPOSAccessCodes = POSAccessCodes.split(",");
-				for (int cnt = 0; cnt < arrPOSAccessCodes.length; cnt++)
+				if (arrPOSAccessCodes.length>0)
 				{
-					if (hmClientPOSCodes.containsKey(arrPOSAccessCodes[cnt]))
+					if (hmClientPOSCodes.containsKey(arrPOSAccessCodes[0]))
 					{
 						String sql = "select a.strUserCode,a.strFormName,a.strButtonName,a.intSequence,a.strAdd,a.strEdit" + ",a.strDelete,a.strView,a.strPrint,a.strSave,a.strGrant,a.strTLA,a.strAuditing " + "from " + masterName + " a, tbluserhd b " + "where a.strUserCode = b.strUserCode and b.strUserCode='" + userCode + "' and b.dteDateEdited > '" + lastModifiedDate + "'";
 						System.out.println(sql);
@@ -6349,7 +6375,9 @@ public class clsPostPOSBillData
 				if (clientPOSCode.length() > 0)
 				{
 					clientPOSCode = clientPOSCode.substring(1, clientPOSCode.length());
-					String sql = "select a.strUserCode,a.strUserName,a.strPassword,a.strSuperType,a.dteValidDate," + " '" + clientPOSCode + "',a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited, " + " a.strClientCode,a.strDataPostFlag,a.imgUserIcon,a.strImgUserIconPath,a.strDebitCardString " + " from " + masterName + " a " + " where a.strUserCode='" + userCode + "' and a.dteDateEdited > '" + lastModifiedDate + "' ";
+					String sql = "select a.strUserCode,a.strUserName,a.strPassword,a.strSuperType,a.dteValidDate,'" + clientPOSCode + "',a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited, "
+							+ " a.strClientCode,a.strDataPostFlag,a.imgUserIcon,a.strImgUserIconPath,a.strDebitCardString ,strWaiterNo,strUserType,intNoOfDaysReportsView"
+							+ " from " + masterName + " a " + " where a.strUserCode='" + userCode + "' and a.dteDateEdited > '" + lastModifiedDate + "' ";
 					System.out.println(sql);
 					ResultSet rsMasterData = st.executeQuery(sql);
 					while (rsMasterData.next())
@@ -6371,7 +6399,10 @@ public class clsPostPOSBillData
 						obj.put("ImageIcon", rsMasterData.getString(13));
 						obj.put("ImagePath", rsMasterData.getString(14));
 						obj.put("DebitCardString", rsMasterData.getString(15));
-
+						obj.put("strWaiterNo", rsMasterData.getString(16));
+						obj.put("strUserType", rsMasterData.getString(17));
+						obj.put("intNoOfDaysReportsView", rsMasterData.getString(18));
+						
 						arrObj.put(obj);
 					}
 					rsMasterData.close();
@@ -8206,6 +8237,238 @@ public class clsPostPOSBillData
 		}
 		return jObj.toString();
 	}
+	
+	private String funGetBillSeriesMaster(String masterName, String strPropertyCode, String lastModifiedDate)
+	{
+		// //clsDatabaseConnection objDb = new clsDatabaseConnection();
+		Connection cmsCon = null;
+		Statement st = null,st1=null;
+		JSONObject jObj = new JSONObject();
+
+		try
+		{
+			JSONArray arrObj = new JSONArray();
+			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
+			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
+			st = cmsCon.createStatement();
+			st1=cmsCon.createStatement();
+			//String sql = " select * from tblbillseries " + " where dteEditedDate >= '" + lastModifiedDate + "' and strClientCode='" + clientCode + "' " + " order by dteEditedDate; ";
+			String sql=" select  RIGHT(a.strPropertyCode,3) AS strPOSCode,a.strType,a.strBillSeries,a.intLastNo,a.strCodes,a.strNames,a.strUserCreated,a.strUserEdited"
+					+ " ,a.dteCreatedDate,a.dteEditedDate,a.strDataPostFlag,a.strClientCode,a.strPropertyCode,a.strPrintGTOfOtherBills"
+					+ " ,a.strPrintInclusiveOfTaxOnBill,a.strBillNote,a.strPOSCode"
+					+ " from tblbillseries a,tblposmaster b  "
+					+ " where (a.strPOSCode=b.strPosCode  OR a.strPOSCode = 'All') and a.strPropertyCode ='"+ strPropertyCode +"' "
+					+ " and a.dteEditedDate >= '"+ lastModifiedDate +"' and a.strDataPostFlag='N' ";
+			System.out.println(sql);
+			ResultSet rsBillSeriesMasterData = st.executeQuery(sql);
+			while (rsBillSeriesMasterData.next())
+			{
+				JSONObject obj = new JSONObject();
+
+				obj.put("strPOSCode", rsBillSeriesMasterData.getString(1));
+				obj.put("strType", rsBillSeriesMasterData.getString(2));
+				obj.put("strBillSeries", rsBillSeriesMasterData.getString(3));
+				obj.put("intLastNo", rsBillSeriesMasterData.getString(4));
+				obj.put("strCodes", rsBillSeriesMasterData.getString(5));
+				obj.put("strNames", rsBillSeriesMasterData.getString(6));
+				obj.put("strUserCreated", rsBillSeriesMasterData.getString(7));
+				obj.put("strUserEdited", rsBillSeriesMasterData.getString(8));
+				obj.put("dteCreatedDate", rsBillSeriesMasterData.getString(9));
+				obj.put("dteEditedDate", rsBillSeriesMasterData.getString(10));
+				obj.put("strDataPostFlag", rsBillSeriesMasterData.getString(11));
+				obj.put("strClientCode", rsBillSeriesMasterData.getString(12));
+				obj.put("strPropertyCode", rsBillSeriesMasterData.getString(13));
+				obj.put("strPrintGTOfOtherBills", rsBillSeriesMasterData.getString(14));
+				obj.put("strPrintInclusiveOfTaxOnBill", rsBillSeriesMasterData.getString(15));
+				obj.put("strBillNote", rsBillSeriesMasterData.getString(16));
+				
+				String sqlUpdate="update tblbillseries set strDataPostFlag='Y' where strPOSCode='"+rsBillSeriesMasterData.getString(17)+"' and strBillSeries='"+rsBillSeriesMasterData.getString(3)+"' and strClientCode='"+rsBillSeriesMasterData.getString(12)+"'";
+				st1.executeUpdate(sqlUpdate);
+				arrObj.put(obj);
+			}
+			rsBillSeriesMasterData.close();
+
+			jObj.put("tblbillseries", arrObj);
+			
+
+		}
+		catch (Exception e)
+		{
+			clsUtilityFunctions objUtility = new clsUtilityFunctions();
+			objUtility.funWriteErrorLog(e);
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				// if (null != cmsCon)
+				// {
+				// cmsCon.close();
+				// }
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return jObj.toString();
+	}
+	
+	private String funGetBillSeriesMasterDetail(String masterName, String clientCode, String lastModifiedDate)
+	{
+		// //clsDatabaseConnection objDb = new clsDatabaseConnection();
+		Connection cmsCon = null;
+		Statement st = null;
+		JSONObject jObj = new JSONObject();
+
+		try
+		{
+			JSONArray arrObj = new JSONArray();
+			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
+			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
+			st = cmsCon.createStatement();
+			String sql = " select * from tblbillseriesbilldtl " + " where dteDateEdited >= '" + lastModifiedDate + "' and strClientCode='" + clientCode + "' " + " order by dteDateEdited; ";
+			System.out.println(sql);
+			ResultSet rsBillSeriesMasterData = st.executeQuery(sql);
+			while (rsBillSeriesMasterData.next())
+			{
+				JSONObject obj = new JSONObject();
+
+				obj.put("strPOSCode", rsBillSeriesMasterData.getString(1));
+				obj.put("strBillSeries", rsBillSeriesMasterData.getString(2));
+				obj.put("strHdBillNo", rsBillSeriesMasterData.getString(3));
+				obj.put("strDtlBillNos", rsBillSeriesMasterData.getString(4));
+				obj.put("dblGrandTotal", rsBillSeriesMasterData.getString(5));
+				obj.put("strClientCode", rsBillSeriesMasterData.getString(6));
+				obj.put("strDataPostFlag", rsBillSeriesMasterData.getString(7));
+				obj.put("strUserCreated", rsBillSeriesMasterData.getString(8));
+				obj.put("dteCreatedDate", rsBillSeriesMasterData.getString(9));
+				obj.put("strUserEdited", rsBillSeriesMasterData.getString(10));
+				obj.put("dteEditedDate", rsBillSeriesMasterData.getString(11));
+				obj.put("dteBillDate", rsBillSeriesMasterData.getString(12));
+				
+				arrObj.put(obj);
+			}
+			rsBillSeriesMasterData.close();
+
+			jObj.put("tblbillseries", arrObj);
+
+		}
+		catch (Exception e)
+		{
+			clsUtilityFunctions objUtility = new clsUtilityFunctions();
+			objUtility.funWriteErrorLog(e);
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				// if (null != cmsCon)
+				// {
+				// cmsCon.close();
+				// }
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return jObj.toString();
+	}
+	
+	private String funGetPOSMaster(String masterName, String clientCode, String lastModifiedDate)
+	{
+		// //clsDatabaseConnection objDb = new clsDatabaseConnection();
+		Connection cmsCon = null;
+		Statement st = null;
+		JSONObject jObj = new JSONObject();
+
+		try
+		{
+			JSONArray arrObj = new JSONArray();
+			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
+			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
+			st = cmsCon.createStatement();
+			String sql = " select * from tblposmaster " + " where dteDateEdited >= '" + lastModifiedDate + "' "
+					+ " and strPropertyPOSCode like '" + clientCode + "%' " + " order by dteDateEdited; ";
+			System.out.println(sql);
+			ResultSet rsBillSeriesMasterData = st.executeQuery(sql);
+			while (rsBillSeriesMasterData.next())
+			{
+				JSONObject obj = new JSONObject();
+
+				obj.put("Column1", rsBillSeriesMasterData.getString(1));
+				obj.put("Column2", rsBillSeriesMasterData.getString(2));
+				obj.put("Column3", rsBillSeriesMasterData.getString(3));
+				obj.put("Column4", rsBillSeriesMasterData.getString(4));
+				obj.put("Column5", rsBillSeriesMasterData.getString(5));
+				obj.put("Column6", rsBillSeriesMasterData.getString(6));
+				obj.put("Column7", rsBillSeriesMasterData.getString(7));
+				obj.put("Column8", rsBillSeriesMasterData.getString(8));
+				obj.put("Column9", rsBillSeriesMasterData.getString(9));
+				obj.put("Column10", rsBillSeriesMasterData.getString(10));
+				obj.put("Column11", rsBillSeriesMasterData.getString(11));
+				obj.put("Column12", rsBillSeriesMasterData.getString(12));
+				obj.put("Column13", rsBillSeriesMasterData.getString(13));
+				obj.put("Column14", rsBillSeriesMasterData.getString(14));
+				obj.put("Column15", rsBillSeriesMasterData.getString(15));
+				obj.put("Column16", rsBillSeriesMasterData.getString(16));
+				obj.put("Column17", rsBillSeriesMasterData.getString(17));
+				obj.put("Column18", rsBillSeriesMasterData.getString(18));
+				obj.put("Column19", rsBillSeriesMasterData.getString(19));
+				obj.put("Column20", rsBillSeriesMasterData.getString(20));
+				obj.put("Column21", rsBillSeriesMasterData.getString(21));
+				obj.put("Column22", rsBillSeriesMasterData.getString(22));
+				obj.put("Column23", rsBillSeriesMasterData.getString(23));
+				obj.put("Column24", rsBillSeriesMasterData.getString(24));
+				obj.put("Column25", rsBillSeriesMasterData.getString(25));
+				obj.put("Column26", rsBillSeriesMasterData.getString(26));
+				obj.put("Column27", rsBillSeriesMasterData.getString(27));
+				obj.put("Column28", rsBillSeriesMasterData.getString(28));
+				
+				arrObj.put(obj);
+			}
+			rsBillSeriesMasterData.close();
+
+			jObj.put("tblposmaster", arrObj);
+
+		}
+		catch (Exception e)
+		{
+			clsUtilityFunctions objUtility = new clsUtilityFunctions();
+			objUtility.funWriteErrorLog(e);
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				// if (null != cmsCon)
+				// {
+				// cmsCon.close();
+				// }
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return jObj.toString();
+	}
 
 	private String funGetMasterDetail(String masterName, String propertyPOSCode, String lastModifiedDate)
 	{
@@ -8220,7 +8483,13 @@ public class clsPostPOSBillData
 			// posCon = objDb.funOpenPOSCon("mysql", "master");
 			posCon = clsDatabaseConnection.DBPOSCONNECTION;
 			st = posCon.createStatement();
-			String sql = "select * from " + masterName + " where dteDateEdited > '" + lastModifiedDate + "' " + "order by dteDateEdited";
+			String sql ="";
+			if(masterName.equalsIgnoreCase("tblbillseriesbilldtl")){
+				sql="select * from " + masterName + " where dteEditedDate > '" + lastModifiedDate + "' " + "order by dteEditedDate";
+			}else{
+				sql="select * from " + masterName + " where dteDateEdited > '" + lastModifiedDate + "' " + "order by dteDateEdited";	
+			}
+			
 
 			System.out.println(sql);
 			JSONArray arrObj = new JSONArray();
@@ -8923,7 +9192,7 @@ public class clsPostPOSBillData
 	@GET
 	@Path("/funGetSystemTime")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String funGetSystemTime()
+	public String funGetSystemTime(@QueryParam("strPOSCode") String strPOSCode)
 	{
 		// clsDatabaseConnection objDb = new clsDatabaseConnection();
 		Connection cmsCon = null;
@@ -8936,7 +9205,7 @@ public class clsPostPOSBillData
 			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
 			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
 			st = cmsCon.createStatement();
-			ResultSet rs = st.executeQuery("select sysdate()");
+			ResultSet rs = st.executeQuery("select ifnull(max(a.dtePOSDate),sysdate()) from tbldayendprocess a where a.strPOSCode='"+strPOSCode+"';");
 			if (rs.next())
 			{
 				systemTime = rs.getString(1);
@@ -9347,7 +9616,7 @@ public class clsPostPOSBillData
 					+ ",strTakeAwayAreaForDirectBiller,strRoundOffBillFinalAmt,dblNoOfDecimalPlace,strSendDBBackupOnClientMail,strPrintOrderNoOnBillYN,strPrintDeviceAndUserDtlOnKOTYN "//211
 					+ ",strRemoveSCTaxCode,strAutoAddKOTToBill,strAreaWiseCostCenterKOTPrintingYN,strWERAOnlineOrderIntegration,strWERAMerchantOutletId,strWERAAuthenticationAPIKey"//217
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
-					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS) "// 229
+					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill) "// 230
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9604,6 +9873,8 @@ public class clsPostPOSBillData
 					String strReprintOnSettleBill = dataObject.get("strReprintOnSettleBill").toString().trim();// 227
 					String strTableReservationSMS = dataObject.get("strTableReservationSMS").toString().trim();// 228
 					String strSendTableReservationSMS = dataObject.get("strSendTableReservationSMS").toString().trim();// 229
+					String strMergeAllKOTSToBill = dataObject.get("strMergeAllKOTSToBill").toString().trim();// 230
+					
 					
 					if (i == 0)
 					{
@@ -9630,7 +9901,7 @@ public class clsPostPOSBillData
 							+ ",'" + strMerchantCode + "','" + strAuthenticationKey + "','" + strSalt + "','" + strEnableLockTable + "','" + strHomeDeliveryAreaForDirectBiller + "' " // 205
 							+ ",'" + strTakeAwayAreaForDirectBiller + "','" + strRoundOffBillFinalAmt + "','" + dblNoOfDecimalPlace + "','" + strSendDBBackupOnClientMail + "','" + strPrintOrderNoOnBillYN + "','" + strPrintDeviceAndUserDtlOnKOTYN + "','" + strRemoveSCTaxCode + "','" + strAutoAddKOTToBill + "'" // 213
 							+ ",'" + strAreaWiseCostCenterKOTPrintingYN + "','" + strWERAOnlineOrderIntegration + "','" + strWERAMerchantOutletId + "','" + strWERAAuthenticationAPIKey + "','" + strFireCommunication + "'" + ",'" + dblUSDConverionRate + "','" + strDBBackupMailReceiver + "','" + strPrintMoveTableMoveKOTYN + "','" + strPrintQtyTotal + "','" + strShowReportsInCurrency + "'" 
-							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "') "); // 229
+							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "') "); // 230
 					flgData = true;
 				}
 			}
