@@ -5413,12 +5413,12 @@ public class clsPostPOSBillData
 			responseData = funGetBillSeriesMaster(masterName, propertyPOSCode, lastModifiedDate);
 			return responseData;
 		}
-		else if (masterName.equalsIgnoreCase("tblposmaster"))
+		/*else if (masterName.equalsIgnoreCase("tblposmaster"))
 		{
 			String clientCode = propertyPOSCode.substring(0, 7);
 			responseData = funGetPOSMaster(masterName, clientCode, lastModifiedDate);
 			return responseData;
-		}
+		}*/
 		/*else if (masterName.equalsIgnoreCase("tblbillseriesbilldtl"))
 		{
 			String clientCode = propertyPOSCode.substring(0, 7);
@@ -8385,7 +8385,7 @@ public class clsPostPOSBillData
 		}
 		return jObj.toString();
 	}
-	
+	/*
 	private String funGetPOSMaster(String masterName, String clientCode, String lastModifiedDate)
 	{
 		// //clsDatabaseConnection objDb = new clsDatabaseConnection();
@@ -8469,7 +8469,7 @@ public class clsPostPOSBillData
 		}
 		return jObj.toString();
 	}
-
+*/
 	private String funGetMasterDetail(String masterName, String propertyPOSCode, String lastModifiedDate)
 	{
 
@@ -9205,7 +9205,7 @@ public class clsPostPOSBillData
 			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
 			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
 			st = cmsCon.createStatement();
-			ResultSet rs = st.executeQuery("select ifnull(max(a.dtePOSDate),sysdate()) from tbldayendprocess a where a.strPOSCode='"+strPOSCode+"';");
+			ResultSet rs = st.executeQuery("select sysdate()");
 			if (rs.next())
 			{
 				systemTime = rs.getString(1);

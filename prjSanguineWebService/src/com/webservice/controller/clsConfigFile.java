@@ -119,11 +119,11 @@ public class clsConfigFile
 		    
 		    posDBBackupPath = configData[42].trim();
 		    posExcelReportExportPath = configData[43].trim();	    	   
-		    
+		   
 		    /*
 		    posDBServerName = "mysql";
-		    posDBName = "sanguine_jpos";
-		    posDBUserId = "sanguine_root";
+		    posDBName = "sheesha";
+		    posDBUserId = "swapnil";
 		    posDBPassword = "sanguine";
 		    posDBIPAddress = "localhost";
 		    posDBPortNo = "3306";
@@ -153,8 +153,8 @@ public class clsConfigFile
 		    webbooksDBIPAddress = "localhost";
 		    webbooksDBPortNo = "3306";
 		    
-		    aposDatabaseName = "sanguine_jpos";
-		    aposDBUserId = "sanguine_root";
+		    aposDatabaseName = "sheesha";
+		    aposDBUserId = "swapnil";
 		    aposDBPassword = "sanguine";
 		    aposDBIPAddress = "localhost";
 		    aposDBPortNo = "3306";
@@ -173,7 +173,9 @@ public class clsConfigFile
 		    
 		    posDBBackupPath = "";
 		    posExcelReportExportPath = "";
-		   */
+
+*/
+		    
 		}
 		catch (Exception e)
 		{
