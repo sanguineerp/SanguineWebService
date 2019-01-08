@@ -10927,334 +10927,332 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		
 		
 		
-		   private void funGenerateItemWiseSales(ResultSet rsItemWiseSales,String userCode,String fromDate,String toDate)
-		    {
-		        try
-		        {
-		            while (rsItemWiseSales.next())
-		            {
-		                String itemCode = rsItemWiseSales.getString(1);//itemCode
-		                String itemName = rsItemWiseSales.getString(2);//itemName
-		                String posName = rsItemWiseSales.getString(3);//posName
-		                double qty = rsItemWiseSales.getDouble(4);//qty
-		                double salesAmt = rsItemWiseSales.getDouble(8);//salesAmount
-		                double subTotal = rsItemWiseSales.getDouble(6);//sunTotal
-		                double discAmt = rsItemWiseSales.getDouble(9);//discount
-		                String date = rsItemWiseSales.getString(10);//date
-		                String posCode = rsItemWiseSales.getString(11);//posCode
+   private void funGenerateItemWiseSales(ResultSet rsItemWiseSales,String userCode,String fromDate,String toDate)
+    {
+        try
+        {
+            while (rsItemWiseSales.next())
+            {
+                String itemCode = rsItemWiseSales.getString(1);//itemCode
+                String itemName = rsItemWiseSales.getString(2);//itemName
+                String posName = rsItemWiseSales.getString(3);//posName
+                double qty = rsItemWiseSales.getDouble(4);//qty
+                double salesAmt = rsItemWiseSales.getDouble(8);//salesAmount
+                double subTotal = rsItemWiseSales.getDouble(6);//sunTotal
+                double discAmt = rsItemWiseSales.getDouble(9);//discount
+                String date = rsItemWiseSales.getString(10);//date
+                String posCode = rsItemWiseSales.getString(11);//posCode
 
-		                String compare = itemCode;
-		                if (itemCode.contains("M"))
-		                {
-		                    compare = itemName;
-		                }
-		                else
-		                {
-		                    compare = itemCode;
-		                }
+                String compare = itemCode;
+                if (itemCode.contains("M"))
+                {
+                    compare = itemName;
+                }
+                else
+                {
+                    compare = itemCode;
+                }
 
-		                if (mapPOSItemDtl.containsKey(posCode))
-		                {
-		                    Map<String, clsBillItemDtl> mapItemDtl = mapPOSItemDtl.get(posCode);
-		                    if (mapItemDtl.containsKey(compare))
-		                    {
-		                        clsBillItemDtl objItemDtl = mapItemDtl.get(compare);
-		                        objItemDtl.setQuantity(objItemDtl.getQuantity() + qty);
-		                        objItemDtl.setAmount(objItemDtl.getAmount() + salesAmt);
-		                        objItemDtl.setSubTotal(objItemDtl.getSubTotal() + subTotal);
-		                        objItemDtl.setDiscountAmount(objItemDtl.getDiscountAmount() + discAmt);
-		                    }
-		                    else
-		                    {
-		                        clsBillItemDtl objItemDtl = new clsBillItemDtl(date, itemCode, itemName, qty, salesAmt, discAmt, posName, subTotal);
-		                        mapItemDtl.put(compare, objItemDtl);
-		                    }
-		                }
-		                else
-		                {
-		                    Map<String, clsBillItemDtl> mapItemDtl = new LinkedHashMap<>();
-		                    clsBillItemDtl objItemDtl = new clsBillItemDtl(date, itemCode, itemName, qty, salesAmt, discAmt, posName, subTotal);
-		                    mapItemDtl.put(compare, objItemDtl);
-		                    mapPOSItemDtl.put(posCode, mapItemDtl);
-		                }
+                if (mapPOSItemDtl.containsKey(posCode))
+                {
+                    Map<String, clsBillItemDtl> mapItemDtl = mapPOSItemDtl.get(posCode);
+                    if (mapItemDtl.containsKey(compare))
+                    {
+                        clsBillItemDtl objItemDtl = mapItemDtl.get(compare);
+                        objItemDtl.setQuantity(objItemDtl.getQuantity() + qty);
+                        objItemDtl.setAmount(objItemDtl.getAmount() + salesAmt);
+                        objItemDtl.setSubTotal(objItemDtl.getSubTotal() + subTotal);
+                        objItemDtl.setDiscountAmount(objItemDtl.getDiscountAmount() + discAmt);
+                    }
+                    else
+                    {
+                        clsBillItemDtl objItemDtl = new clsBillItemDtl(date, itemCode, itemName, qty, salesAmt, discAmt, posName, subTotal);
+                        mapItemDtl.put(compare, objItemDtl);
+                    }
+                }
+                else
+                {
+                    Map<String, clsBillItemDtl> mapItemDtl = new LinkedHashMap<>();
+                    clsBillItemDtl objItemDtl = new clsBillItemDtl(date, itemCode, itemName, qty, salesAmt, discAmt, posName, subTotal);
+                    mapItemDtl.put(compare, objItemDtl);
+                    mapPOSItemDtl.put(posCode, mapItemDtl);
+                }
 
-		                if (!itemCode.contains("M"))
-		                {
-		                    funCreateModifierQuery(itemCode,userCode,posCode,fromDate,toDate);
-		                }
-		            }
-		        }
-		        catch (Exception e)
-		        {
-		            e.printStackTrace();
-		        }
-		    }
+                if (!itemCode.contains("M"))
+                {
+                   // funCreateModifierQuery(itemCode,userCode,posCode,fromDate,toDate);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 		   
-		   
-		   
-		   private void funCreateModifierQuery(String itemCode,String userCode,String posCode,String fromDate,String toDate)
-		    {
-			   clsDatabaseConnection objDb = new clsDatabaseConnection();
-			   Connection aposCon = null;
-			   Statement st = null,st1=null;
-			   
-		        try
-		        {
-		        	aposCon = objDb.funOpenAPOSCon("mysql", "master");
-					st = aposCon.createStatement();
-					st1 = aposCon.createStatement();
-					
-		            String sqlModLive = "select a.strItemCode,a.strModifierName,c.strPOSName"
-		                    + ",sum(a.dblQuantity),'0.0',sum(a.dblAmount)-sum(a.dblDiscAmt),'" + userCode + "' "
-		                    + ",sum(a.dblAmount),sum(a.dblDiscAmt),DATE_FORMAT(date(b.dteBillDate),'%d-%m-%Y'),b.strPOSCode "
-		                    + "from tblbillmodifierdtl a,tblbillhd b,tblposmaster c\n"
-		                    + "where a.strBillNo=b.strBillNo and b.strPOSCode=c.strPosCode  \n"
-		                    + "and date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' "
-		                    + "and left(a.strItemCode,7)='" + itemCode + "' ";
+   private void funCreateModifierQuery(String itemCode,String userCode,String posCode,String fromDate,String toDate)
+    {
+	   clsDatabaseConnection objDb = new clsDatabaseConnection();
+	   Connection aposCon = null;
+	   Statement st = null,st1=null;
+	   
+        try
+        {
+        	aposCon = objDb.funOpenAPOSCon("mysql", "master");
+			st = aposCon.createStatement();
+			st1 = aposCon.createStatement();
+			
+            String sqlModLive = "select a.strItemCode,a.strModifierName,c.strPOSName"
+                    + ",sum(a.dblQuantity),'0.0',sum(a.dblAmount)-sum(a.dblDiscAmt),'" + userCode + "' "
+                    + ",sum(a.dblAmount),sum(a.dblDiscAmt),DATE_FORMAT(date(b.dteBillDate),'%d-%m-%Y'),b.strPOSCode "
+                    + "from tblbillmodifierdtl a,tblbillhd b,tblposmaster c\n"
+                    + "where a.strBillNo=b.strBillNo and b.strPOSCode=c.strPosCode  \n"
+                    + "and date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' "
+                    + "and left(a.strItemCode,7)='" + itemCode + "' ";
 
-		            
-		            String sqlFilters = "";
-		            if (!posCode.equals("All") )
-		             {
-						 sqlFilters += " AND b.strPOSCode = '" + posCode + "' ";                   
-		             }
-		          
-		            sqlFilters += " group by a.strItemCode,a.strModifierName,c.strPOSName  "
-		                    + " order by b.dteBillDate ";
+            
+            String sqlFilters = "";
+            if (!posCode.equals("All") )
+             {
+				 sqlFilters += " AND b.strPOSCode = '" + posCode + "' ";                   
+             }
+          
+            sqlFilters += " group by a.strItemCode,a.strModifierName,c.strPOSName  "
+                    + " order by b.dteBillDate ";
 
-		            sqlModLive = sqlModLive + " " + sqlFilters;
+            sqlModLive = sqlModLive + " " + sqlFilters;
 
-		            ResultSet rs =  st.executeQuery(sqlModLive.toString()); 
-		            funGenerateItemWiseSales(rs,userCode,fromDate,toDate);
+            ResultSet rs =  st.executeQuery(sqlModLive.toString()); 
+            funGenerateItemWiseSales(rs,userCode,fromDate,toDate);
 
-		            //qmodifiers
-		            String sqlModQFile = "select a.strItemCode,a.strModifierName,c.strPOSName"
-		                    + ",sum(a.dblQuantity),'0.0',sum(a.dblAmount)-sum(a.dblDiscAmt),'" + userCode + "' "
-		                    + ",sum(a.dblAmount),sum(a.dblDiscAmt),DATE_FORMAT(date(b.dteBillDate),'%d-%m-%Y'),b.strPOSCode "
-		                    + "from tblqbillmodifierdtl a,tblqbillhd b,tblposmaster c\n"
-		                    + "where a.strBillNo=b.strBillNo and b.strPOSCode=c.strPosCode  \n"
-		                    + "and date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' "
-		                    + "and left(a.strItemCode,7)='" + itemCode + "' ";
+            //qmodifiers
+            String sqlModQFile = "select a.strItemCode,a.strModifierName,c.strPOSName"
+                    + ",sum(a.dblQuantity),'0.0',sum(a.dblAmount)-sum(a.dblDiscAmt),'" + userCode + "' "
+                    + ",sum(a.dblAmount),sum(a.dblDiscAmt),DATE_FORMAT(date(b.dteBillDate),'%d-%m-%Y'),b.strPOSCode "
+                    + "from tblqbillmodifierdtl a,tblqbillhd b,tblposmaster c\n"
+                    + "where a.strBillNo=b.strBillNo and b.strPOSCode=c.strPosCode  \n"
+                    + "and date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' "
+                    + "and left(a.strItemCode,7)='" + itemCode + "' ";
 
-		            sqlModQFile = sqlModQFile + " " + sqlFilters;
+            sqlModQFile = sqlModQFile + " " + sqlFilters;
 
-		            rs = st1.executeQuery(sqlModQFile.toString());
-		            funGenerateItemWiseSales(rs,userCode,fromDate,toDate);
-		            
-		            aposCon.close();
-		            st.close();
-		            st1.close();
+            rs = st1.executeQuery(sqlModQFile.toString());
+            funGenerateItemWiseSales(rs,userCode,fromDate,toDate);
+            
+            aposCon.close();
+            st.close();
+            st1.close();
 
-		        }
-		        catch (Exception e)
-		        {
-		            e.printStackTrace();
-		        }
-		    }		
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }		
 		
-		   private JSONArray funGetMenuwiseReportData(String posCode,String userCode,String fromDate, String toDate,String reportType) 
+   private JSONArray funGetMenuwiseReportData(String posCode,String userCode,String fromDate, String toDate,String reportType) 
+	{
+		clsDatabaseConnection objDb = new clsDatabaseConnection();
+		Connection cmsCon = null;
+		Statement st = null,st1 = null,st2 = null,st3 = null;
+		StringBuilder sbSqlLive = new StringBuilder();
+	    StringBuilder sbSqlQFile = new StringBuilder();
+	    StringBuilder sbFilters=new StringBuilder();
+	    StringBuilder sbSql = new StringBuilder();
+		JSONObject jObj = new JSONObject();
+		String areaWisePricing="N";
+		JSONArray arrMenuwiseObj = new JSONArray();
+		try {
+			cmsCon = objDb.funOpenAPOSCon("mysql", "master");
+			st = cmsCon.createStatement();
+			st1 = cmsCon.createStatement();
+			st2 = cmsCon.createStatement();
+			st3 = cmsCon.createStatement();
+			sbSqlLive.setLength(0);
+			sbSqlQFile.setLength(0);
+			sbFilters.setLength(0);
+			sbSql.append("select a.strAreaWisePricing from tblsetup a  ");
+			if (!posCode.equals("All") )
+             {
+				sbSql.append(" where a.strPOSCode='"+posCode+"'  ");                   
+             }
+			sbSql.append(" group by a.strClientCode  ");  
+			ResultSet rsSql=st1.executeQuery(sbSql.toString());
+			if(rsSql.next())
 			{
-				clsDatabaseConnection objDb = new clsDatabaseConnection();
-				Connection cmsCon = null;
-				Statement st = null,st1 = null,st2 = null,st3 = null;
-				StringBuilder sbSqlLive = new StringBuilder();
-			    StringBuilder sbSqlQFile = new StringBuilder();
-			    StringBuilder sbFilters=new StringBuilder();
-			    StringBuilder sbSql = new StringBuilder();
-				JSONObject jObj = new JSONObject();
-				String areaWisePricing="N";
-				JSONArray arrMenuwiseObj = new JSONArray();
-				try {
-					cmsCon = objDb.funOpenAPOSCon("mysql", "master");
-					st = cmsCon.createStatement();
-					st1 = cmsCon.createStatement();
-					st2 = cmsCon.createStatement();
-					st3 = cmsCon.createStatement();
-					sbSqlLive.setLength(0);
-					sbSqlQFile.setLength(0);
-					sbFilters.setLength(0);
-					sbSql.append("select a.strAreaWisePricing from tblsetup a  ");
-					if (!posCode.equals("All") )
-		             {
-						sbSql.append(" where a.strPOSCode='"+posCode+"'  ");                   
-		             }
-					sbSql.append(" group by a.strClientCode  ");  
-					ResultSet rsSql=st1.executeQuery(sbSql.toString());
-					if(rsSql.next())
-					{
-						areaWisePricing=rsSql.getString(1);
-					}
-					rsSql.close();
-					st1.close();
-					
-					
-					sbSqlLive.append("SELECT ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
-	                        + " sum(a.dblAmount)-sum(a.dblDiscountAmt),f.strPosName,'" + userCode + "',a.dblRate  ,sum(a.dblAmount),sum(a.dblDiscountAmt),b.strPOSCode  "
-	                        + " FROM tblbilldtl a\n"
-	                        + " left outer join tblbillhd b on a.strBillNo=b.strBillNo and date(a.dteBillDate)=date(b.dteBillDate) and a.strClientCode=b.strClientCode "
-	                        + " left outer join tblposmaster f on b.strposcode=f.strposcode "
-	                        + " left outer join tblmenuitempricingdtl d on a.strItemCode = d.strItemCode "
-	                        + " and b.strposcode =d.strposcode ");
-					if (areaWisePricing.equals("Y"))
-	                {
-	                    sbSqlLive.append(" and b.strAreaCode= d.strAreaCode ");
-	                }
-	                sbSqlLive.append("left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode");
-	                sbSqlLive.append(" where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' ");
-					
-					
-	                sbSqlQFile.append("SELECT  ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
-	                        + "sum(a.dblAmount)-sum(a.dblDiscountAmt),f.strPosName,'" + userCode + "',a.dblRate ,sum(a.dblAmount),sum(a.dblDiscountAmt),b.strPOSCode  "
-	                        + "FROM tblqbilldtl a\n"
-	                        + "left outer join tblqbillhd b on a.strBillNo=b.strBillNo and date(a.dteBillDate)=date(b.dteBillDate) and a.strClientCode=b.strClientCode "
-	                        + "left outer join tblposmaster f on b.strposcode=f.strposcode "
-	                        + "left outer join tblmenuitempricingdtl d on a.strItemCode = d.strItemCode "
-	                        + " and b.strposcode =d.strposcode ");
-	                if (areaWisePricing.equals("Y"))
-	                {
-	                    sbSqlQFile.append(" and b.strAreaCode= d.strAreaCode ");
-	                }
-	                sbSqlQFile.append("left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode");
-	                sbSqlQFile.append(" where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' ");
-
-					
-	                String sqlModLive = "SELECT  ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
-	                        + "sum(a.dblAmount)-sum(a.dblDiscAmt),f.strPosName,'" + userCode + "',a.dblRate ,sum(a.dblAmount),sum(a.dblDiscAmt),b.strPOSCode  "
-	                        + "FROM tblbillmodifierdtl a\n"
-	                        + "left outer join tblbillhd b on a.strBillNo=b.strBillNo and a.strClientCode=b.strClientCode "
-	                        + "left outer join tblposmaster f on b.strposcode=f.strposcode "
-	                        + "left outer join tblmenuitempricingdtl d on LEFT(a.strItemCode,7)= d.strItemCode "
-	                        + " and b.strposcode =d.strposcode ";
-		                if (areaWisePricing.equals("Y"))
-		                {
-		                    sqlModLive += " and b.strAreaCode= d.strAreaCode ";
-		                }
-	                sqlModLive += "left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode";
-	                sqlModLive += " where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' and a.dblAmount>0 ";
-
-	                
-	                String sqlModQFile = "SELECT  ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
-	                        + "sum(a.dblAmount)-sum(a.dblDiscAmt),f.strPosName,'" + userCode + "',a.dblRate ,sum(a.dblAmount),sum(a.dblDiscAmt),b.strPOSCode  "
-	                        + "FROM tblqbillmodifierdtl a\n"
-	                        + "left outer join tblqbillhd b on a.strBillNo=b.strBillNo and date(a.dteBillDate)=date(b.dteBillDate) and a.strClientCode=b.strClientCode "
-	                        + "left outer join tblposmaster f on b.strposcode=f.strposcode "
-	                        + "left outer join tblmenuitempricingdtl d on LEFT(a.strItemCode,7)= d.strItemCode "
-	                        + " and b.strposcode =d.strposcode ";
-		                if (areaWisePricing.equals("Y"))
-		                {
-		                    sqlModQFile += " and b.strAreaCode= d.strAreaCode ";
-		                }
-	                sqlModQFile += "left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode";
-	                sqlModQFile += " where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' and a.dblAmount>0  ";
-
-	         
-					 
-					 if (!posCode.equals("All") )
-		             {
-		                 sbFilters.append(" AND b.strPOSCode = '" + posCode + "' ");                    
-		             }
-					 
-					 sbFilters.append(" Group by b.strPoscode, d.strMenuCode,e.strMenuName");
-					 sbFilters.append(" order by b.strPoscode, d.strMenuCode,e.strMenuName");
-		            
-					 sbSqlLive.append(sbFilters);
-		             sbSqlQFile.append(sbFilters);
-
-		             sqlModLive = sqlModLive + " " + sbFilters.toString();
-		             sqlModQFile = sqlModQFile + " " + sbFilters.toString();
-		             
-		             
-		             mapPOSMenuHeadDtl = new LinkedHashMap<>();
-
-	                 ResultSet rsMenuHeadWiseSales = st.executeQuery(sbSqlLive.toString());
-	                 funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
-	                 rsMenuHeadWiseSales = st.executeQuery(sqlModLive);
-	                 funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
-	                 rsMenuHeadWiseSales = st.executeQuery(sbSqlQFile.toString()); 
-	                 funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
-	                 rsMenuHeadWiseSales = st.executeQuery(sqlModQFile); 
-	                 funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
-	                 
-	                 
-	                 Iterator<Map.Entry<String, Map<String, clsBillItemDtl>>> posIterator = mapPOSMenuHeadDtl.entrySet().iterator();
-	                 while (posIterator.hasNext())
-	                 {
-	                     Map<String, clsBillItemDtl> mapItemDtl = posIterator.next().getValue();
-	                     Iterator<Map.Entry<String, clsBillItemDtl>> itemIterator = mapItemDtl.entrySet().iterator();
-	                     while (itemIterator.hasNext())
-	                     {
-	                         clsBillItemDtl objBillItemDtl = itemIterator.next().getValue();
-	                         JSONObject objMenu= new JSONObject();
-	 						 objMenu.put("strMenuCode", objBillItemDtl.getMenuCode());
-	 						 objMenu.put("strMenuName", objBillItemDtl.getMenuName());
-	 						 objMenu.put("posName", objBillItemDtl.getPosName());
-	 						 objMenu.put("strQuantity", objBillItemDtl.getQuantity());
-	 						 objMenu.put("grandTotal", objBillItemDtl.getAmount());
-	 						 objMenu.put("subTotal", objBillItemDtl.getSubTotal());
-	 						 objMenu.put("discountAmt", objBillItemDtl.getDiscountAmount());
-	 						 
-	 						arrMenuwiseObj.put(objMenu);
-	                     }
-	                 }
-	       
-					st.close();
-					st1.close();
-					st2.close();
-					st3.close();
-					cmsCon.close();
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return arrMenuwiseObj;//jObj.toString();
+				areaWisePricing=rsSql.getString(1);
 			}
-		
-		   private void funGenerateMenuHeadWiseSales(ResultSet rsMenuHeadWiseSales)
-		    {
-		        try
-		        {
-		            while (rsMenuHeadWiseSales.next())
-		            {
-		                String posCode = rsMenuHeadWiseSales.getString(10);//posCode
-		                String posName = rsMenuHeadWiseSales.getString(5);//posName
-		                String menuCode = rsMenuHeadWiseSales.getString(1);//menuCode
-		                String menuName = rsMenuHeadWiseSales.getString(2);//menuName                
-		                double qty = rsMenuHeadWiseSales.getDouble(3);//qty
-		                double salesAmt = rsMenuHeadWiseSales.getDouble(8);//salesAmt
-		                double subTotal = rsMenuHeadWiseSales.getDouble(4);//subTotal
-		                double discAmt = rsMenuHeadWiseSales.getDouble(9);//disc                 
+			rsSql.close();
+			st1.close();
+			
+			
+			sbSqlLive.append("SELECT ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
+                    + " sum(a.dblAmount)-sum(a.dblDiscountAmt),f.strPosName,'" + userCode + "',a.dblRate  ,sum(a.dblAmount),sum(a.dblDiscountAmt),b.strPOSCode  "
+                    + " FROM tblbilldtl a\n"
+                    + " left outer join tblbillhd b on a.strBillNo=b.strBillNo and date(a.dteBillDate)=date(b.dteBillDate) and a.strClientCode=b.strClientCode "
+                    + " left outer join tblposmaster f on b.strposcode=f.strposcode "
+                    + " left outer join tblmenuitempricingdtl d on a.strItemCode = d.strItemCode "
+                    + " and b.strposcode =d.strposcode ");
+			if (areaWisePricing.equals("Y"))
+            {
+                sbSqlLive.append(" and b.strAreaCode= d.strAreaCode ");
+            }
+            sbSqlLive.append("left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode");
+            sbSqlLive.append(" where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' ");
+			
+			
+            sbSqlQFile.append("SELECT  ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
+                    + "sum(a.dblAmount)-sum(a.dblDiscountAmt),f.strPosName,'" + userCode + "',a.dblRate ,sum(a.dblAmount),sum(a.dblDiscountAmt),b.strPOSCode  "
+                    + "FROM tblqbilldtl a\n"
+                    + "left outer join tblqbillhd b on a.strBillNo=b.strBillNo and date(a.dteBillDate)=date(b.dteBillDate) and a.strClientCode=b.strClientCode "
+                    + "left outer join tblposmaster f on b.strposcode=f.strposcode "
+                    + "left outer join tblmenuitempricingdtl d on a.strItemCode = d.strItemCode "
+                    + " and b.strposcode =d.strposcode ");
+            if (areaWisePricing.equals("Y"))
+            {
+                sbSqlQFile.append(" and b.strAreaCode= d.strAreaCode ");
+            }
+            sbSqlQFile.append("left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode");
+            sbSqlQFile.append(" where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' ");
 
-		                if (mapPOSMenuHeadDtl.containsKey(posCode))
-		                {
-		                    Map<String, clsBillItemDtl> mapItemDtl = mapPOSMenuHeadDtl.get(posCode);
-		                    if (mapItemDtl.containsKey(menuCode))
-		                    {
-		                        clsBillItemDtl objItemDtl = mapItemDtl.get(menuCode);
-		                        objItemDtl.setQuantity(objItemDtl.getQuantity() + qty);
-		                        objItemDtl.setAmount(objItemDtl.getAmount() + salesAmt);
-		                        objItemDtl.setSubTotal(objItemDtl.getSubTotal() + subTotal);
-		                        objItemDtl.setDiscountAmount(objItemDtl.getDiscountAmount() + discAmt);
-		                    }
-		                    else
-		                    {
-		                        clsBillItemDtl objItemDtl = new clsBillItemDtl(qty, salesAmt, discAmt, posName, subTotal, menuCode, menuName);
-		                        mapItemDtl.put(menuCode, objItemDtl);
-		                    }
-		                }
-		                else
-		                {
-		                    Map<String, clsBillItemDtl> mapItemDtl = new LinkedHashMap<>();
-		                    clsBillItemDtl objItemDtl = new clsBillItemDtl(qty, salesAmt, discAmt, posName, subTotal, menuCode, menuName);
-		                    mapItemDtl.put(menuCode, objItemDtl);
-		                    mapPOSMenuHeadDtl.put(posCode, mapItemDtl);
-		                }
-		            }
-		        }
-		        catch (Exception e)
-		        {
-		            e.printStackTrace();
-		        }
-		    }
+			
+            String sqlModLive = "SELECT  ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
+                    + "sum(a.dblAmount)-sum(a.dblDiscAmt),f.strPosName,'" + userCode + "',a.dblRate ,sum(a.dblAmount),sum(a.dblDiscAmt),b.strPOSCode  "
+                    + "FROM tblbillmodifierdtl a\n"
+                    + "left outer join tblbillhd b on a.strBillNo=b.strBillNo and a.strClientCode=b.strClientCode "
+                    + "left outer join tblposmaster f on b.strposcode=f.strposcode "
+                    + "left outer join tblmenuitempricingdtl d on LEFT(a.strItemCode,7)= d.strItemCode "
+                    + " and b.strposcode =d.strposcode ";
+                if (areaWisePricing.equals("Y"))
+                {
+                    sqlModLive += " and b.strAreaCode= d.strAreaCode ";
+                }
+            sqlModLive += "left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode";
+            sqlModLive += " where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' and a.dblAmount>0 ";
+
+            
+            String sqlModQFile = "SELECT  ifnull(d.strMenuCode,'ND'),ifnull(e.strMenuName,'ND'), sum(a.dblQuantity),\n"
+                    + "sum(a.dblAmount)-sum(a.dblDiscAmt),f.strPosName,'" + userCode + "',a.dblRate ,sum(a.dblAmount),sum(a.dblDiscAmt),b.strPOSCode  "
+                    + "FROM tblqbillmodifierdtl a\n"
+                    + "left outer join tblqbillhd b on a.strBillNo=b.strBillNo and date(a.dteBillDate)=date(b.dteBillDate) and a.strClientCode=b.strClientCode "
+                    + "left outer join tblposmaster f on b.strposcode=f.strposcode "
+                    + "left outer join tblmenuitempricingdtl d on LEFT(a.strItemCode,7)= d.strItemCode "
+                    + " and b.strposcode =d.strposcode ";
+                if (areaWisePricing.equals("Y"))
+                {
+                    sqlModQFile += " and b.strAreaCode= d.strAreaCode ";
+                }
+            sqlModQFile += "left outer join tblmenuhd e on d.strMenuCode= e.strMenuCode";
+            sqlModQFile += " where date( b.dteBillDate ) BETWEEN '" + fromDate + "' AND '" + toDate + "' and a.dblAmount>0  ";
+
+     
+			 
+			 if (!posCode.equals("All") )
+             {
+                 sbFilters.append(" AND b.strPOSCode = '" + posCode + "' ");                    
+             }
+			 
+			 sbFilters.append(" Group by b.strPoscode, d.strMenuCode,e.strMenuName");
+			 sbFilters.append(" order by b.strPoscode, d.strMenuCode,e.strMenuName");
+            
+			 sbSqlLive.append(sbFilters);
+             sbSqlQFile.append(sbFilters);
+
+             sqlModLive = sqlModLive + " " + sbFilters.toString();
+             sqlModQFile = sqlModQFile + " " + sbFilters.toString();
+             
+             
+             mapPOSMenuHeadDtl = new LinkedHashMap<>();
+
+             ResultSet rsMenuHeadWiseSales = st.executeQuery(sbSqlLive.toString());
+             funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
+             rsMenuHeadWiseSales = st.executeQuery(sqlModLive);
+             funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
+             rsMenuHeadWiseSales = st.executeQuery(sbSqlQFile.toString()); 
+             funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
+             rsMenuHeadWiseSales = st.executeQuery(sqlModQFile); 
+             funGenerateMenuHeadWiseSales(rsMenuHeadWiseSales);
+             
+             
+             Iterator<Map.Entry<String, Map<String, clsBillItemDtl>>> posIterator = mapPOSMenuHeadDtl.entrySet().iterator();
+             while (posIterator.hasNext())
+             {
+                 Map<String, clsBillItemDtl> mapItemDtl = posIterator.next().getValue();
+                 Iterator<Map.Entry<String, clsBillItemDtl>> itemIterator = mapItemDtl.entrySet().iterator();
+                 while (itemIterator.hasNext())
+                 {
+                     clsBillItemDtl objBillItemDtl = itemIterator.next().getValue();
+                     JSONObject objMenu= new JSONObject();
+					 objMenu.put("strMenuCode", objBillItemDtl.getMenuCode());
+					 objMenu.put("strMenuName", objBillItemDtl.getMenuName());
+					 objMenu.put("posName", objBillItemDtl.getPosName());
+					 objMenu.put("strQuantity", objBillItemDtl.getQuantity());
+					 objMenu.put("grandTotal", objBillItemDtl.getAmount());
+					 objMenu.put("subTotal", objBillItemDtl.getSubTotal());
+					 objMenu.put("discountAmt", objBillItemDtl.getDiscountAmount());
+					 
+					arrMenuwiseObj.put(objMenu);
+                 }
+             }
+   
+			st.close();
+			st1.close();
+			st2.close();
+			st3.close();
+			cmsCon.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return arrMenuwiseObj;//jObj.toString();
+	}
+		
+   private void funGenerateMenuHeadWiseSales(ResultSet rsMenuHeadWiseSales)
+    {
+        try
+        {
+            while (rsMenuHeadWiseSales.next())
+            {
+                String posCode = rsMenuHeadWiseSales.getString(10);//posCode
+                String posName = rsMenuHeadWiseSales.getString(5);//posName
+                String menuCode = rsMenuHeadWiseSales.getString(1);//menuCode
+                String menuName = rsMenuHeadWiseSales.getString(2);//menuName                
+                double qty = rsMenuHeadWiseSales.getDouble(3);//qty
+                double salesAmt = rsMenuHeadWiseSales.getDouble(8);//salesAmt
+                double subTotal = rsMenuHeadWiseSales.getDouble(4);//subTotal
+                double discAmt = rsMenuHeadWiseSales.getDouble(9);//disc                 
+
+                if (mapPOSMenuHeadDtl.containsKey(posCode))
+                {
+                    Map<String, clsBillItemDtl> mapItemDtl = mapPOSMenuHeadDtl.get(posCode);
+                    if (mapItemDtl.containsKey(menuCode))
+                    {
+                        clsBillItemDtl objItemDtl = mapItemDtl.get(menuCode);
+                        objItemDtl.setQuantity(objItemDtl.getQuantity() + qty);
+                        objItemDtl.setAmount(objItemDtl.getAmount() + salesAmt);
+                        objItemDtl.setSubTotal(objItemDtl.getSubTotal() + subTotal);
+                        objItemDtl.setDiscountAmount(objItemDtl.getDiscountAmount() + discAmt);
+                    }
+                    else
+                    {
+                        clsBillItemDtl objItemDtl = new clsBillItemDtl(qty, salesAmt, discAmt, posName, subTotal, menuCode, menuName);
+                        mapItemDtl.put(menuCode, objItemDtl);
+                    }
+                }
+                else
+                {
+                    Map<String, clsBillItemDtl> mapItemDtl = new LinkedHashMap<>();
+                    clsBillItemDtl objItemDtl = new clsBillItemDtl(qty, salesAmt, discAmt, posName, subTotal, menuCode, menuName);
+                    mapItemDtl.put(menuCode, objItemDtl);
+                    mapPOSMenuHeadDtl.put(posCode, mapItemDtl);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
 		
 		@GET
 		@Path("/funPOSSalesReport")

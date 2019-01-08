@@ -8819,7 +8819,7 @@ public class clsPostPOSBillData
 				sbSqlDelete.append(" delete from tbldayendprocess " + " where dtePOSDate='" + startDate + "' and strPOSCode='" + posCode + "'");
 				st.execute(sbSqlDelete.toString());
 
-				String sql = " insert into tbldayendprocess(strPOSCode,dtePOSDate,strDayEnd,intShiftCode,strShiftEnd,strUserCreated" + ",dteDateCreated) " + " values('" + posCode + "','" + startDate + "','N'," + newShiftCode + " ,'','" + userCreated + "','" + dateCreated + "')";
+				String sql = " insert into tbldayendprocess(strPOSCode,dtePOSDate,strDayEnd,intShiftCode,strShiftEnd,strUserCreated" + ",dteDateCreated,dteDayEndDateTime) " + " values('" + posCode + "','" + startDate + "','N'," + newShiftCode + " ,'','" + userCreated + "','" + dateCreated + "','" + dateCreated + "')";
 				st1.executeUpdate(sql);
 				res = st.executeUpdate(sbSqlInsert.toString());
 
@@ -9616,7 +9616,7 @@ public class clsPostPOSBillData
 					+ ",strTakeAwayAreaForDirectBiller,strRoundOffBillFinalAmt,dblNoOfDecimalPlace,strSendDBBackupOnClientMail,strPrintOrderNoOnBillYN,strPrintDeviceAndUserDtlOnKOTYN "//211
 					+ ",strRemoveSCTaxCode,strAutoAddKOTToBill,strAreaWiseCostCenterKOTPrintingYN,strWERAOnlineOrderIntegration,strWERAMerchantOutletId,strWERAAuthenticationAPIKey"//217
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
-					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill) "// 230
+					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId) "// 230
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9632,11 +9632,20 @@ public class clsPostPOSBillData
 
 				if (!hoClientCode.trim().isEmpty())
 				{
+					String clientName = dataObject.get("strClientName").toString().trim(); // 1
+					sbSqlDelete.setLength(0);
+					sbSqlDelete.append("select strClientName from tblsetup where strClientCode='" + hoClientCode + "'");
+					ResultSet rsClientName = st1.executeQuery(sbSqlDelete.toString());
+					if (rsClientName.next())
+					{
+						clientName=rsClientName.getString(1);
+					}
+					rsClientName.close();
 					sbSqlDelete.setLength(0);
 					sbSqlDelete.append("delete from tblsetup " + "where strClientCode='" + hoClientCode + "' and strPOSCode='" + POSCode + "'");
 					st.execute(sbSqlDelete.toString());
 
-					String clientName = dataObject.get("strClientName").toString().trim(); // 1
+					
 					String address1 = dataObject.get("strAddressLine1").toString().trim(); // 2
 					String address2 = dataObject.get("strAddressLine2").toString().trim(); // 3
 					String address3 = dataObject.get("strAddressLine3").toString().trim(); // 4
@@ -9874,8 +9883,10 @@ public class clsPostPOSBillData
 					String strTableReservationSMS = dataObject.get("strTableReservationSMS").toString().trim();// 228
 					String strSendTableReservationSMS = dataObject.get("strSendTableReservationSMS").toString().trim();// 229
 					String strMergeAllKOTSToBill = dataObject.get("strMergeAllKOTSToBill").toString().trim();// 230
-					
-					
+					String strEmailSmtpHost = dataObject.get("strEmailSmtpHost").toString().trim();// 231
+					String strEmailSmtpPort = dataObject.get("strEmailSmtpPort").toString().trim();// 232
+					String strSendDBBackupOnSanguineId = dataObject.get("strMergeAllKOTSToBill").toString().trim();// 233
+					 
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -9901,7 +9912,8 @@ public class clsPostPOSBillData
 							+ ",'" + strMerchantCode + "','" + strAuthenticationKey + "','" + strSalt + "','" + strEnableLockTable + "','" + strHomeDeliveryAreaForDirectBiller + "' " // 205
 							+ ",'" + strTakeAwayAreaForDirectBiller + "','" + strRoundOffBillFinalAmt + "','" + dblNoOfDecimalPlace + "','" + strSendDBBackupOnClientMail + "','" + strPrintOrderNoOnBillYN + "','" + strPrintDeviceAndUserDtlOnKOTYN + "','" + strRemoveSCTaxCode + "','" + strAutoAddKOTToBill + "'" // 213
 							+ ",'" + strAreaWiseCostCenterKOTPrintingYN + "','" + strWERAOnlineOrderIntegration + "','" + strWERAMerchantOutletId + "','" + strWERAAuthenticationAPIKey + "','" + strFireCommunication + "'" + ",'" + dblUSDConverionRate + "','" + strDBBackupMailReceiver + "','" + strPrintMoveTableMoveKOTYN + "','" + strPrintQtyTotal + "','" + strShowReportsInCurrency + "'" 
-							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "') "); // 230
+							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
+							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "') "); // 233
 					flgData = true;
 				}
 			}
