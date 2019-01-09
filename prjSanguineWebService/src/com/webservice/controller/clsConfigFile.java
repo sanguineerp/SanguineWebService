@@ -50,7 +50,7 @@ public class clsConfigFile
 		    i = 0;
 		    configData = new String[45];
 		    tempData = new String[45];
-		    /*file = new File(System.getProperty("user.dir") + "/DBConfigFile.txt");
+		    file = new File(System.getProperty("user.dir") + "/DBConfigFile.txt");
 		    System.out.println("File Path= "+file.getAbsolutePath());
 		    System.out.println("File Path= "+System.getProperty("user.dir"));
 		    
@@ -118,10 +118,10 @@ public class clsConfigFile
 		    onlineorderDBPortNo = configData[41].trim();
 		    
 		    posDBBackupPath = configData[42].trim();
-		    posExcelReportExportPath = configData[43].trim();*/	    	   
+		    posExcelReportExportPath = configData[43].trim();  	   
 		   
 		    
-		    posDBServerName = "mysql";
+		   /* posDBServerName = "mysql";
 		    posDBName = "sheesha";
 		    posDBUserId = "swapnil";
 		    posDBPassword = "sanguine";
@@ -174,7 +174,7 @@ public class clsConfigFile
 		    posDBBackupPath = "";
 		    posExcelReportExportPath = "";
 
-
+*/
 		    
 		}
 		catch (Exception e)

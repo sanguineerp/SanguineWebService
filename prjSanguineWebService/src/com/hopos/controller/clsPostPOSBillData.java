@@ -6691,7 +6691,7 @@ public class clsPostPOSBillData
 			st = cmsCon.createStatement();
 			String sql = "select a.strTableNo,a.strTableName,a.strStatus,a.strAreaCode,a.strWaiterNo,a.intPaxNo,a.strOperational "
 					+ " ,a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited,a.strClientCode,a.strDataPostFlag"
-					+ " ,a.intSequence,right(b.strPropertyPOSCode,3),a.strNCTable "
+					+ " ,a.intSequence,right(b.strPropertyPOSCode,3),a.strNCTable,a.strBarTable "
 					+ " from tbltablemaster a,tblposmaster b "
 					+ " where a.strPOSCode=b.strPosCode and (b.strPropertyPOSCode ='" + propertyPOSCode + "' OR a.strPOSCode = 'All') "
 					+ " and a.dteDateEdited >= '" + lastModifiedDate + "'";
@@ -6716,13 +6716,15 @@ public class clsPostPOSBillData
 				obj.put("Sequence", rsMasterData.getString(14));
 				obj.put("POSCode", rsMasterData.getString(15));
 				obj.put("strNCTable", rsMasterData.getString(16));
+				obj.put("strBarTable", rsMasterData.getString(17));
+				
 				arrObj.put(obj);
 			}
 			rsMasterData.close();
 
 			sql = "select a.strTableNo,a.strTableName,a.strStatus,a.strAreaCode,a.strWaiterNo,a.intPaxNo,a.strOperational "
 					+ " ,a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited,a.strClientCode,a.strDataPostFlag"
-					+ " ,a.intSequence,a.strPOSCode,a.strNCTable "
+					+ " ,a.intSequence,a.strPOSCode,a.strNCTable,a.strBarTable "
 					+ " from tbltablemaster a where a.dteDateEdited >= '" + lastModifiedDate + "' "
 					+ "and a.strPOSCode='All' ";
 			System.out.println(sql);
@@ -6745,6 +6747,7 @@ public class clsPostPOSBillData
 				obj.put("Sequence", rsMasterData.getString(14));
 				obj.put("POSCode", rsMasterData.getString(15));
 				obj.put("strNCTable", rsMasterData.getString(16));
+				obj.put("strBarTable", rsMasterData.getString(17));
 				arrObj.put(obj);
 			}
 			rsMasterData.close();
@@ -9885,7 +9888,7 @@ public class clsPostPOSBillData
 					String strMergeAllKOTSToBill = dataObject.get("strMergeAllKOTSToBill").toString().trim();// 230
 					String strEmailSmtpHost = dataObject.get("strEmailSmtpHost").toString().trim();// 231
 					String strEmailSmtpPort = dataObject.get("strEmailSmtpPort").toString().trim();// 232
-					String strSendDBBackupOnSanguineId = dataObject.get("strMergeAllKOTSToBill").toString().trim();// 233
+					String strSendDBBackupOnSanguineId = dataObject.get("strSendDBBackupOnSanguineId").toString().trim();// 233
 					 
 					if (i == 0)
 					{
