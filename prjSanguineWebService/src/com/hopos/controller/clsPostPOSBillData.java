@@ -8101,7 +8101,7 @@ public class clsPostPOSBillData
 				obj.put("alternateMobileNo", rsItemOrderingMasterData.getString(12));
 				obj.put("officeBuildingCode", rsItemOrderingMasterData.getString(13));
 				obj.put("officeBuildingName", rsItemOrderingMasterData.getString(14));
-				obj.put("officeStreetName", rsItemOrderingMasterData.getString(15));
+				obj.put("officeStreetName", rsItemOrderingMasterData.getString(15).replaceAll("\'", ""));
 				obj.put("officeLandmark", rsItemOrderingMasterData.getString(16));
 				obj.put("officeArea", rsItemOrderingMasterData.getString(17));
 				obj.put("officeCity", rsItemOrderingMasterData.getString(18));
@@ -8114,16 +8114,16 @@ public class clsPostPOSBillData
 				obj.put("dateEdited", rsItemOrderingMasterData.getString(25));
 				obj.put("dataPostFlag", rsItemOrderingMasterData.getString(26));
 				obj.put("clientCode", rsItemOrderingMasterData.getString(27));
-				obj.put("officeAddress", rsItemOrderingMasterData.getString(28));
+				obj.put("officeAddress", rsItemOrderingMasterData.getString(28).replaceAll("\'", ""));
 				obj.put("externalCode", rsItemOrderingMasterData.getString(29));
 				obj.put("customerType", rsItemOrderingMasterData.getString(30));
 				obj.put("dob", rsItemOrderingMasterData.getString(31));
 				obj.put("gender", rsItemOrderingMasterData.getString(32));
 				obj.put("anniversary", rsItemOrderingMasterData.getString(33));
 				obj.put("emailId", rsItemOrderingMasterData.getString(34));
-				obj.put("CRMId", rsItemOrderingMasterData.getString(35));
+				obj.put("CRMId", rsItemOrderingMasterData.getString(35).replaceAll("\'", ""));
 				obj.put("CustAdress", rsItemOrderingMasterData.getString(36));
-				obj.put("strTempAddress", rsItemOrderingMasterData.getString(37));
+				obj.put("strTempAddress", rsItemOrderingMasterData.getString(37).replaceAll("\'", ""));
 				obj.put("strTempStreet", rsItemOrderingMasterData.getString(38));
 				obj.put("strTempLandmark", rsItemOrderingMasterData.getString(39));
 				obj.put("strGSTNo", rsItemOrderingMasterData.getString(40));
