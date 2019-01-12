@@ -868,7 +868,7 @@ public class clsPostPOSBillData
 				flgData = false;
 				int cnt = 0;
 				sbSql.setLength(0);
-				sbSql.append("INSERT INTO tblqbilldiscdtl (`strBillNo`, `strPOSCode`," + " `dblDiscAmt`, `dblDiscPer`, `dblDiscOnAmt`, `strDiscOnType`," + " `strDiscOnValue`, `strDiscReasonCode`, `strDiscRemarks`, `strUserCreated`, " + " `strUserEdited`, `dteDateCreated`, `dteDateEdited`,`strClientCode`,dteBillDate)"
+				sbSql.append("INSERT INTO tblqbilldiscdtl (`strBillNo`, `strPOSCode`," + " `dblDiscAmt`, `dblDiscPer`, `dblDiscOnAmt`, `strDiscOnType`," + " `strDiscOnValue`, `strDiscReasonCode`, `strDiscRemarks`, `strUserCreated`, " + " `strUserEdited`, `dteDateCreated`, `dteDateEdited`,`strClientCode`,`dteBillDate`,`strDataPostFlag`)"
 						+ " VALUES");
 
 				JSONObject mJsonObject = new JSONObject();
@@ -8080,7 +8080,7 @@ public class clsPostPOSBillData
 			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
 			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
 			st = cmsCon.createStatement();
-			String sql = " select * from tblcustomermaster " + " where dteDateEdited >= '" + lastModifiedDate + "' and strClientCode='" + clientCode + "' " + " order by dteDateEdited; ";
+			String sql = " select * from tblcustomermaster " + " where dteDateEdited >= '" + lastModifiedDate + "' " + " order by dteDateEdited; ";
 			System.out.println(sql);
 			ResultSet rsItemOrderingMasterData = st.executeQuery(sql);
 			while (rsItemOrderingMasterData.next())
