@@ -736,14 +736,15 @@ public class clsPostPOSBillData
 					String ItemCode = mJsonObject.get("ItemCode").toString().trim();
 					String KOTNo = mJsonObject.get("KOTNo").toString().trim();
 					String BillDate = mJsonObject.get("BillDate").toString();
+					String dtBillDate = mJsonObject.get("dtBillDate").toString();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strKOTNo='" + KOTNo + "' " + " and strClientCode='" + strHOClientCode + "'  and date(dteBillDate)='" + BillDate + "' ");
+					sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strKOTNo='" + KOTNo + "' " + " and strClientCode='" + strHOClientCode + "'  and date(dtBillDate)='" + dtBillDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 					if (KOTNo.isEmpty())
 					{
 						sbSqlDelete.setLength(0);
-						sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strClientCode='" + strHOClientCode + "'  and date(dteBillDate)='" + BillDate + "' ");
+						sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strClientCode='" + strHOClientCode + "'  and date(dtBillDate)='" + dtBillDate + "' ");
 					}
 					st.executeUpdate(sbSqlDelete.toString());
 
@@ -766,7 +767,7 @@ public class clsPostPOSBillData
 					String discPer = mJsonObject.get("DiscountPer").toString();
 
 					String strSequenceNo = mJsonObject.get("strSequenceNo").toString();
-					String dtBillDate = mJsonObject.get("dtBillDate").toString();
+					//String dtBillDate = mJsonObject.get("dtBillDate").toString();
 					String tmeOrderPickup = mJsonObject.get("tmeOrderPickup").toString();
 
 					String key = BillNo + "#" + ClientCode + "#" + ItemCode + "#" + KOTNo;
@@ -8125,6 +8126,10 @@ public class clsPostPOSBillData
 				obj.put("strTempAddress", rsItemOrderingMasterData.getString(37));
 				obj.put("strTempStreet", rsItemOrderingMasterData.getString(38));
 				obj.put("strTempLandmark", rsItemOrderingMasterData.getString(39));
+				obj.put("strGSTNo", rsItemOrderingMasterData.getString(40));
+				obj.put("strDebtorCode", rsItemOrderingMasterData.getString(41));
+				obj.put("strAccountCode", rsItemOrderingMasterData.getString(42));
+				obj.put("dblCreditLimit", rsItemOrderingMasterData.getString(43));
 
 				arrObj.put(obj);
 			}
@@ -8898,7 +8903,8 @@ public class clsPostPOSBillData
 			st = cmsCon.createStatement();
 
 			sbSqlInsert.setLength(0);
-			sbSqlInsert.append("INSERT INTO tblcustomermaster (strCustomerCode, strCustomerName, strBuldingCode, strBuildingName" + ", strStreetName, strLandmark, strArea, strCity, strState, intPinCode, longMobileNo" + ", longAlternateMobileNo, strOfficeBuildingCode, strOfficeBuildingName, strOfficeStreetName" + ", strOfficeLandmark, strOfficeArea, strOfficeCity,strOfficePinCode, strOfficeState" + ", strOfficeNo, strUserCreated, strUserEdited, dteDateCreated, dteDateEdited, strDataPostFlag, strClientCode,strOfficeAddress" + ", strExternalCode, strCustomerType, dteDOB, strGender,dteAnniversary,strEmailId, strCRMId) VALUES ");
+			sbSqlInsert.append("INSERT INTO tblcustomermaster (strCustomerCode, strCustomerName, strBuldingCode, strBuildingName" + ", strStreetName, strLandmark, strArea, strCity, strState, intPinCode, longMobileNo" + ", longAlternateMobileNo, strOfficeBuildingCode, strOfficeBuildingName, strOfficeStreetName" + ", strOfficeLandmark, strOfficeArea, strOfficeCity,strOfficePinCode, strOfficeState" + ", strOfficeNo, strUserCreated, strUserEdited, dteDateCreated, dteDateEdited, strDataPostFlag, strClientCode,strOfficeAddress" + ", strExternalCode, strCustomerType, dteDOB, strGender,dteAnniversary,strEmailId, strCRMId"
+					+ ",strCustAddress,strTempAddress,strTempStreet,strGSTNo,strDebtorCode,strAccountCode,dblCreditLimit) VALUES ");
 			JSONObject dataObject = new JSONObject();
 			for (int i = 0; i < dataArrayObject.length(); i++)
 			{
@@ -8943,6 +8949,13 @@ public class clsPostPOSBillData
 				String anniversary = dataObject.get("Anniversary").toString();
 				String eMailId = dataObject.get("EmailId").toString();
 				String crmId = dataObject.get("CRMId").toString();
+				String custAdress = dataObject.get("strCustAddress").toString();
+				String tempAddress = dataObject.get("strTempAddress").toString();
+				String tempStreet = dataObject.get("strTempStreet").toString();
+				String gstNo = dataObject.get("strGSTNo").toString();
+				String debtorCode = dataObject.get("strDebtorCode").toString();
+				String accountCode = dataObject.get("strAccountCode").toString();
+				double dblCreditLimit = Double.parseDouble(dataObject.get("dblCreditLimit").toString());
 
 				if (i == 0)
 				{
@@ -8952,7 +8965,8 @@ public class clsPostPOSBillData
 				{
 					sbSqlInsert.append(",(");
 				}
-				sbSqlInsert.append("'" + customerCode + "','" + customerName + "', '" + buildingCode + "', '" + buildingName + "'" + ", '" + streetName + "', '" + landmark + "', '" + area + "', '" + city + "','" + state + "', '" + pinCode + "'" + ", '" + mobileNumber + "', '" + alternateMobileNumber + "', '" + officeBuildingCode + "', '" + officeBuildingName + "'" + ", '" + officeStreetName + "', '" + officeLandmark + "', '" + officeArea + "', '" + officeCity + "'" + ", '" + officePinCode + "', '" + officeState + "', '" + officeNo + "', '" + userCreated + "', '" + userEdited + "'" + ", '" + dateCreated + "', '" + dateEdited + "', '" + dataPostFlag + "', '" + clientCode + "','" + officeAddress + "'" + ", '" + externalCode + "', '" + customerType + "', '" + dob + "', '" + gender + "', '" + anniversary + "','" + eMailId + "', '" + crmId + "')");
+				sbSqlInsert.append("'" + customerCode + "','" + customerName + "', '" + buildingCode + "', '" + buildingName + "'" + ", '" + streetName + "', '" + landmark + "', '" + area + "', '" + city + "','" + state + "', '" + pinCode + "'" + ", '" + mobileNumber + "', '" + alternateMobileNumber + "', '" + officeBuildingCode + "', '" + officeBuildingName + "'" + ", '" + officeStreetName + "', '" + officeLandmark + "', '" + officeArea + "', '" + officeCity + "'" + ", '" + officePinCode + "', '" + officeState + "', '" + officeNo + "', '" + userCreated + "', '" + userEdited + "'" + ", '" + dateCreated + "', '" + dateEdited + "', '" + dataPostFlag + "', '" + clientCode + "','" + officeAddress + "'" + ", '" + externalCode + "', '" + customerType + "', '" + dob + "', '" + gender + "', '" + anniversary + "','" + eMailId + "', '" + crmId + "'"
+						+ "'" + custAdress + "','" + tempAddress + "','" + tempStreet + "','" + gstNo + "','" + debtorCode + "','" + accountCode + "','" + customerCode + "','" + dblCreditLimit + "')");
 				flgData = true;
 			}
 
