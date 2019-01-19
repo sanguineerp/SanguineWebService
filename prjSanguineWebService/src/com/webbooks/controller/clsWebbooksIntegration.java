@@ -1,5 +1,7 @@
 package com.webbooks.controller;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,7 +12,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import javax.mail.Session;
+import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -20,18 +25,59 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.xml.JRXmlLoader;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.apos.model.clsGroupMasterModel;
 import com.cmsws.controller.clsCMSIntegration;
+import com.webbooks.bean.clsProfitLossReportBean;
 import com.webservice.controller.clsDatabaseConnection;
 
-@Path("/WebBooksIntegration")
 
+
+
+
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.Message.RecipientType;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.util.ByteArrayDataSource;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import net.sf.jasperreports.engine.JasperExportManager;
+
+import org.springframework.stereotype.Controller;
+
+@Path("/WebBooksIntegration")
+@Controller
 public class clsWebbooksIntegration 
 {
+
+	 @Autowired
+	 private ServletContext servletContext;
+
 	@SuppressWarnings("finally")
 	@GET 
 	@Path("/funInvokeWebBooksWebService")
@@ -370,6 +416,10 @@ public class clsWebbooksIntegration
 		flgData = true;
 	    }
 	    
+	    String sendeid=objBillData.getString("senderMailId").toString();
+	    String senderPassward=objBillData.getString("senderMailPassward").toString();
+	    String reciverid=objBillData.getString("reciverMailId").toString();
+	    funProfitAndLossReport(sendeid, senderPassward, reciverid, billDate, clientCode);
 	    if (flgData)
 	    {
 		sql = sql.substring(1, sql.length());
@@ -1615,47 +1665,7 @@ public class clsWebbooksIntegration
 		 }
 	 	
 	 	
-	 	@GET
-		 @Path("/funGetWebBooksTaxAccData")
-		 @Produces(MediaType.APPLICATION_JSON)
-		 public JSONObject funGetWebBooksTaxAccData(@QueryParam("strDocCode") String strDocCode, @QueryParam("clientCode") String clientCode,@QueryParam("propertyCode") String propertyCode)
-		    {
-				JSONObject jObjData = new JSONObject();
-				clsDatabaseConnection objDb=new clsDatabaseConnection();
-		        Connection webbookCon=null;
-		        Statement st = null;
-				String sql="";
-				try
-				{
-					webbookCon=objDb.funOpenWebbooksCon("mysql","master");
-					st = webbookCon.createStatement();	
-				    sql = " select a.strAccountCode , a.strAccountName "
-				    		+ " from tblacmaster a where  a.strAccountCode = '"+strDocCode+"' and a.strClientCode = '"+clientCode+"' and  a.strPropertyCode='"+propertyCode+"'  " ;	
-				
-				    ResultSet rs=st.executeQuery(sql);
-				    while(rs.next())
-					{
-				    	jObjData.put("strAccountCode",rs.getString(1));
-				    	jObjData.put("strAccountName",rs.getString(2));
-					}
-				    
-				    
-				}catch(Exception ex)
-				{
-					try {
-						webbookCon.close();
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					ex.printStackTrace();
-				}finally
-				{
-					return jObjData;
-				}
-				
-		    }
-	 
+	 	
 	 
 	 	@SuppressWarnings("finally")
 		@GET 
@@ -1702,5 +1712,469 @@ public class clsWebbooksIntegration
 		        	return jObj.toString();
 		        }
 		    }
+	 	
+	 	
+	 	
+	 	
+	 	
+	 	@GET
+		 @Path("/funGetPOSDataAcc")
+		 @Produces(MediaType.APPLICATION_JSON)
+		 public JSONObject funGetWebBooksTaxAccData(@QueryParam("strDocCode") String strDocCode, @QueryParam("clientCode") String clientCode,@QueryParam("propertyCode") String propertyCode)
+		    {
+				JSONObject jObjData = new JSONObject();
+				clsDatabaseConnection objDb=new clsDatabaseConnection();
+		        Connection webbookCon=null;
+		        Statement st = null;
+				String sql="";
+				try
+				{
+					webbookCon=objDb.funOpenWebbooksCon("mysql","master");
+					st = webbookCon.createStatement();	
+				    sql = " select a.strAccountCode , a.strAccountName "
+				    		+ " from tblacmaster a where  a.strAccountCode = '"+strDocCode+"' and a.strClientCode = '"+clientCode+"' and  a.strPropertyCode='"+propertyCode+"'  " ;	
+				
+				    ResultSet rs=st.executeQuery(sql);
+				    while(rs.next())
+					{
+				    	jObjData.put("strAccountCode",rs.getString(1));
+				    	jObjData.put("strAccountName",rs.getString(2));
+					}
+				    
+				    
+				}catch(Exception ex)
+				{
+					try {
+						webbookCon.close();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					ex.printStackTrace();
+				}finally
+				{
+					return jObjData;
+				}
+				
+		    }
 	
+	 	
+	 	
+	 	
+	 	private void funProfitAndLossReport(final String senderId, final String senderPasswrd, String recieveId, String date, String clientCode)
+	 	  {
+	 	    clsDatabaseConnection objDb = new clsDatabaseConnection();
+	 	    Connection cmsCon = null;
+	 	    
+	 	    try
+	 	    {
+	 	      String posItemCode = "";String posItemName = "";String posCode = "";String billDate = "";String wsItemCode = "";String locCode = "";String posName = "";
+	 	      String retValue = "";
+	 	      String strStkCode = "";
+	 	      long lastNo = 0L;
+	 	      double totAmt = 0.0D;double rate = 0.0D;double itemTotAmt = 0.0D;double itemPer = 0.0D;double itemPerAmt = 0.0D;
+	 	      Integer quantity = new Integer(0);
+	 	      cmsCon = objDb.funOpenMMSCon("mysql", "transaction");
+	 	      Statement st = cmsCon.createStatement();
+	 	      
+
+	 	      String companyName = "";
+	 	      String userCode = "";
+	 	      String propertyCode = "";
+	 	      
+
+	 	      String strAdd1 = "";
+	 	      String strAdd2 = "";
+	 	      String strcity = "";
+	 	      String strState = "";
+	 	      String strCountry = "";
+	 	      String strPin = "";
+	 	      st = cmsCon.createStatement();
+	 	      String sql = " select a.strAdd1,a.strAdd2,a.strCity,a.strState,a.strCountry,a.strPin from tblpropertysetup a  where a.strPropertyCode='01' and  a.strClientCode='" + 
+	 	        clientCode + "'  ";
+	 	      ResultSet rsProperty = st.executeQuery(sql);
+	 	      while (rsProperty.next())
+	 	      {
+	 	        strAdd1 = rsProperty.getString(1);
+	 	        strAdd2 = rsProperty.getString(2);
+	 	        strcity = rsProperty.getString(3);
+	 	        strState = rsProperty.getString(4);
+	 	        strCountry = rsProperty.getString(5);
+	 	        strPin = rsProperty.getString(6);
+	 	      }
+	 	      
+	 	      String dteFromDate = date;
+	 	      String dteToDate = date;
+	 	      String imagePath = servletContext.getRealPath("/WEB-INF/images/company_Logo.png");
+//	 	      String imagePath = "";
+	 	      
+	 	      List<clsProfitLossReportBean> dataListPaymnet = new ArrayList();
+	 	      List<clsProfitLossReportBean> dataListRecipt = new ArrayList();
+	 	      List<clsProfitLossReportBean> dataListExtraExpense = new ArrayList();
+	 	      List<List<clsProfitLossReportBean>> list = new ArrayList();
+	 	      
+
+	 	      double conversionRate = 1.0D;
+	 	      
+
+	 	      String prevProdCode = "";
+	 	      int cnt = -1;
+	 	      
+	 	      List<clsProfitLossReportBean> listProduct = new ArrayList();
+	 	      JSONObject jObjJVData = new JSONObject();
+		      jObjJVData.put("dteFrom", dteFromDate);
+		      jObjJVData.put("dteTo", dteToDate);
+		      jObjJVData.put("strClientCode", clientCode);
+	 	      
+	 	     JSONObject jObj =funGetPOSDataFromLivBill(jObjJVData);
+	 	      Double dblTotalSale = Double.valueOf(Double.parseDouble(jObj.get("TotalSale").toString()));
+		      Double dblTotalPurchase = Double.valueOf(Double.parseDouble(jObj.get("TotalPurchase").toString()));
+		      clsProfitLossReportBean objPL = new clsProfitLossReportBean();
+		     
+		      objPL.setDblPurAmt(dblTotalPurchase.doubleValue());
+		      objPL.setDblSaleAmt(dblTotalSale.doubleValue());
+		      listProduct.add(objPL);
+	 	      
+	 	      
+	 	      
+	 	      
+	 	      Map<String, clsProfitLossReportBean> hmSalesIncStmt = new HashMap();
+	 	      funCalculateIncomeStmt("Expense", "tbljvhd", "tbljvdtl", dteFromDate, dteToDate, clientCode, hmSalesIncStmt, propertyCode);
+	 	      
+
+	 	      funCalculateIncomeStmt("Expense", "tblreceipthd", "tblreceiptdtl", dteFromDate, dteToDate, clientCode, hmSalesIncStmt, propertyCode);
+	 	      
+
+	 	      funCalculateIncomeStmt("Expense", "tblpaymenthd", "tblpaymentdtl", dteFromDate, dteToDate, clientCode, hmSalesIncStmt, propertyCode);
+	 	      BigDecimal totalExpense = new BigDecimal(0);
+	 	      for (Map.Entry<String, clsProfitLossReportBean> entry : hmSalesIncStmt.entrySet())
+	 	      {
+
+
+	 	        clsProfitLossReportBean objProfitLoss = new clsProfitLossReportBean();
+	 	        objProfitLoss.setStrAccountName(((clsProfitLossReportBean)entry.getValue()).getStrAccountName());
+	 	        objProfitLoss.setDblAmt(((clsProfitLossReportBean)entry.getValue()).getDblAmt());
+	 	        totalExpense = totalExpense.add(((clsProfitLossReportBean)entry.getValue()).getDblAmt());
+	 	        
+	 	        dataListExtraExpense.add(objProfitLoss);
+	 	      }
+	 	      
+
+	 	      BigDecimal purAmt = new BigDecimal(0);
+	 	      BigDecimal dblRevenue = new BigDecimal(0);
+	 	      
+	 	     BigDecimal perCostOfGoodSold = new BigDecimal(0);
+	 	     BigDecimal perTotalExp = new BigDecimal(0);
+	 	     BigDecimal perGrossProfit = new BigDecimal(0);
+	 	     BigDecimal netProfit = new BigDecimal(0);
+	 	     BigDecimal perNetProfit = new BigDecimal(0);
+	 	     BigDecimal grossProfit = new BigDecimal(0);
+	 	    
+	 	      for (clsProfitLossReportBean obj : listProduct)
+	 	      {
+	 	        purAmt = purAmt.add(BigDecimal.valueOf(obj.getDblPurAmt()));
+	 	        dblRevenue = dblRevenue.add(BigDecimal.valueOf(obj.getDblSaleAmt()));
+	 	      }
+	 	     
+	 	      
+
+	 	     if (dblRevenue.compareTo(BigDecimal.ZERO) < 0){
+	 	      grossProfit = dblRevenue.subtract(purAmt);
+	 	      perCostOfGoodSold = purAmt.divide(dblRevenue, 2, RoundingMode.HALF_UP);
+	 	      perCostOfGoodSold = perCostOfGoodSold.multiply(new BigDecimal(100));
+	 	      
+	 	      perTotalExp = totalExpense.divide(dblRevenue, 2, RoundingMode.HALF_UP).multiply(new BigDecimal(100));
+	 	      perGrossProfit = grossProfit.divide(dblRevenue, 2, RoundingMode.HALF_UP).multiply(new BigDecimal(100));
+	 	      netProfit = grossProfit.subtract(totalExpense);
+	 	      perNetProfit = netProfit.divide(dblRevenue, 2, RoundingMode.HALF_UP).multiply(new BigDecimal(100));
+	 	      }
+	 	      if (perNetProfit.compareTo(BigDecimal.ZERO) < 0)
+	 	      {
+	 	        perNetProfit = perNetProfit.multiply(new BigDecimal(-1));
+	 	      }
+	 	      
+	 	      HashMap hm = new HashMap();
+	 	      hm.put("strCompanyName", companyName);
+	 	      hm.put("strUserCode", userCode);
+	 	      hm.put("strImagePath", imagePath);
+	 	      hm.put("strAddr1", strAdd1);
+	 	      hm.put("strAddr2", strAdd2);
+	 	      hm.put("strCity", strcity);
+	 	      hm.put("strState", strState);
+	 	      hm.put("strCountry", strCountry);
+	 	      hm.put("strPin", strPin);
+	 	      hm.put("fromDate", dteFromDate);
+	 	      hm.put("toDate", dteToDate);
+	 	      hm.put("dataListExtraExpense", dataListExtraExpense);
+	 	      hm.put("dataListRecipt", dataListRecipt);
+	 	      hm.put("totalExpense", totalExpense);
+	 	      
+	 	      hm.put("dblGrossProfit", grossProfit);
+	 	      hm.put("dblRevenue", dblRevenue);
+	 	      hm.put("dblCostofGood", purAmt);
+	 	      
+	 	      hm.put("perCostOfGoodSold", perCostOfGoodSold);
+	 	      hm.put("perTotalExp", perTotalExp);
+	 	      hm.put("netProfit", netProfit);
+	 	      hm.put("perNetProfit", perNetProfit);
+	 	      hm.put("perGrossProfit", perGrossProfit);
+	 	      
+	 	     String strPL = "NET PROFIT";
+		      if (netProfit.compareTo(BigDecimal.ZERO) < 0)
+		      {
+		        strPL = "LOSS";
+		      }
+		      hm.put("strPL", strPL);
+
+	 	      list.add(dataListExtraExpense);
+	 	      JRBeanCollectionDataSource beanColDataSource = new JRBeanCollectionDataSource(list);
+	 	      
+	 	      JasperDesign jd = JRXmlLoader.load(servletContext.getResourceAsStream("/WEB-INF/billFormat/rptProfitLossReport.jrxml"));
+	 	      JasperReport jr = JasperCompileManager.compileReport(jd);
+	 	      
+	 	      JasperPrint jp1 = JasperFillManager.fillReport(jr, hm, beanColDataSource);
+	 	      
+
+	 	      Properties props = new Properties();
+	 	      props.put("mail.smtp.host", "smtp.gmail.com");
+	 	      props.put("mail.smtp.socketFactory.port", "465");
+	 	      props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+	 	      props.put("mail.smtp.auth", "true");
+	 	      props.put("mail.smtp.port", "465");
+	 	      
+	 	     Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator()
+		        {
+		            protected PasswordAuthentication getPasswordAuthentication()
+		            {
+		                return new PasswordAuthentication(senderId, senderPasswrd);//change accordingly
+		            }
+		        });
+
+
+
+
+
+
+	 	      MimeMessage message = new MimeMessage(session);
+	 	      message.setFrom(new InternetAddress(senderId));
+	 	      message.addRecipient(Message.RecipientType.TO, new InternetAddress(recieveId));
+	 	      
+	 	      message.setSubject("PL Report");
+	 	      
+	 	      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	 	      JasperExportManager.exportReportToPdfStream(jp1, baos);
+	 	      DataSource source = new ByteArrayDataSource(baos.toByteArray(), "application/pdf");
+	 	      
+	 	      BodyPart messageBodyPart = new MimeBodyPart();
+	 	      Multipart multipart = new MimeMultipart();
+	 	      messageBodyPart.setDataHandler(new DataHandler(source));
+	 	      multipart.addBodyPart(messageBodyPart);
+	 	      message.setContent(multipart);
+	 	      Transport.send(message);
+
+
+
+	 	    }
+	 	    catch (Exception e)
+	 	    {
+	 	      e.printStackTrace();
+	 	      try
+	 	      {
+	 	        cmsCon.close();
+	 	      }
+	 	      catch (SQLException e1) {
+	 	        e1.printStackTrace();
+	 	      }
+	 	    }
+	 	    finally
+	 	    {
+	 	      try
+	 	      {
+	 	        cmsCon.close();
+	 	      }
+	 	      catch (SQLException e) {
+	 	        e.printStackTrace();
+	 	      }
+	 	    }
+	 	  }
+	 	  
+
+
+
+
+	 	  private void funCalculateIncomeStmt(String catType, String hdTableName, String dtlTableName, String fromDate, String toDate, String clientCode, Map<String, clsProfitLossReportBean> hmIncomeStatement, String propCode)
+	 	    throws Exception
+	 	  {
+	 	    StringBuilder sbOp = new StringBuilder();
+	 	    clsDatabaseConnection objDb = new clsDatabaseConnection();
+	 	    Connection cmsCon = null;
+	 	    cmsCon = objDb.funOpenWebbooksCon("mysql", "transaction");
+	 	    Statement st = cmsCon.createStatement();
+	 	    
+	 	    String sbSql = " select a.strType,b.strGroupCode,b.strGroupName,ifnull(d.strCrDr,''),if((c.strVouchNo is null),0,ifnull(sum(d.dblDrAmt),0)),a.strAccountName,a.strAccountCode,if((c.strVouchNo is null),0,ifnull(sum(d.dblCrAmt),0)) from  tblacgroupmaster b,tblacmaster a,   " + 
+	 	      dtlTableName + " d ,  " + 
+	 	      "  " + hdTableName + "  c  " + 
+	 	      "where a.strGroupCode=b.strGroupCode " + 
+	 	      "and b.strCategory like'%EXPENSES' and  a.strAccountCode=d.strAccountCode and c.strVouchNo=d.strVouchNo   and date(c.dteVouchDate) between '" + fromDate + "' and '" + toDate + "' and c.strClientCode='" + clientCode + "' and a.strPropertyCode='" + propCode + "'  " + 
+	 	      "and a.strType='GL Code' " + 
+	 	      "group by a.strAccountCode  ";
+	 	    
+	 	    ResultSet rsTrans = st.executeQuery(sbSql);
+	 	    
+	 	    if (rsTrans.next())
+	 	    {
+	 	      while (rsTrans.next())
+	 	      {
+
+
+	 	        BigDecimal totalAmount = BigDecimal.valueOf(rsTrans.getDouble(5)).subtract(BigDecimal.valueOf(rsTrans.getDouble(8)));
+	 	        if (totalAmount.compareTo(BigDecimal.ZERO) > 0) {
+	 	          String accountCode = rsTrans.getString(7);
+	 	          clsProfitLossReportBean objBean = new clsProfitLossReportBean();
+	 	          
+	 	          if (hmIncomeStatement.containsKey(accountCode))
+	 	          {
+	 	            objBean = (clsProfitLossReportBean)hmIncomeStatement.get(accountCode);
+	 	            objBean.setDblAmt(objBean.getDblAmt().add(totalAmount));
+
+	 	          }
+	 	          else
+	 	          {
+	 	            objBean.setStrAccountName(rsTrans.getString(6));
+	 	            objBean.setDblAmt(totalAmount);
+	 	          }
+	 	          
+	 	          hmIncomeStatement.put(accountCode, objBean);
+	 	        }
+	 	      }
+	 	    }
+	 	  }
+	 	  
+
+	 	  @POST
+	 	  @Path("/funGetPOSData")
+	 	  @Produces({"application/json"})
+	 	  public JSONObject funGetPOSData(JSONObject jObjfillter)
+	 	  {
+	 	    clsDatabaseConnection objDb = new clsDatabaseConnection();
+	 	    Connection POSCon = null;
+	 	    Statement st = null;
+	 	    JSONObject jObj = new JSONObject();
+	 	    String response = "";
+	 	    
+	 	    try
+	 	    {
+	 	      String frmDate = jObjfillter.get("dteFrom").toString();
+	 	      String toDate = jObjfillter.get("dteTo").toString();
+	 	      String clientCode = jObjfillter.get("strClientCode").toString();
+	 	      POSCon = objDb.funOpenPOSCon("mysql", "master");
+	 	      st = POSCon.createStatement();
+	 	      String sql = "";
+	 	      
+	 	      sql = " select a.dblAmount,d.dblPurchaseRate from tblqbilldtl a,tblqbillhd b,tblposmaster c,tblitemmaster d   where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode and a.strItemCode=d.strItemCode  "
+	 	      	  + " and date(b.dteBillDate)  between '" + frmDate + "' and '" + toDate + "' ";
+	 	      
+
+
+	 	      JSONArray arrObj = new JSONArray();
+	 	      ResultSet rsPOSData = st.executeQuery(sql);
+	 	      double saleAmt = 0.0D;
+	 	      double purAmt = 0.0D;
+	 	      while (rsPOSData.next())
+	 	      {
+	 	        saleAmt += Double.parseDouble(rsPOSData.getString(1));
+	 	        purAmt += Double.parseDouble(rsPOSData.getString(2));
+	 	      }
+	 	      
+	 	      rsPOSData.close();
+	 	      String sqlMod = " select   a.dblAmount,d.dblPurchaseRate from tblqbillmodifierdtl a,tblqbillhd b,tblposmaster c,tblitemmaster d  where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode  and left(a.strItemCode,7)=d.strItemCode  "
+	 	      				+ " AND a.dblamount>0   and date(b.dteBillDate)    between '" + frmDate + "' and '" + toDate + "' ";
+	 	      
+	 	      ResultSet rsPOSModData = st.executeQuery(sql);
+	 	      while (rsPOSModData.next())
+	 	      {
+	 	        saleAmt += Double.parseDouble(rsPOSModData.getString(1));
+	 	        purAmt += Double.parseDouble(rsPOSModData.getString(2));
+	 	      }
+	 	      
+	 	      rsPOSModData.close();
+	 	      
+	 	      jObj.put("TotalSale", Double.toString(saleAmt));
+	 	      jObj.put("TotalPurchase", Double.toString(purAmt));
+	 	      rsPOSData.close();
+	 	      
+	 	      st.close();
+	 	      POSCon.close();
+	 	    }
+	 	    catch (Exception e) {
+	 	      e.printStackTrace();
+	 	    }
+	 	    finally
+	 	    {
+	 	      return jObj;
+	 	    }
+	 	  }
+	 	  
+	 	  
+	 	 
+	 	  public JSONObject funGetPOSDataFromLivBill(JSONObject jObjfillter)
+	 	  {
+	 	    clsDatabaseConnection objDb = new clsDatabaseConnection();
+	 	    Connection POSCon = null;
+	 	    Statement st = null;
+	 	    JSONObject jObj = new JSONObject();
+	 	    String response = "";
+	 	    
+	 	    try
+	 	    {
+	 	      String frmDate = jObjfillter.get("dteFrom").toString();
+	 	      String toDate = jObjfillter.get("dteTo").toString();
+	 	      String clientCode = jObjfillter.get("strClientCode").toString();
+	 	      POSCon = objDb.funOpenPOSCon("mysql", "master");
+	 	      st = POSCon.createStatement();
+	 	      String sql = "";
+	 	      
+	 	      sql = " select a.dblAmount,d.dblPurchaseRate from tblbilldtl a,tblbillhd b,tblposmaster c,tblitemmaster d   where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode and a.strItemCode=d.strItemCode  "
+	 	      	  + " and date(b.dteBillDate)  between '" + frmDate + "' and '" + toDate + "' ";
+	 	      
+
+
+	 	      JSONArray arrObj = new JSONArray();
+	 	      ResultSet rsPOSData = st.executeQuery(sql);
+	 	      double saleAmt = 0.0D;
+	 	      double purAmt = 0.0D;
+	 	      while (rsPOSData.next())
+	 	      {
+	 	        saleAmt += Double.parseDouble(rsPOSData.getString(1));
+	 	        purAmt += Double.parseDouble(rsPOSData.getString(2));
+	 	      }
+	 	      
+	 	      rsPOSData.close();
+	 	      String sqlMod = " select   a.dblAmount,d.dblPurchaseRate from tblqbillmodifierdtl a,tblqbillhd b,tblposmaster c,tblitemmaster d  where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode  and left(a.strItemCode,7)=d.strItemCode  "
+	 	      				+ " AND a.dblamount>0   and date(b.dteBillDate)    between '" + frmDate + "' and '" + toDate + "' ";
+	 	      
+	 	      ResultSet rsPOSModData = st.executeQuery(sql);
+	 	      while (rsPOSModData.next())
+	 	      {
+	 	        saleAmt += Double.parseDouble(rsPOSModData.getString(1));
+	 	        purAmt += Double.parseDouble(rsPOSModData.getString(2));
+	 	      }
+	 	      
+	 	      rsPOSModData.close();
+	 	      
+	 	      jObj.put("TotalSale", Double.toString(saleAmt));
+	 	      jObj.put("TotalPurchase", Double.toString(purAmt));
+	 	      rsPOSData.close();
+	 	      
+	 	      st.close();
+	 	      POSCon.close();
+	 	    }
+	 	    catch (Exception e) {
+	 	      e.printStackTrace();
+	 	    }
+	 	    finally
+	 	    {
+	 	      return jObj;
+	 	    }
+	 	  }
 	}
