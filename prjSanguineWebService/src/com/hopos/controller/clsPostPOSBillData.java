@@ -3574,7 +3574,7 @@ public class clsPostPOSBillData
 			rsPOS.close();
 			sbSql.setLength(0);
 
-			sbSql.append("INSERT INTO `tblqadvbookbillhd` (`strAdvBookingNo`, " + "`dteAdvBookingDate`, `dteOrderFor`, `strPOSCode`, " + "`strSettelmentMode`, `dblDiscountAmt`, `dblDiscountPer`," + " `dblTaxAmt`, `dblSubTotal`, `dblGrandTotal`," + " `strUserCreated`, `strUserEdited`, `dteDateCreated`, " + "`dteDateEdited`, `strClientCode`, `strCustomerCode`, " + "`intShiftCode`, `strMessage`, `strShape`, `strNote`, " + "`strDataPostFlag`, `strDeliveryTime`, `strWaiterNo`, " + "`strHomeDelivery`, `dblHomeDelCharges`, `strOrderType`, " + "`strManualAdvOrderNo`, `strImageName`, `strSpecialsymbolImage`,`strUrgentOrder`) VALUES");
+			sbSql.append("INSERT INTO `tblqadvbookbillhd` (`strAdvBookingNo`, " + "`dteAdvBookingDate`, `dteOrderFor`, `strPOSCode`, " + "`strSettelmentMode`, `dblDiscountAmt`, `dblDiscountPer`," + " `dblTaxAmt`, `dblSubTotal`, `dblGrandTotal`," + " `strUserCreated`, `strUserEdited`, `dteDateCreated`, " + "`dteDateEdited`, `strClientCode`, `strCustomerCode`, " + "`intShiftCode`, `strMessage`, `strShape`, `strNote`, " + "`strDataPostFlag`, `strDeliveryTime`, `strWaiterNo`, " + "`strHomeDelivery`, `dblHomeDelCharges`, `strOrderType`, " + "`strManualAdvOrderNo`, `strImageName`, `strSpecialsymbolImage`,`strUrgentOrder`,'dblUSDConversionRate') VALUES");
 
 			JSONObject mJsonObject = new JSONObject();
 			for (int i = 0; i < mJsonArray.length(); i++)
@@ -3619,14 +3619,15 @@ public class clsPostPOSBillData
 				String ImageName = mJsonObject.get("ImageName").toString();
 				String SpecialsymbolImage = mJsonObject.get("SpecialsymbolImage").toString();
 				String urgentOrderYN = mJsonObject.get("UrgentOrderYN").toString();
+				String conversionRate= mJsonObject.get("ConversionRate").toString();
 
 				if (cnt == 0)
 				{
-					sbSql.append("('" + advBookingNo + "','" + AdvBookingDate + "','" + OrderFor + "','" + POSCode + "','" + SettelmentMode + "','" + DiscountAmt + "','" + DiscountPer + "','" + TaxAmt + "','" + SubTotal + "','" + GrandTotal + "','" + UserCreated + "','" + UserEdited + "','" + Installment + "','" + DateEdited + "','" + clientCode + "','" + CustomerCode + "','" + ShiftCode + "','" + Message + "','" + Shape + "','" + Note + "','" + DataPostFlag + "','" + DeliveryTime + "','" + WaiterNo + "','" + HomeDelivery + "','" + HomeDelCharges + "','" + OrderType + "','" + ManualAdvOrderNo + "','" + ImageName + "','" + SpecialsymbolImage + "','" + urgentOrderYN + "')");
+					sbSql.append("('" + advBookingNo + "','" + AdvBookingDate + "','" + OrderFor + "','" + POSCode + "','" + SettelmentMode + "','" + DiscountAmt + "','" + DiscountPer + "','" + TaxAmt + "','" + SubTotal + "','" + GrandTotal + "','" + UserCreated + "','" + UserEdited + "','" + Installment + "','" + DateEdited + "','" + clientCode + "','" + CustomerCode + "','" + ShiftCode + "','" + Message + "','" + Shape + "','" + Note + "','" + DataPostFlag + "','" + DeliveryTime + "','" + WaiterNo + "','" + HomeDelivery + "','" + HomeDelCharges + "','" + OrderType + "','" + ManualAdvOrderNo + "','" + ImageName + "','" + SpecialsymbolImage + "','" + urgentOrderYN + "','"+conversionRate+"')");
 				}
 				else
 				{
-					sbSql.append(",('" + advBookingNo + "','" + AdvBookingDate + "','" + OrderFor + "','" + POSCode + "','" + SettelmentMode + "','" + DiscountAmt + "','" + DiscountPer + "','" + TaxAmt + "','" + SubTotal + "','" + GrandTotal + "','" + UserCreated + "','" + UserEdited + "','" + Installment + "','" + DateEdited + "','" + clientCode + "','" + CustomerCode + "','" + ShiftCode + "','" + Message + "','" + Shape + "','" + Note + "','" + DataPostFlag + "','" + DeliveryTime + "','" + WaiterNo + "','" + HomeDelivery + "','" + HomeDelCharges + "','" + OrderType + "','" + ManualAdvOrderNo + "','" + ImageName + "','" + SpecialsymbolImage + "','" + urgentOrderYN + "')");
+					sbSql.append(",('" + advBookingNo + "','" + AdvBookingDate + "','" + OrderFor + "','" + POSCode + "','" + SettelmentMode + "','" + DiscountAmt + "','" + DiscountPer + "','" + TaxAmt + "','" + SubTotal + "','" + GrandTotal + "','" + UserCreated + "','" + UserEdited + "','" + Installment + "','" + DateEdited + "','" + clientCode + "','" + CustomerCode + "','" + ShiftCode + "','" + Message + "','" + Shape + "','" + Note + "','" + DataPostFlag + "','" + DeliveryTime + "','" + WaiterNo + "','" + HomeDelivery + "','" + HomeDelCharges + "','" + OrderType + "','" + ManualAdvOrderNo + "','" + ImageName + "','" + SpecialsymbolImage + "','" + urgentOrderYN + "','"+conversionRate+"')");
 				}
 				cnt++;
 				flgData = true;
@@ -9645,7 +9646,7 @@ public class clsPostPOSBillData
 					+ ",strRemoveSCTaxCode,strAutoAddKOTToBill,strAreaWiseCostCenterKOTPrintingYN,strWERAOnlineOrderIntegration,strWERAMerchantOutletId,strWERAAuthenticationAPIKey"//217
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
-					+ "strPrintOriginalOnBill,strPostSalesDataToExcise) "// 235
+					+ "strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill) "// 236
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9917,6 +9918,7 @@ public class clsPostPOSBillData
 					String strSendDBBackupOnSanguineId = dataObject.get("strSendDBBackupOnSanguineId").toString().trim();// 233
 					String strPrintOriginalOnBill= dataObject.get("strPrintOriginalOnBill").toString().trim();// 234
 					String strPostSalesDataToExcise= dataObject.get("strPostSalesDataToExcise").toString().trim();// 235
+					String strPrintFullVoidBill= dataObject.get("strPrintFullVoidBill").toString().trim();//236
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -9943,7 +9945,7 @@ public class clsPostPOSBillData
 							+ ",'" + strTakeAwayAreaForDirectBiller + "','" + strRoundOffBillFinalAmt + "','" + dblNoOfDecimalPlace + "','" + strSendDBBackupOnClientMail + "','" + strPrintOrderNoOnBillYN + "','" + strPrintDeviceAndUserDtlOnKOTYN + "','" + strRemoveSCTaxCode + "','" + strAutoAddKOTToBill + "'" // 213
 							+ ",'" + strAreaWiseCostCenterKOTPrintingYN + "','" + strWERAOnlineOrderIntegration + "','" + strWERAMerchantOutletId + "','" + strWERAAuthenticationAPIKey + "','" + strFireCommunication + "'" + ",'" + dblUSDConverionRate + "','" + strDBBackupMailReceiver + "','" + strPrintMoveTableMoveKOTYN + "','" + strPrintQtyTotal + "','" + strShowReportsInCurrency + "'" 
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
-							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "') "); // 235
+							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "') "); // 236
 					flgData = true;
 				}
 			}
