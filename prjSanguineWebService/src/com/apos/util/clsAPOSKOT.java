@@ -31,6 +31,9 @@ public class clsAPOSKOT {
 	@Autowired 
 	private clsKOTJasperFileGenerationForMakeKOT objKOTJasperFileGenerationForMakeKOT;
 	
+	@Autowired 
+	private clsConsolidatedKOTJasperGenerationForDirectBiller objConsolidatedKOTJasperGenerationForDirectBiller;
+	
 	@Autowired
 	clsAPOSUtility objAPOSUtility;
     /**
@@ -51,6 +54,7 @@ public class clsAPOSKOT {
 	   
        try 
        {
+    	   String strPrintType="",strConsolidatePrint="";
     	   aposCon=objDb.funOpenAPOSCon("mysql","master");
 	       st = aposCon.createStatement();
 
@@ -70,11 +74,11 @@ public class clsAPOSKOT {
                    }
                    rsPrintDirect.close();
                    st.close();
-                   
+                  
                    if (printYN.equalsIgnoreCase("Y") )//print consolidated KOT only 
-                    {
-                	   funGenerateConsolidatedKOTTextFileForDirectBiller(areaCode, billNo,reprint, POSCode,printYN);
-                    }
+	                {
+	            	   funGenerateConsolidatedKOTTextFileForDirectBiller(areaCode, billNo,reprint, POSCode,printYN);
+	                }
                  
            
            

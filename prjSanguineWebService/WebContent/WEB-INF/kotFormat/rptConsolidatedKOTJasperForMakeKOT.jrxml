@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.0.final using JasperReports Library version 6.5.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="null" pageWidth="595" pageHeight="842" columnWidth="575" leftMargin="0" rightMargin="20" topMargin="0" bottomMargin="20" uuid="bc252664-cff5-4f7f-ad73-a1eec70b78f9">
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<subDataset name="dsForDirectBillerKOT" uuid="c39dc2c6-bcfd-4707-ac3e-3450e3405bb1">
+		<queryString language="SQL">
+			<![CDATA[select * from tblbilldtl;]]>
+		</queryString>
+		<field name="dblQuantity" class="java.lang.Double"/>
+		<field name="strItemName" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="listOfItemDtl" class="java.util.List"/>
+	<parameter name="SUB TOTAL" class="java.lang.String"/>
+	<parameter name="TIME" class="java.lang.String"/>
+	<parameter name="POS" class="java.lang.String"/>
+	<parameter name="ClientName" class="java.lang.String"/>
+	<parameter name="posName" class="java.lang.String"/>
+	<parameter name="KOT" class="java.lang.String"/>
+	<parameter name="orderNo" class="java.lang.String"/>
+	<parameter name="decimalFormaterForIntegerValue" class="java.lang.String"/>
+	<parameter name="decimalFormaterForDoubleValue" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
+	<parameter name="tableName" class="java.lang.String"/>
+	<parameter name="waiterName" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[select * from tblbilldtl;]]>
+	</queryString>
+	<variable name="orderNo" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="133" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="38" y="71" width="131" height="16" isRemoveLineWhenBlank="true" uuid="dd21c578-a8c2-494a-90bd-53a83a15ed93"/>
+				<textElement textAlignment="Center">
+					<font fontName="Trebuchet MS" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{POS}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="38" y="56" width="131" height="15" isRemoveLineWhenBlank="true" uuid="45d4d40a-9a69-43d9-90b5-41983fae1d42"/>
+				<textElement textAlignment="Center">
+					<font fontName="Trebuchet MS" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{KOT}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="38" y="117" width="67" height="15" uuid="66dbe20a-bc13-4c8a-b9c3-bb58ceb459bd"/>
+				<textElement>
+					<font fontName="Trebuchet MS"/>
+				</textElement>
+				<text><![CDATA[TIME           :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="105" y="117" width="124" height="15" uuid="18c1aab8-c8b7-4307-819f-0aba1871b40b"/>
+				<textElement>
+					<font fontName="Trebuchet MS" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TIME}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="105" y="87" width="124" height="15" uuid="18c1aab8-c8b7-4307-819f-0aba1871b40b"/>
+				<textElement>
+					<font fontName="Trebuchet MS" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{tableName}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="38" y="87" width="67" height="15" uuid="66dbe20a-bc13-4c8a-b9c3-bb58ceb459bd"/>
+				<textElement>
+					<font fontName="Trebuchet MS"/>
+				</textElement>
+				<text><![CDATA[Table Name        :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="38" y="102" width="67" height="15" uuid="66dbe20a-bc13-4c8a-b9c3-bb58ceb459bd"/>
+				<textElement>
+					<font fontName="Trebuchet MS"/>
+				</textElement>
+				<text><![CDATA[Waiter Name  :]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="105" y="102" width="124" height="15" uuid="18c1aab8-c8b7-4307-819f-0aba1871b40b"/>
+				<textElement>
+					<font fontName="Trebuchet MS" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{waiterName}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="21" splitType="Stretch">
+			<componentElement>
+				<reportElement x="7" y="1" width="205" height="20" uuid="f6ff2509-a370-4847-b368-98e00c05cd80"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="dsForDirectBillerKOT" uuid="81a0e0cd-2e6f-4e56-b2a9-e9c9a840bb6f">
+						<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{listOfItemDtl})]]></dataSourceExpression>
+					</datasetRun>
+					<jr:column width="34" uuid="699aa6e8-7173-4756-80bb-149d043a40b0">
+						<jr:tableHeader height="0" rowSpan="1"/>
+						<jr:tableFooter height="2" rowSpan="1">
+							<line>
+								<reportElement x="0" y="1" width="34" height="1" uuid="fd524e29-758d-4800-8bab-59d37b8c0a52"/>
+							</line>
+						</jr:tableFooter>
+						<jr:columnHeader height="16" rowSpan="1">
+							<staticText>
+								<reportElement x="0" y="0" width="32" height="15" uuid="2ff3711a-f26d-42c7-bcc7-8913c067b85c"/>
+								<textElement textAlignment="Right">
+									<font fontName="Trebuchet MS" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Qty]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="15" rowSpan="1">
+							<textField pattern="#.###" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="32" height="15" uuid="06914f88-ab30-4c05-b4aa-eae84be9e674">
+									<printWhenExpression><![CDATA[$F{dblQuantity}>0.0]]></printWhenExpression>
+								</reportElement>
+								<textElement textAlignment="Right">
+									<font fontName="Trebuchet MS" size="10" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{dblQuantity}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="164" uuid="55886318-c2f3-4bf7-911f-72caa1809e0f">
+						<jr:tableHeader height="0" rowSpan="1"/>
+						<jr:tableFooter height="2" rowSpan="1">
+							<line>
+								<reportElement x="0" y="1" width="164" height="1" uuid="fd524e29-758d-4800-8bab-59d37b8c0a52"/>
+							</line>
+						</jr:tableFooter>
+						<jr:columnHeader height="16" rowSpan="1">
+							<staticText>
+								<reportElement x="5" y="0" width="140" height="15" uuid="2ff3711a-f26d-42c7-bcc7-8913c067b85c"/>
+								<textElement textAlignment="Left">
+									<font fontName="Trebuchet MS" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Item Name]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="15" rowSpan="1">
+							<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+								<reportElement x="5" y="0" width="140" height="15" uuid="06914f88-ab30-4c05-b4aa-eae84be9e674"/>
+								<textElement textAlignment="Left">
+									<font fontName="Trebuchet MS" size="10" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{strItemName}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+			<line>
+				<reportElement x="5" y="0" width="235" height="1" uuid="fd524e29-758d-4800-8bab-59d37b8c0a52"/>
+			</line>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>
