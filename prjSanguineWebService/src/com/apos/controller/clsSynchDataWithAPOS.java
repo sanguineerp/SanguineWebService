@@ -2284,8 +2284,12 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 					+ "FROM tblmenuitempricingdtl a ,tblitemmaster b, tblcounterdtl d "
 					+ "WHERE  (a.strAreaCode='"+areaCode+"' or a.strAreaCode='"+gAreaCodeForTrans+"' ) and a.strItemCode=b.strItemCode and a.strMenuCode=d.strMenuCode "
 					+ " and (a.strPosCode='" + POSCode + "' or a.strPosCode='All') "
-	                + " and date(a.dteFromDate)<='"+fromDate+"' and date(a.dteToDate)>='"+toDate+"' "
-					+ "and d.strCounterCode='"+counterCode+"'";
+	                + " and date(a.dteFromDate)<='"+fromDate+"' and date(a.dteToDate)>='"+toDate+"' ";
+			
+			if(!counterCode.equals("All")){
+				sql=sql + "and d.strCounterCode='"+counterCode+"'";
+			}
+	              
             
             if(!flgAllItems)
             {
@@ -2763,8 +2767,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     		 	            
     		             // Counter Details
     		 	            	
-    		             	String sql2=  " select a.strCounterCode,a.strCounterName from tblcounterhd a  "
-    		                        + " where a.strPosCode='"+rsMasterData.getString(1)+"' ";
+    		             	String sql2=  " select a.strCounterCode,a.strCounterName,a.strUserCode from tblcounterhd a  "
+    		                        + " where a.strPosCode='"+rsMasterData.getString(1)+"' and a.strOperational='Yes' ;";
     		 	            	
     		             	JSONArray arrjObjCounter= new JSONArray();
     		             	ResultSet rsCounter = st2.executeQuery(sql2);
@@ -2773,7 +2777,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     		             		JSONObject jObjCounetrRows=new JSONObject();
     		             		jObjCounetrRows.put("CounterCode",rsCounter.getString(1));
     		             		jObjCounetrRows.put("CounterName",rsCounter.getString(2));
-    		 	            		
+    		             		jObjCounetrRows.put("strUserCode",rsCounter.getString(3));
+    		             		
     		             		String sql3= "   select b.strMenuCode,b.strMenuName  "
     		        				  +  "   from tblcounterdtl a,tblmenuhd b    "
     		        				  +  "   where a.strCounterCode='"+rsCounter.getString(1)+"'  "
@@ -2785,12 +2790,12 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     		 		            while (rsMenu.next()) 
     		 				    {
     		 		            	JSONObject jObjMenuRows=new JSONObject();
-    		 		            	jObjMenuRows.put("MenuCode",rsMenu.getString(1));
-    		 		            	jObjMenuRows.put("MenuName",rsMenu.getString(2));
+    		 		            	jObjMenuRows.put("strMenuCode",rsMenu.getString(1));
+    		 		            	jObjMenuRows.put("strMenuName",rsMenu.getString(2));
     		 		            	arrjObjMenu.put(jObjMenuRows);
     		 				    }
     		 		            rsMenu.close();
-    		 		            jObjCounetrRows.put("MenuRows",arrjObjMenu);
+    		 		            jObjCounetrRows.put("arrListMemuDtl",arrjObjMenu);
     		 		            arrjObjCounter.put(jObjCounetrRows);
     		 		        }
     		 	            rsCounter.close();

@@ -270,34 +270,30 @@ public class clsPOSMasterServiceImpl implements clsPOSMasterService{
 	}
 
 
-public String funGetAllPOSForMaster(String clientCode)
-{
-	clsPOSMasterModel model =new clsPOSMasterModel();
-	JSONObject jObj = new JSONObject();
-try{
-	JSONArray jArrData=new JSONArray();
-	 
-	List list=objService.funLoadAll(model,clientCode);
-	 clsPOSMasterModel objTaxModel = null;
-		for(int cnt=0;cnt<list.size();cnt++)
-		{
-			objTaxModel= (clsPOSMasterModel) list.get(cnt);
-		    
-		    JSONObject jArrDataRow = new JSONObject();
-		    jArrDataRow.put("strPosCode",objTaxModel.getStrPosCode());
-		    jArrDataRow.put("strPosName",objTaxModel.getStrPosName());
-		   
-		    jArrData.put(jArrDataRow);
-		}
-		jObj.put("POSList", jArrData);
-}
-catch(Exception ex)
-{
-	ex.printStackTrace();
-}
+	public String funGetAllPOSForMaster(String clientCode) {
+		clsPOSMasterModel model = new clsPOSMasterModel();
+		JSONObject jObj = new JSONObject();
+		try {
+			JSONArray jArrData = new JSONArray();
 
-return jObj.toString();
-}
+			List list = objService.funLoadAll(model, clientCode);
+			clsPOSMasterModel objTaxModel = null;
+			for (int cnt = 0; cnt < list.size(); cnt++) {
+				objTaxModel = (clsPOSMasterModel) list.get(cnt);
+
+				JSONObject jArrDataRow = new JSONObject();
+				jArrDataRow.put("strPosCode", objTaxModel.getStrPosCode());
+				jArrDataRow.put("strPosName", objTaxModel.getStrPosName());
+
+				jArrData.put(jArrDataRow);
+			}
+			jObj.put("POSList", jArrData);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return jObj.toString();
+	}
 
 public String funGetPrintVatNoPOS(String posCode)
 {
