@@ -112,6 +112,9 @@ public class clsSynchDataWithAPOS implements intfSynchDataWithAPOS
 	@Autowired
 	clsAPOSUtility objAPOSUtility;
 	
+	@Autowired
+	clsUtilityController objUtilityController;
+	
 	Map<String, List<Map<String, clsBillSettlementDtl>>> mapPOSDtlForSettlement;
 	Map<String, Map<String, clsBillItemDtl>> mapPOSItemDtl;
 	Map<String, Map<String, clsBillItemDtl>> mapPOSMenuHeadDtl;
@@ -5803,6 +5806,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		}
 		
 		
+		
 		return jObj;//Response.status(201).entity(kotNO+"#"+printingResult).build();		
 	}
     
@@ -6010,7 +6014,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 					+ " where a.strBillNo='"+billNo+"' "
 					+ " group by a.strBillNo,date(a.dteBillDate)";
 	        }
-			System.out.println(sql);
+			System.out.println("Db Print Bill= "+sql);
 			String operationType="";
 			String customerCode="";
 			String cardNo="";
@@ -6828,7 +6832,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	
 	
 	@SuppressWarnings("finally")
-	private int funInsertBillDtlData(JSONArray mJsonArray)
+	private int funInsertBillDtlData(JSONArray mJsonArray,boolean isModifierPresentInBill)
 	{
 		int res=0;
 		clsDatabaseConnection objDb=new clsDatabaseConnection();
@@ -6852,11 +6856,12 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ "VALUES";
 			
 			JSONObject mJsonObject = new JSONObject();
+			String BillNo="",BillDate="";
 			for (int i = 0; i < mJsonArray.length(); i++) 
 			{
 				mJsonObject =(JSONObject) mJsonArray.get(i);
 		            
-		        String BillNo=mJsonObject.get("BillNo").toString();
+		        BillNo=mJsonObject.get("BillNo").toString();
 		        String ClientCode=mJsonObject.get("ClientCode").toString();
 		            
 		        deleteSql="delete from tblbilldtl "
@@ -6870,7 +6875,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				    double Quantity=Double.parseDouble(mJsonObject.get("Quantity").toString());
 				    double Amount=Double.parseDouble(mJsonObject.get("Amount").toString());
 				    double TaxAmount=Double.parseDouble(mJsonObject.get("TaxAmount").toString());
-				    String BillDate=mJsonObject.get("BillDate").toString();
+				    BillDate=mJsonObject.get("BillDate").toString();
 				    String KOTNo=mJsonObject.get("KOTNo").toString();
 				    String CustomerCode=mJsonObject.get("CustomerCode").toString();
 				    String OrderProcessing=mJsonObject.get("OrderProcessedTime").toString();
@@ -6910,6 +6915,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				try{
 					System.out.println(insert_qry);
 					res=st.executeUpdate(insert_qry);
+					if(!isModifierPresentInBill){
+						//update bill items tax values
+						objUtilityController.funUpdateBillDtlWithTaxValues( BillNo,"live",BillDate);
+					}
+					
 				} catch(Exception e){
 					e.printStackTrace();
 				}
@@ -6959,10 +6969,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ "`strMMSDataPostFlag`,`strDefaultModifierDeselectedYN`,`dblDiscPer`,`dblDiscAmt`,`dteBillDate`) VALUES";
 			
 			JSONObject mJsonObject = new JSONObject();
+			String BillNo="",billDate="";
 			for (int i = 0; i < mJsonArray.length(); i++) 
 			{
 				mJsonObject =(JSONObject) mJsonArray.get(i);
-		    	String BillNo=mJsonObject.get("BillNo").toString();
+		    	BillNo=mJsonObject.get("BillNo").toString();
 		    	String ClientCode=mJsonObject.get("ClientCode").toString();
 		    	    
 		    	deleteSql="delete from tblbillmodifierdtl "
@@ -6981,7 +6992,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				String DefaultModifierSelection=mJsonObject.get("DefaultModifierSelection").toString();
 				double DiscPer=Double.parseDouble(mJsonObject.get("DiscPer").toString());
 				double DiscAmt=Double.parseDouble(mJsonObject.get("DiscAmt").toString());
-				String billDate=mJsonObject.get("BillDate").toString();
+				billDate=mJsonObject.get("BillDate").toString();
 				    
 				sql+=",('"+BillNo+"','"+ItemCode+"','"+ModifierCode+"','"+ModifierName+"'"
 					+ ",'"+Rate+"','"+Quantity+"','"+Amount+"','"+ClientCode+"','"+CustomerCode+"'"
@@ -6998,6 +7009,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				try{
 					System.out.println(insert_qry);
 					res=st.executeUpdate(insert_qry);
+					//update bill items tax values
+					objUtilityController.funUpdateBillDtlWithTaxValues( BillNo,"live",billDate);
 				} catch(Exception e){
 					e.printStackTrace();
 				}
@@ -10299,6 +10312,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	   public Response funGenerateBillTextFile(@QueryParam("BillNo") String billNo,@QueryParam("PosCode") String posCode,
 			   @QueryParam("ClientCode") String clientCode,@QueryParam("reprint")String reprint,@QueryParam("strServerBillPrinterName") String strServerBillPrinterName)
 	   {
+		   System.out.println("Generate Bill Text File "+billNo+"\tReprint = "+reprint+"\tServerBillPrinterName = "+strServerBillPrinterName);
 		   JSONObject jsonOb=new JSONObject();
 		   Response.ResponseBuilder response =    Response.ok();
 		   jsonOb=funCreateBillTextFile(response,billNo,posCode,clientCode,reprint,strServerBillPrinterName);
@@ -16258,7 +16272,12 @@ private JSONArray funInsertDataBillSeriesWise(JSONObject objBillData,String strP
 								else if (key.equalsIgnoreCase("BillDtlData") && mJsonBSArray !=null) 
 								{
 									System.out.println("BillDtl= "+key);
-									if (funInsertBillDtlData(mJsonBSArray) > 0) 
+									boolean isModifierPresentInBill=false;
+									if(objBillData.get("BillModifierData")!=null && objBillData.getJSONArray("BillModifierData").length()>0){
+										isModifierPresentInBill=true;
+									}
+									
+									if (funInsertBillDtlData(mJsonBSArray,isModifierPresentInBill) > 0) 
 									{	
 										jObResponse.put("BillDtl", "BillDtl");
 									} else{
@@ -16626,8 +16645,8 @@ private String funGetBillSeriesDtlBillNos(List<clsBillSeriesBillDtl> listBillSer
 		 
 		 	cmsCon=objDb.funOpenAPOSCon("mysql","transaction");
 			st = cmsCon.createStatement();
-			
 			Iterator callfunction=objBillData.keys();
+			
 			while(callfunction.hasNext())
 			{
 				JSONObject jsonResponse=new JSONObject();
@@ -16666,7 +16685,11 @@ private String funGetBillSeriesDtlBillNos(List<clsBillSeriesBillDtl> listBillSer
 				else if (key.equalsIgnoreCase("BillDtlData") && mJsonArray !=null) 
 				{
 					System.out.println("BillDtl= "+key);
-					if (funInsertBillDtlData(mJsonArray) > 0) 
+					boolean isModifierPresentInBill=false;
+					if(objBillData.get("BillModifierData")!=null && objBillData.getJSONArray("BillModifierData").length()>0){
+						isModifierPresentInBill=true;
+					}
+					if (funInsertBillDtlData(mJsonArray,isModifierPresentInBill) > 0) 
 					{
 						jsonResponse.put("BillDtl","BillDtl");
 					} else{
@@ -17427,5 +17450,244 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
+	   
+    @SuppressWarnings("rawtypes")
+	@POST
+	@Path("/funSaveAndDownloadKOT")
+    @Produces("application/pdf")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public javax.ws.rs.core.Response funSaveAndDownloadKOTForInternalPrinter(JSONObject objKOTData)
+	{
+    	javax.ws.rs.core.Response.ResponseBuilder responseBuilder=null;
+    	clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+        Statement st2=null,st3=null;
+		String kotNO="K000001",printingResult="";
+		int exe=0;
+		JSONObject jObj=new JSONObject();
+		try {
+			
+			String tableNo="",posCode="", posName="",customerCode="",deviceName="",macAddress="";
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+	        st = cmsCon.createStatement();
+	        st2 = cmsCon.createStatement();
+	        st3 = cmsCon.createStatement();
+	        String sql="";
+	       
+			JSONArray mJsonArray=(JSONArray)objKOTData.get("KOTDtl");
+			String lockTable=objKOTData.getString("lockTable");
+			boolean isKOTSave=false;
+			if(lockTable.equalsIgnoreCase("Y")){
+				if(mJsonArray.length()>0){
+					JSONObject mJsonObject =(JSONObject) mJsonArray.get(0);
+					tableNo=mJsonObject.get("strTableNo").toString();
+					String waiterNo=mJsonObject.get("strWaiterNo").toString();
+					sql="select distinct b.strStatus,a.strWaiterNo from tblitemrtemp a,tbltablemaster b " 
+							+" where a.strTableNo=b.strTableNo and a.strTableNo='"+tableNo+"';";
+					ResultSet rs=st.executeQuery(sql);
+					String tableStatus="",oldWaiter="";
+					if(rs.next()){
+						if(rs.getString(1).equalsIgnoreCase("Occupied")){
+							if(rs.getString(2).equals(waiterNo)){
+								isKOTSave=true;
+							}
+						}
+					}else{
+						isKOTSave=true;
+					}
+					
+					
+				}
+				if(!isKOTSave){
+					/*jObj.put("kotNO", " Not Punched.. Table Already Busy");
+					jObj.put("printingResult", printingResult);
+					return jObj;*/
+				}
+			}
+			
+			
+		    String insertQuery1="";
+		    int paxNo=0;
+			boolean flgData=false;
+			JSONObject mJsonObject = new JSONObject();
+			kotNO=funGenerateKOTNo();
+			String insertQuery = "insert into tblitemrtemp(strSerialNo,strTableNo,strCardNo,dblRedeemAmt,strPosCode,strItemCode"
+				+ ",strHomeDelivery,strCustomerCode,strItemName,dblItemQuantity,dblAmount,strWaiterNo"
+                + ",strKOTNo,intPaxNo,strPrintYN,strUserCreated,strUserEdited,dteDateCreated"
+                + ",dteDateEdited,strTakeAwayYesNo,strNCKotYN,strCustomerName,strCounterCode"
+                + ",dblRate,strCardType,strDeviceMACAdd,strDeviceId) values ";
+			
+			
+			 insertQuery1 = "insert into tblnonchargablekot "
+      	        	+ " (strTableNo,strItemCode,dblQuantity,dblRate,strKOTNo,strEligibleForVoid,strClientCode,"
+      	        	+ " strDataPostFlag,strReasonCode,strRemark,dteNCKOTDate,strUserCreated,strUserEdited,strPOSCode) "
+      	        	+ " values " ;
+			 
+			 boolean flgNCKOT=false;
+			
+			for (int i = 0; i < mJsonArray.length(); i++) 
+			{
+			    mJsonObject =(JSONObject) mJsonArray.get(i);
+			    String itemName=mJsonObject.get("strItemName").toString();
+			    System.out.println(itemName);
+			    double qty=Double.parseDouble(mJsonObject.get("dblItemQuantity").toString());
+			    double rate=Double.parseDouble(mJsonObject.get("dblRate").toString());
+			    //double amt=qty*rate;
+			    double amt=Double.parseDouble(mJsonObject.get("dblAmount").toString());
+			    tableNo=mJsonObject.get("strTableNo").toString();
+			    posCode=mJsonObject.get("strPOSCode").toString();
+			    posName=mJsonObject.get("strPOSName").toString();
+			    deviceName=mJsonObject.get("deviceName").toString();
+			    macAddress=mJsonObject.get("macAddress").toString();
+			    //customerCode=mJsonObject.get("strCustomerCode").toString();
+			    
+			    if(i==0)
+			    {
+			    	Statement st1 = cmsCon.createStatement();
+			    	sql="select strCustomerCode from tblitemrtemp "
+		    			+ "where strTableNo='"+tableNo+"' and strPOSCode='"+posCode+"'";
+			    	ResultSet rsCust=st1.executeQuery(sql);
+			    	if(rsCust.next())
+			    	{
+			    		customerCode=rsCust.getString(1);
+			    	}
+			    	else
+			    	{
+			    		customerCode=mJsonObject.get("strCustomerCode").toString();
+			    	}
+			    	rsCust.close();
+			    	st1.close();
+			    }
+			    Date objDate = new Date();
+			    String currentDate = mJsonObject.get("POSDate").toString()
+     		                      + " "+ objDate.getHours() + ":" + objDate.getMinutes() + ":" +objDate.getSeconds();
+			    
+			    insertQuery +="('"+mJsonObject.get("strSerialNo").toString()+"','"+mJsonObject.get("strTableNo").toString()+"'"
+			    	+ ",'" + mJsonObject.get("strCardNo").toString() + "','" + mJsonObject.get("dblRedeemAmt").toString() + "'"
+	    			+ ",'" + mJsonObject.get("strPOSCode").toString() + "','" + mJsonObject.get("strItemCode").toString() + "'"
+	                + ",'" + mJsonObject.get("strHomeDelivery").toString() + "','"+customerCode+"'"
+                   	+ ",'" + mJsonObject.get("strItemName").toString() + "','" + mJsonObject.get("dblItemQuantity").toString() + "'"
+                   	+ ",'" + amt + "','" + mJsonObject.get("strWaiterNo").toString() + "'"
+                 	+ ",'" + kotNO + "','" + mJsonObject.get("intPaxNo").toString() + "'"
+            		+ ",'" + mJsonObject.get("strPrintYN").toString() + "','" + mJsonObject.get("strUserCreated").toString() + "'"
+            		+ ",'" + mJsonObject.get("strUserEdited").toString() + "','" + mJsonObject.get("dteDateCreated").toString()+ "'"
+         			+ ",'" + mJsonObject.get("dteDateEdited").toString() + "','"+mJsonObject.get("strTakeAwayYesNo").toString()+"'"
+      				+ ",'"+ mJsonObject.get("strNCKotYN").toString() + "','"+mJsonObject.get("strCustomerName").toString()+"'"
+      				+ ",'"+mJsonObject.get("strCounterCode").toString()+"','"+mJsonObject.get("dblRate").toString()+"'"
+      				+ ",'"+mJsonObject.get("strCardType").toString()+"','"+mJsonObject.get("macAddress").toString()+"','"+mJsonObject.get("deviceName").toString()+"'), ";
+      			
+			    
+			    paxNo=Integer.parseInt(mJsonObject.get("intPaxNo").toString());
+			    String NCKOTYN= mJsonObject.get("strNCKotYN").toString();
+			    System.out.println("Nckotyn="+NCKOTYN);
+			    if(NCKOTYN.equalsIgnoreCase("Y"))
+	            {
+	                 insertQuery1+= "('" +mJsonObject.get("strTableNo").toString()+ "','" +  mJsonObject.get("strItemCode").toString()+ "','"+mJsonObject.get("dblItemQuantity").toString()+ "'"
+	         	        	+ ", '"+mJsonObject.get("dblRate").toString()+"','"+kotNO+"','Y','"+mJsonObject.get("strClientCode").toString()+"','N','"+mJsonObject.get("strReasonCode").toString()+"'"
+	         	        	+ ", '"+mJsonObject.get("strRemark").toString()+"','"+currentDate+"','"+mJsonObject.get("strUserCreated").toString()+"','"+mJsonObject.get("strUserEdited").toString()+"'"
+	         	        	+ ", '"+posCode +"'),";
+	                 //System.out.println("query="+insertQuery1);
+	                 flgNCKOT=true;
+	            }
+			    
+			}
+			System.out.println("query="+insertQuery1);
+            StringBuilder sb = new StringBuilder(insertQuery);            
+            int index = sb.lastIndexOf(",");
+            insertQuery = sb.delete(index, sb.length()).toString();
+            System.out.println(insertQuery);
+            exe=st.executeUpdate(insertQuery);
+            System.out.println("Exe= "+exe);
+            sql="select strFireCommunication,strAreaWisePricing from tblsetup where strClientCode='"+mJsonObject.get("strClientCode").toString()+"' ";
+        	String strFireComm="N",strAreaWisePricing="N";
+        	ResultSet rsFire=st.executeQuery(sql);
+	    	if(rsFire.next())
+	    	{
+	    		strFireComm=rsFire.getString(1);
+	    		strAreaWisePricing=rsFire.getString(2);
+	    	}
+	    	rsFire.close();
+            if(flgNCKOT)
+            {
+	            StringBuilder sb1 = new StringBuilder(insertQuery1);
+	            int index1=sb1.lastIndexOf(",");            
+	            insertQuery1 = sb1.delete(index1, sb1.length()).toString();
+				System.out.println("query="+insertQuery1);            
+	            st2.executeUpdate(insertQuery1);
+	            sql = "update tbltablemaster set strStatus='Normal',intPaxNo='0' where strTableNo='"+tableNo+"'";
+	            st3.executeUpdate(sql);
+	            printingResult=funGenerateTextFileForKOT(posCode, posName, tableNo, kotNO, "", "", "Dina", "Y",deviceName,macAddress,strFireComm,strAreaWisePricing);
+            }
+            else{
+            	if(exe>0)
+                {
+                	sql="update tbltablemaster set strStatus='Occupied',intPaxNo="+paxNo+" where strTableNo='"+tableNo+"'";
+                	System.out.println(sql);
+                	st.executeUpdate(sql);
+                	
+                	
+			    	if(strFireComm.equals("N")){
+			    		printingResult=funGenerateTextFileForKOT(posCode, posName, tableNo, kotNO, "", "", "Dina", "Y",deviceName,macAddress,strFireComm,strAreaWisePricing);	
+			    	}
+                }
+            }
+            
+            
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(exe==0){
+			kotNO="ERROR";			
+		}
+
+		try{
+			jObj.put("kotNO", kotNO);
+			jObj.put("printingResult", printingResult);
+			
+			String filePath = System.getProperty("user.dir");
+			File file = new File(filePath + "/Temp/Temp_KOT.txt");
+		    FileInputStream fileInputStream = new FileInputStream(file);
+		    responseBuilder = javax.ws.rs.core.Response.ok((Object) fileInputStream);
+		    responseBuilder.type("application/pdf");
+		    //responseBuilder.header("Content-Disposition",  "attachment; filename=restfile.pdf");// direct download
+		    responseBuilder.header("Content-Disposition",  " filename=Temp_KOT.txt");//open in browser
+		
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	   return responseBuilder.build();
+		//return jObj;//Response.status(201).entity(kotNO+"#"+printingResult).build();		
+	}
+    
+    @SuppressWarnings("rawtypes")
+	@GET
+	@Path("/funDownloadBill")
+    @Produces("application/pdf")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public javax.ws.rs.core.Response funDownloadBill(@QueryParam("billNo") String bill )
+	{
+    	javax.ws.rs.core.Response.ResponseBuilder responseBuilder=null;
+
+		try{
+			
+			String filePath = System.getProperty("user.dir");
+			File file = new File(filePath + "/Temp/TempBill.txt");
+		    FileInputStream fileInputStream = new FileInputStream(file);
+		    responseBuilder = javax.ws.rs.core.Response.ok((Object) fileInputStream);
+		    responseBuilder.type("application/pdf");
+		    //responseBuilder.header("Content-Disposition",  "attachment; filename=restfile.pdf");// direct download
+		    responseBuilder.header("Content-Disposition",  " filename=TempBill.txt");//open in browser
+		
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	   return responseBuilder.build();
+	}
+    
 
 }

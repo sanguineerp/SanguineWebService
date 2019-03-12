@@ -99,6 +99,9 @@ public class clsTextFileGenerator
 		    billFormat = rs.getString(1);
 		}
 		rs.close();
+		
+		System.out.println("funGenerateAndPrintBill "+billNo+"\tReprint = "+reprint+"\billFormat = "+billFormat);
+		
 		if (billFormat.equalsIgnoreCase("Text 1"))
 		{
 			objTextFormat1ForBill.funGenerateTextFileForBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
@@ -563,7 +566,7 @@ public class clsTextFileGenerator
 	    PrintService printService[] = PrintServiceLookup.lookupPrintServices(flavor, printerReqAtt);
 	    for (int i = 0; i < printService.length; i++)
 	    {
-		//System.out.println("Sys=" + printService[i].getName() + "\tBill Printer=" + billPrinterName);
+		System.out.println("Sys=" + printService[i].getName() + "\tBill Printer=" + billPrinterName);
 		if (billPrinterName.equalsIgnoreCase(printService[i].getName()))
 		{
 		    System.out.println("Bill Print on \t"+billPrinterName);

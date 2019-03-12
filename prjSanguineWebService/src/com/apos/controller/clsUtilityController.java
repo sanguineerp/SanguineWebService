@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,6 +33,7 @@ import com.apos.bean.clsTaxCalculationBean;
 import com.apos.dao.clsSetupDao;
 import com.apos.service.clsUtilityService;
 import com.apos.util.clsSendMail;
+import com.webservice.util.clsTaxCalculation;
 
 
 @Controller
@@ -451,13 +453,13 @@ public class clsUtilityController {
     }
 
 
-    public int funUpdateBillDtlWithTaxValues(String billNo, String billType) throws Exception
+    public int funUpdateBillDtlWithTaxValues(String billNo, String billType,String filterBillDate) throws Exception
     {
         Map<String, clsBillItemTaxDtl> hmBillItemTaxDtl = new HashMap<String, clsBillItemTaxDtl>();
         Map<String, clsBillItemTaxDtl> hmBillTaxDtl = new HashMap<String, clsBillItemTaxDtl>();
-
+        filterBillDate=filterBillDate.split(" ")[0];
         Query sqlQuery;
-	    List list;
+	   // List list;
         String billDtl = "tblbilldtl";
         String billTaxDtl = "tblbilltaxdtl";
         String billModifierDtl = "tblbillmodifierdtl";
@@ -469,17 +471,24 @@ public class clsUtilityController {
             billModifierDtl = "tblqbillmodifierdtl";
         }
 
-        String sql = "select a.strTaxCode,b.dblPercent,ifnull(b.strTaxIndicator,'NA'),b.strTaxCalculation,b.strTaxOnGD,b.strTaxOnTax "
+        String sql = "update " + billDtl + " set dblTaxAmount=0.00  "
+        		+ " where strBillNo='" + billNo + "' "
+        		+ " and date(dteBillDate)='" + filterBillDate + "' ";
+        WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql).executeUpdate();
+        
+        sql = "select a.strTaxCode,b.dblPercent,ifnull(b.strTaxIndicator,'NA'),b.strTaxCalculation,b.strTaxOnGD,b.strTaxOnTax "
                 + " ,b.strTaxOnTaxCode,a.dblTaxAmount,a.dblTaxableAmount "
                 + " from " + billTaxDtl + " a,tbltaxhd b "
-                + " where a.strTaxCode=b.strTaxCode and a.strBillNo='" + billNo + "' and a.dblTaxAmount>0 "
+                + " where a.strTaxCode=b.strTaxCode and a.strBillNo='" + billNo + "'"
+                + " and date(a.dteBillDate)='" + filterBillDate + "' "
+                + " and a.dblTaxAmount>0 "
                 + " and a.dblTaxableAmount>0 "
                 + " order by b.strTaxOnTax,b.strTaxCode; ";
         sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
-        list = sqlQuery.list();
-        for(int k=0 ;k<list.size();k++ )
+        List listtax = sqlQuery.list();
+        for(int k=0 ;k<listtax.size();k++ )
 	    	{
-        	Object[] objBillTaxDtl = (Object[]) list.get(k);	
+        	Object[] objBillTaxDtl = (Object[]) listtax.get(k);	
      
             String taxCode = objBillTaxDtl[0].toString();
             String taxIndicator = objBillTaxDtl[2].toString();
@@ -491,14 +500,15 @@ public class clsUtilityController {
             double billTaxAmt = Double.parseDouble(objBillTaxDtl[7].toString());
             double billTaxableAmt = Double.parseDouble(objBillTaxDtl[8].toString());
 
-            sql = "select a.strItemCode,a.dblAmount,ifnull(b.strTaxIndicator,'NA'),a.strKOTNo,a.dblDiscountAmt "
+            sql = "select a.strItemCode,a.dblAmount,ifnull(b.strTaxIndicator,'NA'),ifnull(a.strKOTNo,''),a.dblDiscountAmt "
                     + " from " + billDtl + " a,tblitemmaster b "
-                    + " where a.strItemCode=b.strItemCode and a.strBillNo='" + billNo + "'; ";
+                    + " where a.strItemCode=b.strItemCode and a.strBillNo='" + billNo + "'"
+                    + " and date(a.dteBillDate)='" + filterBillDate + "' ";
             sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
-            list = sqlQuery.list();
-            for(int i=0 ;i<list.size();i++ )
+            List listDtl = sqlQuery.list();
+            for(int i=0 ;i<listDtl.size();i++ )
     	    	{
-            	Object[] objBillDtl = (Object[]) list.get(i);	
+            	Object[] objBillDtl = (Object[]) listDtl.get(i);	
          
                 String itemCode = objBillDtl[0].toString();
                 double itemAmt = Double.parseDouble(objBillDtl[1].toString());
@@ -510,110 +520,96 @@ public class clsUtilityController {
                     itemAmt -= itemDiscAmt;
                 }
 
-                sql = "select sum(dblAmount) "
-                        + " from tblbillmodifierdtl "
+                sql = "select sum(dblAmount),sum(dblDiscAmt) "
+                        + " from "+billModifierDtl+" "
                         + " where strBillNo='" + billNo + "' and left(strItemCode,7)='" + itemCode + "' "
+                        + " and date(dteBillDate)='" + filterBillDate + "' "
                         + " group by left(strItemCode,7)";
                 
                 sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
-                list = sqlQuery.list();
-                if (list.size()>0)
+                List list1 = sqlQuery.list();
+                if (list1.size()>0)
                 {
-                	Object objModifierAmt = (Object) list.get(0);	
+                	Object objModifierAmt = (Object) list1.get(0);	
                     itemAmt += Double.parseDouble(objModifierAmt.toString());
+                    if (taxOnGD.equalsIgnoreCase("Discount"))
+                    {
+                        itemAmt -= itemDiscAmt;
+                    }
                 }
             
-
-                if (taxOnTax.equals("Yes"))
+                boolean isApplicable =isTaxApplicableOnItemGroup(taxCode, itemCode); 
+                if(isApplicable)
                 {
-                    String keyForTaxOnTax = itemCode + "," + KOTNo + "," + taxOnTaxCode;
-                    if (hmBillTaxDtl.containsKey(keyForTaxOnTax))
-                    {
-                        clsBillItemTaxDtl objBillItemTaxDtl1 = hmBillTaxDtl.get(keyForTaxOnTax);
-                        if (taxIndicator.isEmpty())
-                        {
-                            taxAmt = (billTaxAmt / billTaxableAmt) * (itemAmt + objBillItemTaxDtl1.getDblTaxAmt());
-                        }
-                        else
-                        {
-                            if (objBillDtl[2].toString().equals(taxIndicator))
-                            {
-                                taxAmt = (billTaxAmt / billTaxableAmt) * (itemAmt + objBillItemTaxDtl1.getDblTaxAmt());
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (taxIndicator.isEmpty())
-                        {
-                            taxAmt = (billTaxAmt / billTaxableAmt) * (itemAmt);
-                        }
-                        else
-                        {
-                            if (objBillDtl[2].toString().equals(taxIndicator))
-                            {
-                                taxAmt = (billTaxAmt / billTaxableAmt) * (itemAmt);
-                            }
-                        }
-                    }
+                		
+                	if (taxOnTax.equals("Yes"))
+        		    {
+        			String keyForTaxOnTax = itemCode + "," + KOTNo + "," + taxOnTaxCode;
+        			if (hmBillTaxDtl.containsKey(keyForTaxOnTax))
+        			{
 
-                    clsBillItemTaxDtl objItemTaxDtl = new clsBillItemTaxDtl();
-                    objItemTaxDtl.setStrItemCode(itemCode);
-                    objItemTaxDtl.setDblTaxAmt(taxAmt);
-                    objItemTaxDtl.setStrKOTNo(KOTNo);
-                    objItemTaxDtl.setStrBillNo(billNo);
+        			    clsBillItemTaxDtl objBillItemTaxDtl1 = hmBillTaxDtl.get(keyForTaxOnTax);
 
-                    String key2 = itemCode + "," + KOTNo + "," + taxCode;
-                    String key1 = itemCode + "," + KOTNo;
-                    hmBillTaxDtl.put(key2, objItemTaxDtl);
+        			    taxAmt = (billTaxAmt / billTaxableAmt) * (itemAmt + objBillItemTaxDtl1.getDblTaxAmt());
 
-                    clsBillItemTaxDtl objBillItemTaxDtl = new clsBillItemTaxDtl();
-                    objBillItemTaxDtl.setStrItemCode(itemCode);
-                    objBillItemTaxDtl.setDblTaxAmt(taxAmt);
-                    objBillItemTaxDtl.setStrKOTNo(KOTNo);
-                    objBillItemTaxDtl.setStrBillNo(billNo);
-                    if (hmBillItemTaxDtl.containsKey(key1))
-                    {
-                        objBillItemTaxDtl = hmBillItemTaxDtl.get(key1);
-                        objBillItemTaxDtl.setDblTaxAmt(objBillItemTaxDtl.getDblTaxAmt() + taxAmt);
-                    }
-                    hmBillItemTaxDtl.put(key1, objBillItemTaxDtl);
-                }
-                else
-                {
-                    if (taxIndicator.isEmpty())
-                    {
-                        taxAmt = (billTaxAmt / billTaxableAmt) * itemAmt;
-                    }
-                    else
-                    {
-                        if (objBillDtl[2].toString().equals(taxIndicator))
-                        {
-                            taxAmt = (billTaxAmt / billTaxableAmt) * itemAmt;
-                        }
-                    }
-                    clsBillItemTaxDtl objItemTaxDtl = new clsBillItemTaxDtl();
-                    objItemTaxDtl.setStrItemCode(itemCode);
-                    objItemTaxDtl.setDblTaxAmt(taxAmt);
-                    objItemTaxDtl.setStrKOTNo(KOTNo);
-                    objItemTaxDtl.setStrBillNo(billNo);
+        			}
+        			else
+        			{
 
-                    String key2 = itemCode + "," + KOTNo + "," + taxCode;
-                    String key1 = itemCode + "," + KOTNo;
-                    hmBillTaxDtl.put(key2, objItemTaxDtl);
+        			    taxAmt = (billTaxAmt / billTaxableAmt) * (itemAmt);
 
-                    clsBillItemTaxDtl objBillItemTaxDtl = new clsBillItemTaxDtl();
-                    objBillItemTaxDtl.setStrItemCode(itemCode);
-                    objBillItemTaxDtl.setDblTaxAmt(taxAmt);
-                    objBillItemTaxDtl.setStrKOTNo(KOTNo);
-                    objBillItemTaxDtl.setStrBillNo(billNo);
+        			}
 
-                    if (hmBillItemTaxDtl.containsKey(key1))
-                    {
-                        objBillItemTaxDtl = hmBillItemTaxDtl.get(key1);
-                        objBillItemTaxDtl.setDblTaxAmt(objBillItemTaxDtl.getDblTaxAmt() + taxAmt);
-                    }
-                    hmBillItemTaxDtl.put(key1, objBillItemTaxDtl);
+        			clsBillItemTaxDtl objItemTaxDtl = new clsBillItemTaxDtl();
+        			objItemTaxDtl.setStrItemCode(itemCode);
+        			objItemTaxDtl.setDblTaxAmt(taxAmt);
+        			objItemTaxDtl.setStrKOTNo(KOTNo);
+        			objItemTaxDtl.setStrBillNo(billNo);
+
+        			String key2 = itemCode + "," + KOTNo + "," + taxCode;
+        			String key1 = itemCode + "," + KOTNo;
+        			hmBillTaxDtl.put(key2, objItemTaxDtl);
+
+        			clsBillItemTaxDtl objBillItemTaxDtl = new clsBillItemTaxDtl();
+        			objBillItemTaxDtl.setStrItemCode(itemCode);
+        			objBillItemTaxDtl.setDblTaxAmt(taxAmt);
+        			objBillItemTaxDtl.setStrKOTNo(KOTNo);
+        			objBillItemTaxDtl.setStrBillNo(billNo);
+        			if (hmBillItemTaxDtl.containsKey(key1))
+        			{
+        			    objBillItemTaxDtl = hmBillItemTaxDtl.get(key1);
+        			    objBillItemTaxDtl.setDblTaxAmt(objBillItemTaxDtl.getDblTaxAmt() + taxAmt);
+        			}
+        			hmBillItemTaxDtl.put(key1, objBillItemTaxDtl);
+        		    }
+        		    else
+        		    {
+
+        			taxAmt = (billTaxAmt / billTaxableAmt) * itemAmt;
+
+        			clsBillItemTaxDtl objItemTaxDtl = new clsBillItemTaxDtl();
+        			objItemTaxDtl.setStrItemCode(itemCode);
+        			objItemTaxDtl.setDblTaxAmt(taxAmt);
+        			objItemTaxDtl.setStrKOTNo(KOTNo);
+        			objItemTaxDtl.setStrBillNo(billNo);
+
+        			String key2 = itemCode + "," + KOTNo + "," + taxCode;
+        			String key1 = itemCode + "," + KOTNo;
+        			hmBillTaxDtl.put(key2, objItemTaxDtl);
+
+        			clsBillItemTaxDtl objBillItemTaxDtl = new clsBillItemTaxDtl();
+        			objBillItemTaxDtl.setStrItemCode(itemCode);
+        			objBillItemTaxDtl.setDblTaxAmt(taxAmt);
+        			objBillItemTaxDtl.setStrKOTNo(KOTNo);
+        			objBillItemTaxDtl.setStrBillNo(billNo);
+
+        			if (hmBillItemTaxDtl.containsKey(key1))
+        			{
+        			    objBillItemTaxDtl = hmBillItemTaxDtl.get(key1);
+        			    objBillItemTaxDtl.setDblTaxAmt(objBillItemTaxDtl.getDblTaxAmt() + taxAmt);
+        			}
+        			hmBillItemTaxDtl.put(key1, objBillItemTaxDtl);
+        		    }
                 }
             }
            
@@ -624,9 +620,10 @@ public class clsUtilityController {
         {
             sql = "update " + billDtl + " set dblTaxAmount = " + entry.getValue().getDblTaxAmt() + " "
                     + " where strBillNo='" + billNo + "' and strItemCode='" + entry.getValue().getStrItemCode() + "' "
-                    + " and strKOTNo='" + entry.getValue().getStrKOTNo() + "'";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
-            sqlQuery.executeUpdate();
+                    + " and strKOTNo='" + entry.getValue().getStrKOTNo() + "'"
+                    + " and date(dteBillDate)='" + filterBillDate + "' ";
+             WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql).executeUpdate();
+            //sqlQuery.executeUpdate();
             //System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue().getStrItemCode() + " " + entry.getValue().getDblTaxAmt());
         }
         return 1;
@@ -1421,5 +1418,38 @@ public class clsUtilityController {
 	          }
 			  return user;
     	}
+    	
+    	public boolean isTaxApplicableOnItemGroup(String taxCode, String itemCode)throws Exception
+  	    {
+  		    boolean isApplicable = false;
+  	        try
+  	        {
+  	            String sql = "select a.strItemCode,a.strItemName,b.strSubGroupCode,b.strSubGroupName,c.strGroupCode,c.strGroupName,d.strTaxCode,d.strApplicable "
+  	                    + "from tblitemmaster a,tblsubgrouphd b,tblgrouphd c,tbltaxongroup d "
+  	                    + "where a.strSubGroupCode=b.strSubGroupCode "
+  	                    + "and b.strGroupCode=c.strGroupCode "
+  	                    + "and c.strGroupCode=d.strGroupCode "
+  	                    + "and a.strItemCode='" + itemCode + "' "
+  	                    + "and d.strTaxCode='" + taxCode + "' "
+  	                    + "and d.strApplicable='true' ";
+  	            
+  	        Query query=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+      		List list=query.list();
+  			  if (list!=null && list.size()>0 )
+  	          {
+  				  isApplicable = true;
+  	          }
+  	           
+  	        }
+  	        catch (Exception e)
+  	        {
+  	            e.printStackTrace();
+  	        }
+  	        finally
+  	        {
+  	            return isApplicable;
+  	        }
+  	    }
+  	   
 
 }

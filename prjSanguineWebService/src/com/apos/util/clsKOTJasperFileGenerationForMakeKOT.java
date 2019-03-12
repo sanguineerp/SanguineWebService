@@ -1,6 +1,8 @@
 package com.apos.util;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.sql.Connection;
@@ -42,6 +44,7 @@ import com.itextpdf.awt.geom.Dimension;
 import com.webservice.controller.clsDatabaseConnection;
 import com.webservice.util.clsUtilityFunctions;
 
+import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -49,6 +52,8 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.export.JRPdfExporterParameter;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
@@ -374,6 +379,17 @@ public class clsKOTJasperFileGenerationForMakeKOT {
                 }
             }.start();
             
+            String filePath = System.getProperty("user.dir");
+			 File pdfrpt = new File(filePath + "/Temp");
+			    if (!pdfrpt.exists())
+			    {
+			    	pdfrpt.mkdirs();
+			    }
+			    
+			JRExporter exporter = new JRPdfExporter();
+		    exporter.setParameter(JRPdfExporterParameter.JASPER_PRINT, mainJaperPrint);
+			exporter.setParameter(JRPdfExporterParameter.OUTPUT_STREAM, new FileOutputStream(filePath + "/Temp/kotprint-"+KOTNO+".pdf")); // your output goes here
+			exporter.exportReport();
        
         }
         catch (Exception e)
@@ -383,6 +399,60 @@ public class clsKOTJasperFileGenerationForMakeKOT {
     }
 
     public void funPrintJasperExporterInThread(JasperPrint print,String billPrinterName)
+    {
+
+		 PrintServiceAttributeSet printServiceAttributeSet = new HashPrintServiceAttributeSet();
+		
+		 int selectedService = 0;
+	     //String billPrinterName = strBillPrinterPort;
+		 String filePath = System.getProperty("user.dir");
+		    String filename = "";
+		    filename = (filePath + "/Temp/TempBill1.pdf");
+		    
+	     billPrinterName = billPrinterName.replaceAll("#", "\\\\");
+	     printServiceAttributeSet.add(new PrinterName(billPrinterName, null));
+
+	     PrintService[] printService = PrintServiceLookup.lookupPrintServices(null, printServiceAttributeSet);
+
+	     try {
+	       
+	    	    JRPrintServiceExporter exporter;
+	    	    PrintRequestAttributeSet printRequestAttributeSet = new HashPrintRequestAttributeSet();
+	    	    printRequestAttributeSet.add(MediaSizeName.NA_LETTER);
+	    	    printRequestAttributeSet.add(new Copies(1));
+
+	    	    // these are deprecated
+	    	    exporter = new JRPrintServiceExporter();
+	    	    exporter.setParameter(JRExporterParameter.JASPER_PRINT, print);
+	    	    if(printService.length>0){
+	    	    	exporter.setParameter(JRPrintServiceExporterParameter.PRINT_SERVICE, printService[selectedService]);
+		    	    exporter.setParameter(JRPrintServiceExporterParameter.PRINT_SERVICE_ATTRIBUTE_SET, printService[selectedService].getAttributes());
+		    	    
+	    	    }
+	    	    exporter.setParameter(JRPrintServiceExporterParameter.PRINT_REQUEST_ATTRIBUTE_SET, printRequestAttributeSet);
+	    	    exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PAGE_DIALOG, Boolean.FALSE);
+	    	    exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PRINT_DIALOG, Boolean.FALSE);
+	    	    exporter.exportReport();
+	    	    
+	    	    DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
+	    	    if(printService.length>0){
+	    	    	DocPrintJob job = printService[0].createPrintJob();	
+	    	    }
+	   		    /*FileInputStream fis = new FileInputStream(filename);
+	   		    DocAttributeSet das = new HashDocAttributeSet();
+	   		    Doc doc = new SimpleDoc(fis, flavor, das);*/
+	   		    //job.print(doc, printerReqAtt);
+
+	     } catch (Exception e) {
+	    	 
+	    	 e.printStackTrace();
+	     }
+		
+	     
+	 
+    }
+    
+   /* public void funPrintJasperExporterInThread(JasperPrint print,String billPrinterName)
     {
 
 		 PrintServiceAttributeSet printServiceAttributeSet = new HashPrintServiceAttributeSet();
@@ -427,9 +497,6 @@ public class clsKOTJasperFileGenerationForMakeKOT {
 	    	 e.printStackTrace();
 	     }
 		
-	     
-	 
-    }
-
+    }*/
 
 }

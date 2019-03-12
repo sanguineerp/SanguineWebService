@@ -225,7 +225,7 @@ public class clsTaxCalculation
 	    }
 	   
 	   
-	   private boolean isTaxApplicableOnItemGroup(String taxCode, String itemCode)throws Exception
+	   public boolean isTaxApplicableOnItemGroup(String taxCode, String itemCode)throws Exception
 	    {
 		   cmsCon = objDb.funOpenAPOSCon("mysql", "master");
 	       st = cmsCon.createStatement();
