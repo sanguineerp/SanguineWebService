@@ -9646,7 +9646,7 @@ public class clsPostPOSBillData
 					+ ",strRemoveSCTaxCode,strAutoAddKOTToBill,strAreaWiseCostCenterKOTPrintingYN,strWERAOnlineOrderIntegration,strWERAMerchantOutletId,strWERAAuthenticationAPIKey"//217
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
-					+ "strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill) "// 236
+					+ "strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill,strUserWiseShowBill,strDisplayTotalShowBill,strShowNotificationsOnTransaction,strBlankDayEndPrint) "// 240
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9919,6 +9919,12 @@ public class clsPostPOSBillData
 					String strPrintOriginalOnBill= dataObject.get("strPrintOriginalOnBill").toString().trim();// 234
 					String strPostSalesDataToExcise= dataObject.get("strPostSalesDataToExcise").toString().trim();// 235
 					String strPrintFullVoidBill= dataObject.get("strPrintFullVoidBill").toString().trim();//236
+					
+					String strUserWiseShowBill = dataObject.get("strUserWiseShowBill").toString().trim();// 233
+					String strDisplayTotalShowBill= dataObject.get("strDisplayTotalShowBill").toString().trim();// 234
+					String strShowNotificationsOnTransaction= dataObject.get("strShowNotificationsOnTransaction").toString().trim();// 235
+					String strBlankDayEndPrint= dataObject.get("strBlankDayEndPrint").toString().trim();//236
+
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -9945,7 +9951,8 @@ public class clsPostPOSBillData
 							+ ",'" + strTakeAwayAreaForDirectBiller + "','" + strRoundOffBillFinalAmt + "','" + dblNoOfDecimalPlace + "','" + strSendDBBackupOnClientMail + "','" + strPrintOrderNoOnBillYN + "','" + strPrintDeviceAndUserDtlOnKOTYN + "','" + strRemoveSCTaxCode + "','" + strAutoAddKOTToBill + "'" // 213
 							+ ",'" + strAreaWiseCostCenterKOTPrintingYN + "','" + strWERAOnlineOrderIntegration + "','" + strWERAMerchantOutletId + "','" + strWERAAuthenticationAPIKey + "','" + strFireCommunication + "'" + ",'" + dblUSDConverionRate + "','" + strDBBackupMailReceiver + "','" + strPrintMoveTableMoveKOTYN + "','" + strPrintQtyTotal + "','" + strShowReportsInCurrency + "'" 
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
-							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "') "); // 236
+							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "'" //236
+							+ ", '" + strUserWiseShowBill + "','" + strDisplayTotalShowBill + "','" + strShowNotificationsOnTransaction + "','" + strBlankDayEndPrint + "') "); // 240 
 					flgData = true;
 				}
 			}

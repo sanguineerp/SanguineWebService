@@ -87,7 +87,7 @@ public class clsTextFormat5ForBill {
 	    }
 	    rs.close();
 	    
-	    sql = " select a.strClientName,a.strAddressLine1,a.strAddressLine2, a.strAddressLine3,a.strCityName,a.intTelephoneNo, a.strEmail,a.strVatNo,a.strServiceTaxNo,a.strBillFooter,a.strPrintServiceTaxNo,a.strPrintVatNo,a.strMultipleBillPrinting ,a.strPrintInclusiveOfAllTaxesOnBill,a.dblUSDConverionRate,a.dblNoOfDecimalPlace   from tblsetup a where a.strClientCode='"+clientCode+"'";
+	    sql = " select a.strClientName,a.strAddressLine1,a.strAddressLine2, a.strAddressLine3,a.strCityName,a.intTelephoneNo, a.strEmail,a.strVatNo,a.strServiceTaxNo,a.strBillFooter,a.strPrintServiceTaxNo,a.strPrintVatNo,a.strMultipleBillPrinting ,a.strPrintInclusiveOfAllTaxesOnBill,a.dblUSDConverionRate,a.dblNoOfDecimalPlace   from tblsetup a where a.strClientCode='"+clientCode+"' and a.strPOSCode='"+posCode+"' ";
 	    // System.out.println(sql);
 	    
 	    st.close();
@@ -113,7 +113,9 @@ public class clsTextFormat5ForBill {
 	    }
 	    rs.close();
 	    DecimalFormat gDecimalFormat = clsGlobalFunctions.funGetGlobalDecimalFormatter(noOfDecimalPlace);
-	    sql = " select a.strBillNo,ifnull(b.strTableName,''),ifnull(c.strWShortName,''),a.dblGrandTotal,a.dblSubTotal,a.dblDiscountAmt,a.dteBillDate,a.intPaxNo,a.strOperationType,a.strCustomerCode " + ",a.strUserCreated,ifnull(a.strRemarks,'') from tblbillhd a left outer join tbltablemaster b " + " on a.strTableNo=b.strTableNo " + " left outer join tblwaitermaster c " + " on a.strWaiterNo=c.strWaiterNo " + " where a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
+	    sql = " select a.strBillNo,ifnull(b.strTableName,''),ifnull(c.strWShortName,''),a.dblGrandTotal,a.dblSubTotal,a.dblDiscountAmt,a.dteBillDate,a.intPaxNo,a.strOperationType,a.strCustomerCode,a.strUserCreated,ifnull(e.strDiscRemarks,'') "
+	    		+ "from tblbillhd a left outer join tbltablemaster b " + " on a.strTableNo=b.strTableNo " + " left outer join tblwaitermaster c " + " on a.strWaiterNo=c.strWaiterNo "
+	    		+ "LEFT OUTER JOIN tblbilldiscdtl e on a.strBillNo=e.strBillNo where a.strBillNo='" + billNo + "' " + " and a.strPosCode='" + posCode + "' ";
 	    // System.out.println(sql);
 	    
 	    rs = st.executeQuery(sql);
@@ -427,12 +429,12 @@ public class clsTextFormat5ForBill {
 	    pw.print(objTextFileGenerator.funPrintTextWithAlignment("SUB TOTAL", 32, "Left"));
 	    pw.print(objTextFileGenerator.funPrintTextWithAlignment("" + gDecimalFormat.format(sbTotal), 8, "RIGHT"));
 	    pw.println(" ");
-	   /* if(dis>0)
+	    if(dis>0)
 	    {
 	    	pw.print(objTextFileGenerator.funPrintTextWithAlignment("DISCOUNT  ", 32, "Left"));
 		    pw.print(objTextFileGenerator.funPrintTextWithAlignment("" +gDecimalFormat.format( dis), 8, "RIGHT"));
 		    pw.println(" "); 	
-	    }*/
+	    }
 	    
 	    sql = "select a.dblDiscPer,a.dblDiscAmt,a.strDiscOnType,a.strDiscOnValue,b.strReasonName,a.strDiscRemarks "
 			    + " from tblbilldiscdtl a ,tblreasonmaster b,tblbillhd c "

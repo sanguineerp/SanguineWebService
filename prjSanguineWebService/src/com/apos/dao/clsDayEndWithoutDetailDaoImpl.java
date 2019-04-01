@@ -142,7 +142,7 @@ public class clsDayEndWithoutDetailDaoImpl implements clsDayEndWithoutDetailDao{
                         if ("Windows".equalsIgnoreCase("Windows"))
                         {
                             //objUtility.funBackupAndMailDB(backupFilePath);
-                            objUtility.funBackupAndMailDB(backupFilePath,strClientCode,strPOSCode,strPOSName,strPOSDate);
+                          //  objUtility.funBackupAndMailDB(backupFilePath,strClientCode,strPOSCode,strPOSName,strPOSDate);
                         }  
                 }
 				
@@ -180,7 +180,7 @@ public class clsDayEndWithoutDetailDaoImpl implements clsDayEndWithoutDetailDao{
                             String backupFilePath="";
                             if ("Windows".equalsIgnoreCase("Windows"))
                             {
-                            	backupFilePath = obBackupDatabase.funTakeBackUpDB(strClientCode);
+                            	//backupFilePath = obBackupDatabase.funTakeBackUpDB(strClientCode);
                             }
 
                             sql = "update tbltablemaster set strStatus='Normal' "
@@ -220,7 +220,7 @@ public class clsDayEndWithoutDetailDaoImpl implements clsDayEndWithoutDetailDao{
 	                        if ("Windows".equalsIgnoreCase("Windows"))
 	                        {
 	                            //objUtility.funBackupAndMailDB(backupFilePath);
-	                            objUtility.funBackupAndMailDB(backupFilePath,strClientCode,strPOSCode,strPOSName,strPOSDate);
+	                          //  objUtility.funBackupAndMailDB(backupFilePath,strClientCode,strPOSCode,strPOSName,strPOSDate);
 	                        }
                           
                         }

@@ -301,14 +301,14 @@ public class clsKOTJasperFileGenerationForMakeKOT {
             }
             
             String strAreaWiseCostCenterKOTPrintingYN="N";
-   			sql="select strAreaWiseCostCenterKOTPrintingYN from tblsetup where strPOSCode='"+posCode+"' ";
+   			sql="select strAreaWiseCostCenterKOTPrintingYN from tblsetup where strPOSCode='"+posCode+"' or   strPOSCode='All'";
    			ResultSet rsPrinter = st.executeQuery(sql);
            if (rsPrinter.next()) {
         	   strAreaWiseCostCenterKOTPrintingYN=rsPrinter.getString(1);
            }
            rsPrinter.close();
-           //String primary="",secondary="",printOnBothPrinters="";
-          /* if(strAreaWiseCostCenterKOTPrintingYN.equalsIgnoreCase("Y"))
+           String secondary="",printOnBothPrinters="";
+           if(strAreaWiseCostCenterKOTPrintingYN.equalsIgnoreCase("Y"))
            {
         	    String areaCodeOfTable = "";
            	    String sqlArea = "select strTableName,intPaxNo,strAreaCode "
@@ -330,8 +330,8 @@ public class clsKOTJasperFileGenerationForMakeKOT {
        		    rsPrinter = st.executeQuery(sqlAreaWiseCostCenterKOTPrinting);
        		    if (rsPrinter.next())
        		    {
-           			 primary = rsPrinter.getString(1);
-           			 secondary = rsPrinter.getString(2);
+       		    	primaryPrinterName = rsPrinter.getString(1);
+       		    	secondaryPrinterName = rsPrinter.getString(2);
            			 printOnBothPrinters = rsPrinter.getString(3);
        		    }
        		    rsPrinter.close();   
@@ -342,12 +342,12 @@ public class clsKOTJasperFileGenerationForMakeKOT {
                
                if (rsPrinter.next())
                {
-                    primary = rsPrinter.getString(1);
-                    secondary = rsPrinter.getString(2);
+            	   primaryPrinterName = rsPrinter.getString(1);
+            	   secondaryPrinterName = rsPrinter.getString(2);
                     printOnBothPrinters = rsPrinter.getString(3);
                }
                rsPrinter.close();   
-           }*/
+           }
             
            
             hm.put("listOfItemDtl", listOfKOTDetail);

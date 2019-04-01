@@ -234,6 +234,7 @@ public class clsWebbooksIntegration
 	String JVNo = "";
 	String userCode = "";
 	String propertyCode = "";
+	String toDate="";
 	boolean flgData = false;
 	HashMap<String, clsJVDtlModel> hmJVDtlata = new HashMap<>();
 	try
@@ -269,6 +270,7 @@ public class clsWebbooksIntegration
 	    billDate = objBillData.getString("POSDate");
 	    userCode = objBillData.getString("User");
 	    String billMonth=billDate.split("-")[1];
+	    toDate = objBillData.getString("toDate");
 	    
 	    JSONArray mJsonSubGroupArray = (JSONArray) objBillData.get("SubGroupwise");
 	    // System.out.println(mJsonSubGroupArray);
@@ -323,15 +325,21 @@ public class clsWebbooksIntegration
 //	    }
 //	    
 //	    hmJVDtlata.clear();
-	    JSONArray mJsonRoundOffArray = (JSONArray) objBillData.get("RoundOffDtl");
-	    // System.out.println(mJsonRoundOffArray);
-	  //  hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlData("Cr", mJsonRoundOffArray);
-	    hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlDataForRounOff("Cr", mJsonRoundOffArray);
-	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
-	    {
-	    	System.out.println("Key=="+entry.getKey()+"--"+entry.getValue().getDblCrAmt());
-		hmJVDtlModel.put(entry.getKey(), entry.getValue());
+	    
+	    System.out.println("Round Off= "+objBillData.has("RoundOffDtl"));
+	    
+	    if(objBillData.has("RoundOffDtl")){
+	    	JSONArray mJsonRoundOffArray = (JSONArray) objBillData.get("RoundOffDtl");
+		    if(null!=mJsonRoundOffArray){
+			   hmJVDtlata = (HashMap<String, clsJVDtlModel>) funGetJVDtlDataForRounOff("Cr", mJsonRoundOffArray);
+			    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlata.entrySet())
+			    {
+			    	System.out.println("Key=="+entry.getKey()+"--"+entry.getValue().getDblCrAmt());
+			    	hmJVDtlModel.put(entry.getKey(), entry.getValue());
+			    }
+		   }
 	    }
+	    
 	    
 	    propertyCode = "01";
 	    
@@ -358,10 +366,15 @@ public class clsWebbooksIntegration
 	    {
 	    	daydateonly = "0"+billDate.split("-")[2];
 	    }
-	   
+	  //single day 
+	    String narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0] +" "+POSName;
+	    //check from date = to date
+	    if(!toDate.equals(billDate)){
+	    	//Manual Posting 
+	    	narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+toDate.split("-")[0] +" to " +toDate.split("-")[1]+"-"+toDate.split("-")[0] +" "+POSName;
+	    }
 	    
 	    sql = "";
-	    String narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0] +" "+POSName;
 	    JVNo = funGenerateDocumentCode(currentDate, clientCode, propertyCode);
 	    String sql_insertJVHd = " insert into tblJVHd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";
 	    sql_insertJVHd += " ('" + JVNo + "','" + narration + "','" + sancCode + "','None','" + billDate + "','"+billMonth+"','" + totalJVAmt + "' " + ",'R','A','AR','" + POSCode + "','"+userCode+"','"+userCode+"','" + currentDate + "','" + currentDate + "','" + clientCode + "','" + propertyCode + "','')";

@@ -65,6 +65,7 @@ import com.apos.util.clsAPOSKOT;
 import com.apos.util.clsAPOSUtility;
 import com.apos.util.clsConsolidatedKOTJasperGenerationForDirectBiller;
 import com.apos.util.clsConsolidatedKOTJasperGenerationForMakeKOT;
+import com.apos.util.clsGlobalFunctions;
 import com.apos.util.clsKOTJasperFileGenerationForMakeKOT;
 import com.apos.util.clsTextFileGenerator;
 import com.apos.util.clsTextFormatVoidKOT;
@@ -3023,7 +3024,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	    			+ "or a.strModuleName='POS Wise Sales' or a.strModuleName='Customer Order' "
 	    			//+ "or a.strModuleName='Non Available Items' or a.strModuleName='Mini Make KOT' "
 	    			+ "or a.strModuleName='Day End' or a.strModuleName='KDSForKOTBookAndProcess' "
-	    			+ "or a.strModuleName='Kitchen Process System' ) ";																		  
+	    			+ "or a.strModuleName='Kitchen Process System' or a.strModuleName='Change Settlement' ) ";																		  
 	    	}
 	    }
 	    else
@@ -3087,7 +3088,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ ",'Make Bill','Sales Report','Reprint','SettleBill','TableStatusReport'"
 				+ ",'NCKOT','Take Away','Table Reservation','POS Wise Sales','Customer Order'"
 				//+ ",'Non Available Items','Mini Make KOT','Day End','KDSForKOTBookAndProcess','Kitchen Process System') "
-				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System') "
+				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement') "
 				+ " order by b.intSequence";
 	    		
 	    	}
@@ -3156,8 +3157,6 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				
 		
 	}
-	
-	
 	
 	
 	@GET
@@ -16656,7 +16655,9 @@ private String funGetBillSeriesDtlBillNos(List<clsBillSeriesBillDtl> listBillSer
 				try {
 					if(key.equals("BillPromoDiscountData")){
 						mJsonOb=(JSONObject) objBillData.get(key);	
-					}else{
+					}
+					else
+					{
 						mJsonArray = (JSONArray) objBillData.get(key);	
 					}
 					
@@ -17689,5 +17690,201 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	   return responseBuilder.build();
 	}
     
+    
+    @GET
+	@Path("/funGetDateWiseSettleBillList")
+	@Produces(MediaType.APPLICATION_JSON)
+    public JSONArray funGetDateWiseSettleBillList(@QueryParam("BillDate") String strBillDate,@QueryParam("ClientCode") String strClientCode,@QueryParam("POSCode") String strPOSCode )
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null,st1=null;
+        JSONArray arrObj=new JSONArray();
+        try
+        {
+        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            st1 = cmsCon.createStatement();
+        	String sqlLive="";
+        	String sqlQFile="";
+        	
+        	sqlLive = " SELECT a.strBillNo, a.dblGrandTotal, a.strSettelmentMode"
+					+ " FROM tblbillhd a, tblbilldtl b, tblbillsettlementdtl c,tblsettelmenthd d"
+					+ " where a.strBillNo=b.strBillNo and a.strBillNo=c.strBillNo and a.strSettelmentMode=d.strSettelmentType"
+					+ " and a.dtBillDate = '"+strBillDate+"' and a.strClientCode='"+strClientCode+"' and (strPOSCode='"+strPOSCode+"' or strPOSCode='All')"
+					+ " group by a.strBillNo";
+        	
+        	ResultSet rsSettleBillData=st.executeQuery(sqlLive);
+            while(rsSettleBillData.next())
+            {
+            	JSONObject obj=new JSONObject();
+            	obj.put("BillNo",rsSettleBillData.getString(1));
+            	obj.put("SettlementAmt",rsSettleBillData.getString(2));
+            	obj.put("SettlementMode",rsSettleBillData.getString(3));
+            	arrObj.put(obj);
+            }
+            rsSettleBillData.close();
+        	
+        	sqlQFile = " SELECT a.strBillNo, a.dblGrandTotal, a.strSettelmentMode"
+					+ " FROM tblqbillhd a, tblqbilldtl b, tblqbillsettlementdtl c,tblsettelmenthd d"
+					+ " where a.strBillNo=b.strBillNo and a.strBillNo=c.strBillNo and a.strSettelmentMode=d.strSettelmentType"
+					+ " and a.dtBillDate = '"+strBillDate+"' and a.strClientCode='"+strClientCode+"' and (strPOSCode='"+strPOSCode+"' or strPOSCode='All')"
+					+ " group by a.strBillNo";
+            rsSettleBillData=st.executeQuery(sqlQFile);
+            while(rsSettleBillData.next())
+            {
+            	JSONObject obj=new JSONObject();
+            	obj.put("BillNo",rsSettleBillData.getString(1));
+            	obj.put("SettlementAmt",rsSettleBillData.getString(2));
+            	obj.put("SettlementMode",rsSettleBillData.getString(3));
+            	arrObj.put(obj);
+            }
+            rsSettleBillData.close();
+            st.close();
+            cmsCon.close();
+            
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+        return arrObj;
+	}
+    
+
+	@SuppressWarnings("rawtypes")
+    @POST
+	@Path("/funChangeSettleBillList")
+	@Produces(MediaType.APPLICATION_JSON)
+    public Response funChangeSettleBillList(@QueryParam("Type") String type,@QueryParam("BillDate") String strBillDate,
+    		@QueryParam("ClientCode") String strClientCode,JSONObject jObjData,@QueryParam("POSCode") String strPOSCode )
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null,st1=null;
+        String curDate="";
+        int result;
+        JSONObject jsonSettlementOptionBean=null;
+        JSONArray arrObj=new JSONArray();
+        String ret="false";
+    	JSONObject mJsonObject=null;
+    	ResultSet rsSettleBillData;
+    	String strBillDt="";
+        try
+        {
+        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            st1 = cmsCon.createStatement();
+        	String sqlLive="";
+        	String sqlQFile="";
+        	String billDate[]=strBillDate.split("-");
+        	strBillDt=billDate[2] + "-" + billDate[1] + "-" + billDate[0];
+        	/*
+        	Iterator itrBillData=jObjData.keys();
+        	JSONArray mJsonArray =new JSONArray();
+        	while(itrBillData.hasNext())
+			{
+        		String key = itrBillData.next().toString();
+        		jsonSettlementOptionBean = (JSONObject) jObjData.get(key);
+        		
+				
+			}
+        	*/
+        	String settlementName="Cash";
+        	JSONArray jArrBillSettData=new JSONArray();
+        	if(jObjData.has("BillSettlementData")){
+        		jArrBillSettData=(JSONArray)jObjData.get("BillSettlementData");
+        		
+        		funInsertBillSettlementDtlData(jArrBillSettData);
+        	}
+        	for (int i = 0; i < jArrBillSettData.length(); i++) 
+			{
+				mJsonObject =(JSONObject) jArrBillSettData.get(i);
+			}
+        	
+        	if(jArrBillSettData.length()>1){
+        		settlementName="MultiSettle";
+        	}else{
+
+        		JSONObject jsobSettname=(JSONObject)jArrBillSettData.get(0);
+        		settlementName=jsobSettname.getString("SettlementMode");
+        	}
+        	
+        	if(type.equals("Live"))
+        	{
+        		sqlLive = "update tblbillhd set strSettelmentMode='" + settlementName + "' "
+                    + ",strTransactionType=CONCAT(strTransactionType,',','Change Settlement') "
+                    + "where strBillNo='" + mJsonObject.get("BillNo") + "' "
+                    + "and strPOSCode='" + strPOSCode + "' "
+                    + "and date(dteBillDate)='" + strBillDt + "' "; 
+        		int i=st.executeUpdate(sqlLive);
+        		if(i>0)
+        			ret="true";
+                
+        	}
+        	else
+        	{
+        		sqlQFile = "update tblqbillhd set strSettelmentMode='" +settlementName + "' "
+                        + ",strTransactionType=CONCAT(strTransactionType,',','Change Settlement') "
+                        + "where strBillNo='" + mJsonObject.get("BillNo") + "' "
+                        + "and strPOSCode='" + strPOSCode + "' "
+                        + "and date(dteBillDate)='" + strBillDt + "' "; 
+        		int i=st.executeUpdate(sqlQFile);
+        		if(i>0)
+        			ret="true";
+        	}
+        	
+        	
+        	
+            
+            /*// Insert BillSettlementDtl
+            if(type.equals("Live"))
+        	{
+            	String sqlDelete = "delete from tblbillsettlementdtl "
+                        + " where strBillNo='" +  jsonSettlementOptionBean.get("BillNo") + "' "
+                        + " and date(dteBillDate)='" + strBillDate + "' ";
+            	ResultSet rsSqlDelete=st.executeQuery(sqlDelete);
+            	
+            	String sqlInsertBillSettlementDtl = "insert into tblbillsettlementdtl "
+                        + "(strBillNo,strSettlementCode,dblSettlementAmt,dblPaidAmt,strExpiryDate"
+                        + ",strCardName,strRemark,strClientCode,strCustomerCode,dblActualAmt"
+                        + ",dblRefundAmt,strGiftVoucherCode,strDataPostFlag,dteBillDate) "
+                        + "values ('" + jsonSettlementOptionBean.get("strBillNo") + "'"
+		                + ",'" + jsonSettlementOptionBean.get("strSettlementCode") + "'," + jsonSettlementOptionBean.get("dblSettlementAmt") + " "
+		                + "," + jsonSettlementOptionBean.get("dblPaidAmt") + ",'" + jsonSettlementOptionBean.get("strExpiryDate") + "' "
+		                + ",'" + jsonSettlementOptionBean.get("strCardName") + "','" + jsonSettlementOptionBean.get("strRemark") + "'"
+		                + ",'" + jsonSettlementOptionBean.get("strClientCode") + "','" + jsonSettlementOptionBean.get("strCustomerCode") + "'"
+		                + "," + jsonSettlementOptionBean.get("dblActualAmt") + "," + jsonSettlementOptionBean.get("dblRefundAmt") + ""
+		                + ",'" + jsonSettlementOptionBean.get("strGiftVoucherCode") + "','" + jsonSettlementOptionBean.get("strDataPostFlag") + "','" + strBillDate + "'), ";
+            	ResultSet rsSqlInsert=st.executeQuery(sqlInsertBillSettlementDtl);
+        	}
+        	else
+        	{
+        		String sqlDelete = "delete from tblqbillsettlementdtl "
+                        + " where strBillNo='" +  jsonSettlementOptionBean.get("BillNo") + "' "
+                        + " and date(dteBillDate)='" + strBillDate + "' ";
+            	ResultSet rsSqlDelete=st.executeQuery(sqlDelete);
+            	
+            	String sqlInsertBillSettlementDtl = "insert into tblqbillsettlementdtl "
+                        + "(strBillNo,strSettlementCode,dblSettlementAmt,dblPaidAmt,strExpiryDate"
+                        + ",strCardName,strRemark,strClientCode,strCustomerCode,dblActualAmt"
+                        + ",dblRefundAmt,strGiftVoucherCode,strDataPostFlag,dteBillDate) "
+                        + "values ('" + jsonSettlementOptionBean.get("strBillNo") + "'"
+		                + ",'" + jsonSettlementOptionBean.get("strSettlementCode") + "'," + jsonSettlementOptionBean.get("dblSettlementAmt") + " "
+		                + "," + jsonSettlementOptionBean.get("dblPaidAmt") + ",'" + jsonSettlementOptionBean.get("strExpiryDate") + "' "
+		                + ",'" + jsonSettlementOptionBean.get("strCardName") + "','" + jsonSettlementOptionBean.get("strRemark") + "'"
+		                + ",'" + jsonSettlementOptionBean.get("strClientCode") + "','" + jsonSettlementOptionBean.get("strCustomerCode") + "'"
+		                + "," + jsonSettlementOptionBean.get("dblActualAmt") + "," + jsonSettlementOptionBean.get("dblRefundAmt") + ""
+		                + ",'" + jsonSettlementOptionBean.get("strGiftVoucherCode") + "','" + jsonSettlementOptionBean.get("strDataPostFlag") + "','" + strBillDate + "'), ";
+            	ResultSet rsSqlInsert=st.executeQuery(sqlInsertBillSettlementDtl);
+        	}*/
+            
+            st.close();
+            cmsCon.close();
+            
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return Response.status(201).entity(ret).build();
+	}
 
 }
