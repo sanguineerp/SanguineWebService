@@ -233,8 +233,8 @@ public class clsWebbooksIntegration
 	String POSName = "";
 	String JVNo = "";
 	String userCode = "";
-	String propertyCode = "";
-	String toDate="";
+	String propertyCode = "01";
+	
 	boolean flgData = false;
 	HashMap<String, clsJVDtlModel> hmJVDtlata = new HashMap<>();
 	try
@@ -246,6 +246,7 @@ public class clsWebbooksIntegration
 	    int month = objDate.getMonth() + 1;
 	    int year = objDate.getYear() + 1900;
 	    currentDate = year + "-" + month + "-" + day;
+	    propertyCode=objBillData.getString("propertyCode");
 	    
 	    String sql_Code = " select strControlCode,strBillableCode,strSuspenceCode,strDbtrSuspAcctCode,strSancCode,strECSBankcode" + ",strClientCode,strBillableName from tblpropertysetup  ";
 	    ResultSet rs = st.executeQuery(sql_Code);
@@ -269,8 +270,9 @@ public class clsWebbooksIntegration
 //	    POSName = objBillData.getString("POSName");
 	    billDate = objBillData.getString("POSDate");
 	    userCode = objBillData.getString("User");
+	   
 	    String billMonth=billDate.split("-")[1];
-	    toDate = objBillData.getString("toDate");
+	    
 	    
 	    JSONArray mJsonSubGroupArray = (JSONArray) objBillData.get("SubGroupwise");
 	    // System.out.println(mJsonSubGroupArray);
@@ -341,7 +343,7 @@ public class clsWebbooksIntegration
 	    }
 	    
 	    
-	    propertyCode = "01";
+	    //propertyCode = "01";
 	    
 	    String vouchNoToDel = "";
 	    sql = "select strVouchNo from tbljvhd where strMasterPOS='" + POSCode + "' and date(dteVouchDate)='" + billDate + "' ";
@@ -361,20 +363,15 @@ public class clsWebbooksIntegration
 	    sql = " delete from tbljvdebtordtl where strVouchNo='" + vouchNoToDel + "' and strClientCode='"+clientCode+"' ";
 	    st.execute(sql);
 	    
-	    String daydateonly=billDate.split("-")[2];
+	    String onlyDate=billDate.split(" ")[0];
+	    String daydateonly=onlyDate.split("-")[2];
 	    if(daydateonly.length()==1)
 	    {
-	    	daydateonly = "0"+billDate.split("-")[2];
+	    	daydateonly = "0"+onlyDate.split("-")[2];
 	    }
-	  //single day 
+	   
 	    String narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0] +" "+POSName;
-	    //check from date = to date
-	    if(!toDate.equals(billDate)){
-	    	//Manual Posting 
-	    	narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+toDate.split("-")[0] +" to " +toDate.split("-")[1]+"-"+toDate.split("-")[0] +" "+POSName;
-	    }
-	    
-	    sql = "";
+	     sql = "";
 	    JVNo = funGenerateDocumentCode(currentDate, clientCode, propertyCode);
 	    String sql_insertJVHd = " insert into tblJVHd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";
 	    sql_insertJVHd += " ('" + JVNo + "','" + narration + "','" + sancCode + "','None','" + billDate + "','"+billMonth+"','" + totalJVAmt + "' " + ",'R','A','AR','" + POSCode + "','"+userCode+"','"+userCode+"','" + currentDate + "','" + currentDate + "','" + clientCode + "','" + propertyCode + "','')";
@@ -2024,10 +2021,11 @@ public class clsWebbooksIntegration
 	 	    cmsCon = objDb.funOpenWebbooksCon("mysql", "transaction");
 	 	    Statement st = cmsCon.createStatement();
 	 	    
-	 	    String sbSql = " select a.strType,b.strGroupCode,b.strGroupName,ifnull(d.strCrDr,''),if((c.strVouchNo is null),0,ifnull(sum(d.dblDrAmt),0)),a.strAccountName,a.strAccountCode,if((c.strVouchNo is null),0,ifnull(sum(d.dblCrAmt),0)) from  tblacgroupmaster b,tblacmaster a,   " + 
+	 	    String sbSql = " select a.strType,b.strGroupCode,b.strGroupName,ifnull(d.strCrDr,''),if((c.strVouchNo is null),0,ifnull(sum(d.dblDrAmt),0)),a.strAccountName,a.strAccountCode,if((c.strVouchNo is null),0,ifnull(sum(d.dblCrAmt),0)) from  tblacgroupmaster b, tblsubgroupmaster s,tblacmaster a,   " + 
 	 	      dtlTableName + " d ,  " + 
 	 	      "  " + hdTableName + "  c  " + 
-	 	      "where a.strGroupCode=b.strGroupCode " + 
+	 	      "where a.strSubGroupCode=s.strSubGroupCode "
+	 	      + " and s.strGroupCode=b.strGroupCode " + 
 	 	      "and b.strCategory like'%EXPENSES' and  a.strAccountCode=d.strAccountCode and c.strVouchNo=d.strVouchNo   and date(c.dteVouchDate) between '" + fromDate + "' and '" + toDate + "' and c.strClientCode='" + clientCode + "' and a.strPropertyCode='" + propCode + "'  " + 
 	 	      "and a.strType='GL Code' " + 
 	 	      "group by a.strAccountCode  ";
@@ -2084,7 +2082,7 @@ public class clsWebbooksIntegration
 	 	      st = POSCon.createStatement();
 	 	      String sql = "";
 	 	      
-	 	      sql = " select a.dblAmount,d.dblPurchaseRate from tblqbilldtl a,tblqbillhd b,tblposmaster c,tblitemmaster d   where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode and a.strItemCode=d.strItemCode  "
+	 	      sql = " select   ifnull(sum(a.dblAmount),0),ifnull(sum(d.dblPurchaseRate),0) from tblqbilldtl a,tblqbillhd b,tblposmaster c,tblitemmaster d   where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode and a.strItemCode=d.strItemCode  "
 	 	      	  + " and date(b.dteBillDate)  between '" + frmDate + "' and '" + toDate + "' ";
 	 	      
 
@@ -2100,10 +2098,10 @@ public class clsWebbooksIntegration
 	 	      }
 	 	      
 	 	      rsPOSData.close();
-	 	      String sqlMod = " select   a.dblAmount,d.dblPurchaseRate from tblqbillmodifierdtl a,tblqbillhd b,tblposmaster c,tblitemmaster d  where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode  and left(a.strItemCode,7)=d.strItemCode  "
+	 	      String sqlMod = " select  ifnull(sum(a.dblAmount),0),ifnull(sum(d.dblPurchaseRate),0) from tblqbillmodifierdtl a,tblqbillhd b,tblposmaster c,tblitemmaster d  where a.strBillNo=b.strBillNo   AND DATE(a.dteBillDate)=DATE(b.dteBillDate)  and b.strPOSCode=c.strPosCode   and a.strClientCode=b.strClientCode  and left(a.strItemCode,7)=d.strItemCode  "
 	 	      				+ " AND a.dblamount>0   and date(b.dteBillDate)    between '" + frmDate + "' and '" + toDate + "' ";
 	 	      
-	 	      ResultSet rsPOSModData = st.executeQuery(sql);
+	 	      ResultSet rsPOSModData = st.executeQuery(sqlMod);
 	 	      while (rsPOSModData.next())
 	 	      {
 	 	        saleAmt += Double.parseDouble(rsPOSModData.getString(1));

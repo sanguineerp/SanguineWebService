@@ -10650,7 +10650,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	                 sbFilters.append(" AND a.strPOSCode = '" + posCode + "' ");                    
 	             }
 				 
-	             sbFilters.append(" order by date(a.dteBillDate),a.strBillNo desc");
+				 sbFilters.append(" order by date(a.dteBillDate),a.strBillNo,a.dteDateCreated asc");
+
 	             System.out.println(sbFilters);
 	             sbSqlBillWiseLive.append(" ").append(sbFilters);
 	             sbSqlBillWiseQFile.append(" ").append(sbFilters);
@@ -10798,8 +10799,24 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	             }
 
 	             //sort arrTempListBillWiseSales 
-	             Collections.sort(arrTempListBillWiseSales, COMPARATOR);
+	            // Collections.sort(arrTempListBillWiseSales, COMPARATOR);
+	             Collections.sort(arrTempListBillWiseSales, new Comparator<clsSalesFlashColumns>()
+	             {
+            	 	public int compare(clsSalesFlashColumns o1, clsSalesFlashColumns o2)
+     	        	{
+	     	            return (int) (o1.getStrField2().compareTo(o2.getStrField2()));
+     	        	}
+	             });
 	             
+	             Collections.sort(arrTempListBillWiseSales, new Comparator<clsSalesFlashColumns>()
+	             {
+            	 	public int compare(clsSalesFlashColumns o1, clsSalesFlashColumns o2)
+     	        	{
+	     	            return (int) (o1.getStrField1().compareTo(o2.getStrField1()));
+     	        	}
+	             });
+	    			
+	    	             
 	             for (clsSalesFlashColumns objSalesFlashColumns : arrTempListBillWiseSales)
 	             {
 	            	JSONObject objBill= new JSONObject();
@@ -10850,14 +10867,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		
 		
 		
-		private static Comparator<clsSalesFlashColumns> COMPARATOR = new Comparator<clsSalesFlashColumns>()
+		/*private static Comparator<clsSalesFlashColumns> COMPARATOR = new Comparator<clsSalesFlashColumns>()
 	    {
 	        // This is where the sorting happens.
 	        public int compare(clsSalesFlashColumns o1, clsSalesFlashColumns o2)
 	        {
 	            return (int) (o2.getSeqNo() - o1.getSeqNo());
 	        }
-	    };
+	    };*/
 		
 		
 		
