@@ -3115,6 +3115,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        rsMasterData.close();
 	        
 	        String posDate="StartDay";
+	        String dayStatus="";
 	        sql = "select date(max(dtePOSDate)),intShiftCode,strShiftEnd,strDayEnd "
 	            + " from tbldayendprocess "
 	            + " where strPOSCode='"+ POSCode + "' and strDayEnd='N' and (strShiftEnd='' or strShiftEnd='N')";
@@ -3126,7 +3127,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        	String dayEnd=rsMasterData.getString(4);
 	        	if(shiftEnd.equals("") && dayEnd.equals("N"))
 	        	{
-	        		posDate="StartDay";
+	        		posDate=rsMasterData.getString(1);
+	        		dayStatus = "StartDay";
 	        	}
 	        	else
 	        	{
@@ -3135,7 +3137,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        }
 	        jObj.put("POSDate",posDate);
 	        jObj.put("MainMenuList", arrObj);
-	        
+	        jObj.put("DayStatus",dayStatus);
 	        if(true){
 	        	JSONObject obj=new JSONObject();            	
 	        	obj.put("ModuleName","Item Voice Capture");
