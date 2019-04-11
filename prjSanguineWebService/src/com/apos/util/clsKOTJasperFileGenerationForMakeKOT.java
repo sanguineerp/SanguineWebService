@@ -288,9 +288,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
                     listOfKOTDetail.add(objBillDtl);
                 }
             }
-            rs_KOT_Items.close();
-            pst_KOT_Items.close();
-            pst.close();
+           
 
             for (int cntLines = 0; cntLines < Integer.parseInt(noOfLinesInKOTPrint); cntLines++)
             {
@@ -390,6 +388,13 @@ public class clsKOTJasperFileGenerationForMakeKOT {
 		    exporter.setParameter(JRPdfExporterParameter.JASPER_PRINT, mainJaperPrint);
 			exporter.setParameter(JRPdfExporterParameter.OUTPUT_STREAM, new FileOutputStream(filePath + "/Temp/kotprint-"+KOTNO+".pdf")); // your output goes here
 			exporter.exportReport();
+			
+			rs_KOT_Items.close();
+            pst_KOT_Items.close();
+            pst.close();
+			st.close();
+			Con.close();
+			
        
         }
         catch (Exception e)

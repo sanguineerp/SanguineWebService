@@ -1855,7 +1855,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			JSONArray mJsonArray=(JSONArray)objKOTTaxData.get("TaxDtl");
 			String sql="";
 		    String posDate="";
-			 ResultSet rs;
+			ResultSet rs=null;
 			JSONObject mJsonObject = new JSONObject();
 			for (int i = 0; i < mJsonArray.length(); i++) 
 			{
@@ -1914,6 +1914,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            }
 	            jsTaxDtl.put("listOfTax", jAyyTaxList);
 	            jsTaxDtl.put("totalTaxAmt", taxAmt);
+	            cmsCon.close(); 
+	            st.close(); 
+	            st2.close();
+
             
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -2045,6 +2049,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				}
 	      
 	       jObj.put("taxAmount", taxAmt);
+	       cmsCon.close(); 
+           st.close(); 
+           st2.close();
+         
+	       
             
 		} catch (Exception e) 
 		{
@@ -2232,6 +2241,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             rsBillList.close();
             jObj.put("BillNoDetails", arrObj);
             st.close();
+            st1.close();
+            st2.close();
             cmsCon.close();
             
         } catch (Exception e) {
@@ -2500,7 +2511,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
           //  jObj.put("tblmenuitempricingdtl", arrObj);
             st.close();
             cmsCon.close();
-            
+            st1.close();
         }catch(Exception e)
         {
             e.printStackTrace();
@@ -2566,6 +2577,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             jObj.put("MenuHeadList", arrObj);
             st.close();
             cmsCon.close();
+            st1.close();
             
         }catch(Exception e)
         {
@@ -2864,6 +2876,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        st2.close();
 	        st3.close();
 	        aposCon.close();
+	        st4.close();
 		}
 		catch(Exception e)
 	    {
@@ -3628,7 +3641,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				arrObj.put(obj);
 				jObj.put("cardInfo", arrObj);
 			}
-		
+			   st.close();
+	            cmsCon.close();
+			
 		}catch(Exception e)
 	    {
 	        e.printStackTrace();
@@ -3660,6 +3675,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				debitCardBalance=rsBal.getDouble(1);				
 			}
 			rsBal.close();
+			posCon.close();
+			st.close();
+			
 		}
 		catch(Exception e)
 		{
@@ -3753,6 +3771,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				
                 arrObj.put(obj);
 				jObj.put("CardInfo", arrObj);
+				posCon.close();
+				st.close();
 			}
 		
 		}catch(Exception e)
@@ -3846,6 +3866,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				
                 arrObj.put(obj);
 				jObj.put("CardInfo", arrObj);
+				posCon.close();
+				st.close();
 			}
 		
 		}catch(Exception e)
@@ -4103,6 +4125,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			}
 			jObj.put("CustomerDetails", arrObj);
 			rsCustInfo.close();
+			cmsCon.close();
+			st.close();
 		
 		}catch(Exception e)
 	    {
@@ -4253,6 +4277,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			}
 			//jObj.put("CostCenterDetails", arrObj);
 			rsCustInfo.close();
+			cmsCon.close();
+			st.close();
 		
 		}catch(Exception e)
 	    {
@@ -4297,7 +4323,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			}
 			//jObj.put("CostCenterDetails", arrObj);
 			rsAreaInfo.close();
-		
+		    cmsCon.close();
+		    st.close();
+		    
 		}catch(Exception e)
 	    {
 	        e.printStackTrace();
@@ -4402,7 +4430,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				}
 //				jObj.put("CustomerDetails", arrObj);
 				rsCustInfo.close();
-			
+			    cmsCon.close();
+			    st.close();
 			}catch(Exception e)
 		    {
 		        e.printStackTrace();
@@ -4474,7 +4503,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 							jObj.put("CustomerStatus", "false");
 							jObj.put("Reason", "Error");
 						}
+					
 			}	
+			cmsCon.close();
+			st.close();
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -4541,6 +4574,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 customerCode = propertCode+"C" + String.format("%07d", lastNo);
              
             }
+            cmsCon.close();
+            st.close();
+            
         }
         catch (Exception e)
         {
@@ -4583,6 +4619,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        arrObj.put(obj);
 		       // jObj.put("CustomerTypeDetails", arrObj);
 			}
+			rsCustType.close();
+			cmsCon.close();
+			st.close();
 		
 		}catch(Exception e)
 	    {
@@ -4633,7 +4672,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        arrObj.put(obj);
 		        jObj.put("CardTypeDetails", arrObj);
 			}
-		
+			rsCardTypeInfo.close();
+			cmsCon.close();
+			st.close();
+		     
 		}catch(Exception e)
 	    {
 	        e.printStackTrace();
@@ -4679,6 +4721,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        arrObj.put(obj);
 		        jObj.put("PaymodTypeDetails", arrObj);
 			}
+			rsPaymentMode.close();
+			cmsCon.close();
+			st.close();
 		
 		}catch(Exception e)
 	    {
@@ -4787,6 +4832,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 					jObj.put("Reason", "Error");
 				}
 			}
+			cmsCon.close();
+			st.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -4840,6 +4887,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 + "where strTransactionType='CardNo'";
         st.executeUpdate(updateSql);
         con.close();
+        st.close();
         
         return lastNo;
     }
@@ -4874,6 +4922,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 }
                 rsCustomerData.close();
             }
+            con.close();
+            st.close();
+           
             
         } catch (Exception e) {
             flgCustomerCount = true;
@@ -4909,6 +4960,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	flgCardNo = true;
             }
             rs.close();
+            con.close();
+            st.close();
+            
             
         } catch (Exception e) {
         	flgCardNo = true;
@@ -4948,6 +5002,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                 }
                 rsCustomerData.close();
             }
+            con.close();
+            st.close();
             
         } catch (Exception e) {
             flgCustomerCount = true;
@@ -5017,6 +5073,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				jObj.put("DCRechargeStatus", "false");
 			}
 			
+			cmsCon.close();
+			st.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -5068,6 +5126,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            	 st.executeUpdate(sql);
 	             }
 	             rsSlipNo.close();
+	             cmsCon.close();
+	             st.close();
 	            
 	         }
 	         catch (Exception e)
@@ -5182,6 +5242,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            	 st.executeUpdate(sql);
 	             }
 	             rsRecharge.close();
+	             cmsCon.close();
+	             st.close();
 	            
 	         }
 	         catch (Exception e)
@@ -5225,6 +5287,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            	 st.executeUpdate(sql);
 	             }
 	             rsRedeem.close();
+	             cmsCon.close();
+	             st.close();
 	           
 	         }
 	         catch (Exception e)
@@ -5271,6 +5335,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		            	 st.executeUpdate(sql);
 		             }
 		             rsRefundSlipNo.close();
+		             cmsCon.close();
+		             st.close();
 		            
 		         }
 		         catch (Exception e)
@@ -5344,6 +5410,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				{
 					jObj.put("DCRefundStatus", "false");
 				}
+				st.close();
+				cmsCon.close();
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -5397,6 +5465,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            	 st.executeUpdate(sql);
 	             }
 	             rsRefund.close();
+	             cmsCon.close();
+	             st.close();
 	           
 	         }
 	         catch (Exception e)
@@ -5584,6 +5654,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        	
 		        	
 		        	
+		        	
 		        	jObjKOTHeaderInfo.put("ItemDtl",jArrKOTItemDtl);
 		        	jObjKOTHeaderInfo.put("ModItemDtl",jArrKOTModItemDtl);
 		        	jArrKOTHeaderInfo.put(jObjKOTHeaderInfo);
@@ -5591,6 +5662,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        	jObjKOTData.put("KOTData",jArrKOTHeaderInfo);
 		        }
 		        rsKOTDtl.close();
+		        cmsCon.close();
+		        st.close();
 	            
 	        }
 	        catch (Exception e)
@@ -5788,6 +5861,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			    	}
                 }
             }
+           st.close();
+           cmsCon.close();
+           st2.close();
+           st3.close();
             
             
 		} catch (Exception e) {
@@ -5840,6 +5917,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             rsKOT.close();
             sql = "update tblinternal set dblLastNo='" + code + "' where strTransactionType='KOTNo'";
             st.executeUpdate(sql);
+            cmsCon.close();
+            st.close();
         }
         catch (Exception e)
         {
@@ -5905,6 +5984,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        {
 	        	funUpdateDebitCardNoBalance(debitCardNo,debitCardSettleAmt);
 	        }
+	        cmsCon.close();
+	        st.close();
+	        
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
@@ -5928,6 +6010,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
   	        	+ " ,'"+posCode + "','"+ posDate + "','Settle') ";
   	        retRows=st.executeUpdate(sqlDebitCardDetials);
   	        System.out.println(sqlDebitCardDetials);
+  	        cmsCon.close();
+  	        st.close();
       	} catch (Exception e) 
       	{
       		e.printStackTrace();
@@ -5962,6 +6046,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
   	        	retRows=st.executeUpdate(sql);
   	        	 System.out.println(sql);
   	        }
+  	        rsS2.close();
+  	        cmsCon.close();
+  	        st.close();
       	} catch (Exception e) {
       		e.printStackTrace();
       	}
@@ -6261,6 +6348,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			}
 			
 			jObj.put("BillHdInfo", arrObjBillHd);
+			cmsCon.close();
+			st.close();
 			
 		}catch(Exception e)
 		{
@@ -6559,6 +6648,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	                    funSendSMS(smsURL);
 	                }
 	            }
+	            cmsCon.close();
+	            st.close();
+	            rs.close();
 	            
 	       
 	        }catch (Exception e)
@@ -6800,6 +6892,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			}
 			
 			
+			cmsCon.close();
+			st.close();
 			
 		} catch(Exception e)
 		{
@@ -6929,6 +7023,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			{
 				res=1;
 			}
+			cmsCon.close();
+			st.close();
 			
 		} catch(Exception e)
 		{
@@ -7021,6 +7117,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			{
 				res=1;
 			}
+			cmsCon.close();
+			st.close();
+			
 			
 		} catch(Exception e)
 		{
@@ -7101,6 +7200,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			{
 				res=1;
 			}
+			cmsCon.close();
+			st.close();
+			
 			
 		} catch(Exception e)
 		{
@@ -7183,7 +7285,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			{
 				res=1;
 			}
-			
+		
+			cmsCon.close();
+			st.close();
 		} catch(Exception e)
 		{
 			res=0;
@@ -7240,6 +7344,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		    	res=funClearComplimetaryBillAmt(billNo,reasonCode,remark,couponCode,posCode,posDate,clientCode);
 			}
 		
+			
 	
 		} catch(Exception e)
 		{
@@ -10258,6 +10363,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			                    		   , rsPrint.getString(5),printYN,POSCode,POSName,rsPrint.getString(6),deviceName,macAddress,rsPrint.getString(7),fireCommunication,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
 			                	  
 		   			    		}
+		   			    		
 		   			    	}else{
 		   			    	 result=objAPOSKOTPrint.funWriteKOTDetailsToTextFile(tableNo, rsPrint.getString(2), "", AreaCodeForAll, KOTNo, reprint,rsPrint.getString(3), rsPrint.getString(4)
 		                    		   , rsPrint.getString(5),printYN,POSCode,POSName,rsPrint.getString(6),deviceName,macAddress,rsPrint.getString(7),fireCommunication,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11));
@@ -10265,8 +10371,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		   			    	}
 		                	  
 		                   }
-		                   
-		                   
+		                  
+		                   rsPrint.close();
 		                   if (!strConsolidatePrint.isEmpty())//print consolidated KOT only 
 		                    {
 		                	   if(strPrintType.equals("Jasper"))
@@ -10274,9 +10380,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		                	   else   
 		                		 objAPOSKOTPrint.funConsolidateKOTDetailsToTextFile(tableNo,POSCode,POSName,reprint,printYN,"Consolidated KOT",KOTNo,deviceName) ;
 		                    }
-
+		                  
 	                   
-	                   	                  // rsPrint.close();
+		                             // rsPrint.close();
 	                   break;
 
 	                   /*
@@ -10297,6 +10403,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	                   st.close();
 	                   break;*/
 	           }
+	          
+	           aposCon.close();
+	           st.close();
+	           st2.close();
+	           
 	           
 	       } catch (Exception e) 
 	       {
@@ -10380,6 +10491,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                objAPOSKOTPrint.funGenerateTextFileForKOTForDirectBiller(POSCode,areaCode,BillNo,reprint,"Y") ;
 			   
                jOb.put("result", status);
+               aposCon.close();
+               st.close();
 	       } catch (Exception e) 
 	       {
 		    	   try {
@@ -10580,6 +10693,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		                    mapPOSDtlForSettlement.put(posCode, listOfSettelment);
 		                }
 		            }
+		            
 		        }
 		        catch (Exception e)
 		        {
@@ -11052,6 +11166,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                    // funCreateModifierQuery(itemCode,userCode,posCode,fromDate,toDate);
                 }
             }
+           
         }
         catch (Exception e)
         {
@@ -11316,6 +11431,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                     mapPOSMenuHeadDtl.put(posCode, mapItemDtl);
                 }
             }
+            
+            
         }
         catch (Exception e)
         {
@@ -12341,7 +12458,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            exe=st.executeUpdate(insertQuery);
 	            System.out.println("Exe= "+exe);
 	            
-	          
+	             cmsCon.close();
+	             st.close();
 	            
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -12431,6 +12549,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            sql="update tbltablemaster set strStatus='Reserve' where strTableNo='"+tableNo+"'";
 	        	System.out.println(sql);
 	        	st.executeUpdate(sql);
+	        	cmsCon.close();
+	        	st.close();
 	        	
 	            
 	        } catch (Exception e) {
@@ -12490,6 +12610,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            {
 	                reservationCode = "RS0000001";
 	            }
+	            cmsCon.close();
+	            st.close();
 	        }
 	        catch (Exception e)
 	        {
@@ -12836,6 +12958,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			        }
 	            }
 	            jsonPromotionCalculation.put("promoDtl", promoItemWithAmtAndQty);
+	            cmsCon.close();
+	            st.close();
+	            rsSetupValues.close();
+	            
 			} 
 			catch (Exception e) 
 			{
@@ -12946,6 +13072,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	    	        	st.executeUpdate(sql);
 	                }
 	            }
+				aposCon.close();
+				st.close();
+				st1.close();
+				rs.close();
 	              
 	        } 
 	        catch (Exception e) 
@@ -13893,7 +14023,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            System.out.println("Exe= "+exe);
 	            result="true";
 			    
-			}  
+			} 
+			cmsCon.close();
+			st.close();
+			st2.close();
+			
            
 		} catch (Exception e) 
 		{
@@ -14580,6 +14714,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                       
                   }
                   rscomboItemDtl.close();
+                  cmsCon.close();
+                  st.close();
                   
                   jObj.put("TDHCombo "+i, arrObj);
                   arrObjMain.put(jObj);
@@ -15323,6 +15459,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        }
 				
 		        jObj.put("result", result);
+	            cmsCon.close();
+	            st.close();
+	            st2.close();
 	            
 			} catch (Exception e) 
 			{
@@ -15484,6 +15623,11 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        }
 				
 		        jObj.put("result", result);
+		        cmsCon.close();
+		        st.close();
+		        st2.close();
+		        st3.close();
+		        
 	            
 			} catch (Exception e) 
 			{
@@ -15527,6 +15671,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                    objTextFormatVoidKOT.funGenerateVoidKOT(KOTTableNo, KotNo, "VoidKOT", costCenterCode,POSCode,deviceName);
 	           }
 	            rsPrint.close();
+	            cmsCon.close();
+	            st.close();
+	            
 	        }
 	        catch (Exception e)
 	        {
@@ -15712,6 +15859,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 							objResult.put("POSVersion","NotFound");
 						}
 					}
+				
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -16040,6 +16188,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                     }
                 }
 			}
+			cmsCon.close();
+			st.close();
+			
 			
 		}catch(Exception e){
 			e.printStackTrace();
@@ -16569,7 +16720,7 @@ private JSONArray funInsertDataBillSeriesWise(JSONObject objBillData,String strP
 				}
 				
 				//save bill series bill detail
-				ResultSet res;
+				//ResultSet res=null;
 				Date objDate=new Date();
 				 String currentDate = (objDate.getYear() + 1900) + "-" +(objDate.getMonth()+ 1) + "-" + objDate.getDate() 
 	                      + " "+ objDate.getHours() + ":" + objDate.getMinutes() + ":" +objDate.getSeconds();
@@ -16605,9 +16756,10 @@ private JSONArray funInsertDataBillSeriesWise(JSONObject objBillData,String strP
                         st.executeUpdate(sqlUpdate);
                     }
                     rsIsComplementary.close();
+                    
                 }
 
-				
+			
 			}
 			else{ // bill from make bill-- bill settle list
 				jArrResponse=funInsertBillData(objBillData,strPOSCode);
@@ -16955,6 +17107,10 @@ private String funGetBillSeriesDtlBillNos(List<clsBillSeriesBillDtl> listBillSer
 				
 				jArrResponse.put(jsonResponse);
 			}
+			cmsCon.close();
+			
+			st.close();
+			
 		 
 	 }catch(Exception e){
 		 e.printStackTrace();
@@ -17077,7 +17233,10 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 			{
 				res=1;
 			}
-      
+       cmsCon.close();
+       st.close();
+       
+       
        jObj.put("taxAmount", taxAmt);
         
 	} catch (Exception e) 

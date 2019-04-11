@@ -366,7 +366,7 @@ public class clsUtilityController {
             sql_Query = "select strTaxIndicator from tblitemmaster "
                     + "where strItemCode='" + objItemDtl.getItemCode().substring(0, 7) + "' "
                     + "and strTaxIndicator='" + indicator + "'";
-  Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_Query.toString());
+           Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_Query.toString());
             
             List listSql = querySql.list();
     		   if(listSql.size()>0)
