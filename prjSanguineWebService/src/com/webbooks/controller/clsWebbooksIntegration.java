@@ -347,6 +347,10 @@ public class clsWebbooksIntegration
 	    
 	    String vouchNoToDel = "";
 	    sql = "select strVouchNo from tbljvhd where strMasterPOS='" + POSCode + "' and date(dteVouchDate)='" + billDate + "' ";
+    		if(propertyCode!=null && !propertyCode.isEmpty()){
+    	    sql+= " and strPropertyCode='"+propertyCode+"' ";	
+    	    }
+	    		
 	    rs = st.executeQuery(sql);
 	    if (rs.next())
 	    {

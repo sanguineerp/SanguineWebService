@@ -425,8 +425,8 @@ public class clsSynchPOSDataWithMMSAuto {
 							Displyqty=tempDisQty[0]+" "+strReceivedUOM+"."+Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
 						}	          	           	
 													
-						String sqlDtl=" INSERT INTO `tblstockadjustmentdtl` ( `strSACode`, `strProdCode`, `dblQty`, `strType`, `dblPrice`, `dblWeight`, `strProdChar`, `intIndex`, `strRemark`, `strClientCode`, `dblRate`, `strDisplayQty`,`strWSLinkedProdCode`,`dblParentQty`) VALUES"
-								+" ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?) ";	
+						String sqlDtl=" INSERT INTO `tblstockadjustmentdtl` ( `strSACode`, `strProdCode`, `dblQty`, `strType`, `dblPrice`, `dblWeight`, `strProdChar`, `intIndex`, `strRemark`, `strClientCode`, `dblRate`, `strDisplayQty`,`strWSLinkedProdCode`,`dblParentQty`,`strJVNo`) VALUES"
+								+" ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?) ";	
 						
 					//		+" ( '"+strStkCode+"', '"+childProdCode+"', "+finalQty+", 'Out', "+finalRate+", 0.00, ' ', 0, 'BOM Code:"+strBOMCode+":Parent Code:"+strParentCode+"', '"+clientCode+"', "+rate+", '"+Displyqty+"') ";
 						
@@ -445,6 +445,7 @@ public class clsSynchPOSDataWithMMSAuto {
 						stUpdate.setString(12,Displyqty);
 						stUpdate.setString(13,strParentCode);
 						stUpdate.setDouble(14,qty);
+						stUpdate.setString(15,"");
 						int i=stUpdate.executeUpdate();  
 					
 						String updateSACode="update tblpossalesdtl set strSACode='"+strStkCode+"' "
@@ -481,8 +482,8 @@ public class clsSynchPOSDataWithMMSAuto {
 				String tempDisQty[]=qty.toString().split("\\.");
 				String Displyqty=tempDisQty[0]+" "+strReceivedUOM+"."+Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
 	           	
-				String sqlDtl=" INSERT INTO `tblstockadjustmentdtl` ( `strSACode`, `strProdCode`, `dblQty`, `strType`, `dblPrice`, `dblWeight`, `strProdChar`, `intIndex`, `strRemark`, `strClientCode`, `dblRate`, `strDisplayQty`,`strWSLinkedProdCode`,`dblParentQty`) VALUES "
-						+" ( '"+strStkCode+"', '"+wsProdCode+"', "+quantity+", 'Out', "+rate+", 0.00, ' ', 0, 'BOM Code:"+wsProdCode+":Parent Code:"+wsProdCode+":Qty:"+qty+":ItemName:"+posItemName+"', '"+clientCode+"', "+rate+", '"+Displyqty+"','"+wsProdCode+"','"+qty+"') ";
+				String sqlDtl=" INSERT INTO `tblstockadjustmentdtl` ( `strSACode`, `strProdCode`, `dblQty`, `strType`, `dblPrice`, `dblWeight`, `strProdChar`, `intIndex`, `strRemark`, `strClientCode`, `dblRate`, `strDisplayQty`,`strWSLinkedProdCode`,`dblParentQty`,`strJVNo`) VALUES "
+						+" ( '"+strStkCode+"', '"+wsProdCode+"', "+quantity+", 'Out', "+rate+", 0.00, ' ', 0, 'BOM Code:"+wsProdCode+":Parent Code:"+wsProdCode+":Qty:"+qty+":ItemName:"+posItemName+"', '"+clientCode+"', "+rate+", '"+Displyqty+"','"+wsProdCode+"','"+qty+"','') ";
 				st.executeUpdate(sqlDtl);
 				retValue=strStkCode+","+lastNo;		        	
 				String updateSACode="update tblpossalesdtl set strSACode='"+strStkCode+"' "

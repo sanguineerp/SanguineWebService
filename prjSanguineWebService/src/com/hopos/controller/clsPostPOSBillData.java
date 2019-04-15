@@ -5835,7 +5835,7 @@ public class clsPostPOSBillData
 				obj.put("AccountCode", rsMasterData.getString(24));
 				obj.put("TaxShortName", rsMasterData.getString(25));
 				obj.put("strBillNote", rsMasterData.getString(26));
-
+				obj.put("strTOTOnSubTotal", rsMasterData.getString(27));
 				arrObj.put(obj);
 			}
 			rsMasterData.close();
