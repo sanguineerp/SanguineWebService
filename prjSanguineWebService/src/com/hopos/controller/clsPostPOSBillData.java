@@ -616,7 +616,7 @@ public class clsPostPOSBillData
 					POSCode = hmPOSMaster.get(propertyPOSCode);
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbillhd " + "where strBillNo='" + billNo + "' and strClientCode='" + strHOClientCode + "' and strPOSCode='" + POSCode + "' and date(dteBillDate)='" + billDate + "' ");
+					sbSqlDelete.append("delete from tblqbillhd " + "where strBillNo='" + billNo + "' and strClientCode='" + clientCode + "' and strPOSCode='" + POSCode + "' and date(dteBillDate)='" + billDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 
 					String billInfo = billNo + "#" + POSCode + "#" + clientCode;
@@ -673,13 +673,13 @@ public class clsPostPOSBillData
 						String dblUSDConverionRate= mJsonObject.get("dblUSDConverionRate").toString();
 						if (cnt == 0)
 						{
-							sbSql.append("('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + strHOClientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
+							sbSql.append("('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
 									+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "','" + dblRoundOff + "','" + intBillSeriesPaxNo + "',"
 											+ "'" + dtBillDate + "','" + strCRMRewardId + "','" + strNSCTax + "','" + strKOTToBillNote + "','" + dblUSDConverionRate + "')");
 						}
 						else
 						{
-							sbSql.append(",('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + strHOClientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
+							sbSql.append(",('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
 									+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "','" + dblRoundOff + "','" + intBillSeriesPaxNo + "'"
 											+ ",'" + dtBillDate + "','" + strCRMRewardId + "','" + strNSCTax + "','" + strKOTToBillNote + "','" + dblUSDConverionRate + "')");
 						}
@@ -739,12 +739,12 @@ public class clsPostPOSBillData
 					String dtBillDate = mJsonObject.get("dtBillDate").toString();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strKOTNo='" + KOTNo + "' " + " and strClientCode='" + strHOClientCode + "'  and date(dtBillDate)='" + dtBillDate + "' ");
+					sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strKOTNo='" + KOTNo + "' " + " and strClientCode='" + ClientCode + "'  and date(dtBillDate)='" + dtBillDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 					if (KOTNo.isEmpty())
 					{
 						sbSqlDelete.setLength(0);
-						sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strClientCode='" + strHOClientCode + "'  and date(dtBillDate)='" + dtBillDate + "' ");
+						sbSqlDelete.append("delete from tblqbilldtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strClientCode='" + ClientCode + "'  and date(dtBillDate)='" + dtBillDate + "' ");
 					}
 					st.executeUpdate(sbSqlDelete.toString());
 
@@ -778,12 +778,12 @@ public class clsPostPOSBillData
 
 						if (cnt == 0)
 						{
-							sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + strHOClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
+							sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
 									+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
 						}
 						else
 						{
-							sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + strHOClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
+							sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
 									+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
 						}
 						cnt++;
@@ -824,7 +824,7 @@ public class clsPostPOSBillData
 					String dteBillDate = mJsonObject.get("dteBillDate").toString();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbillmodifierdtl " + "where strBillNo='" + billNo + "' and strItemCode='" + itemCode + "' and strModifierCode='" + modifierCode + "' " + " and strClientCode='" + strHOClientCode + "' and date(dteBillDate)='" + dteBillDate + "' ");
+					sbSqlDelete.append("delete from tblqbillmodifierdtl " + "where strBillNo='" + billNo + "' and strItemCode='" + itemCode + "' and strModifierCode='" + modifierCode + "' " + " and strClientCode='" + clientCode + "' and date(dteBillDate)='" + dteBillDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 
 					String modifierName = mJsonObject.get("ModifierName").toString();
@@ -840,11 +840,11 @@ public class clsPostPOSBillData
 
 					if (cnt == 0)
 					{
-						sbSql.append("('" + billNo + "','" + itemCode + "','" + modifierCode + "','" + modifierName + "'" + ",'" + rate + "','" + quantity + "','" + amount + "','" + strHOClientCode + "','" + customerCode + "'" + ",'N','" + MMSDataPostFlag + "','" + defaultModifierDeselectedYN + "'" + ",'" + seqNo + "','" + discPer + "','" + discAmt + "','" + dteBillDate + "')");
+						sbSql.append("('" + billNo + "','" + itemCode + "','" + modifierCode + "','" + modifierName + "'" + ",'" + rate + "','" + quantity + "','" + amount + "','" + clientCode + "','" + customerCode + "'" + ",'N','" + MMSDataPostFlag + "','" + defaultModifierDeselectedYN + "'" + ",'" + seqNo + "','" + discPer + "','" + discAmt + "','" + dteBillDate + "')");
 					}
 					else
 					{
-						sbSql.append(",('" + billNo + "','" + itemCode + "','" + modifierCode + "','" + modifierName + "'" + ",'" + rate + "','" + quantity + "','" + amount + "','" + strHOClientCode + "','" + customerCode + "'" + ",'N','" + MMSDataPostFlag + "','" + defaultModifierDeselectedYN + "'" + ",'" + seqNo + "','" + discPer + "','" + discAmt + "','" + dteBillDate + "')");
+						sbSql.append(",('" + billNo + "','" + itemCode + "','" + modifierCode + "','" + modifierName + "'" + ",'" + rate + "','" + quantity + "','" + amount + "','" + clientCode + "','" + customerCode + "'" + ",'N','" + MMSDataPostFlag + "','" + defaultModifierDeselectedYN + "'" + ",'" + seqNo + "','" + discPer + "','" + discAmt + "','" + dteBillDate + "')");
 					}
 					cnt++;
 					flgData = true;
@@ -881,7 +881,7 @@ public class clsPostPOSBillData
 					String dteBillDate = mJsonObject.get("dteBillDate").toString();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbilldiscdtl " + "where strBillNo='" + billNo + "' and strClientCode='" + strHOClientCode + "'  and date(dteBillDate)='" + dteBillDate + "'  ");
+					sbSqlDelete.append("delete from tblqbilldiscdtl " + "where strBillNo='" + billNo + "' and strClientCode='" + clientCode + "'  and date(dteBillDate)='" + dteBillDate + "'  ");
 					st.executeUpdate(sbSqlDelete.toString());
 
 					String POSCode = mJsonObject.get("POSCode").toString();
@@ -900,11 +900,11 @@ public class clsPostPOSBillData
 					
 					if (cnt == 0)
 					{
-						sbSql.append("('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + strHOClientCode + "','" + dteBillDate + "','"+strDataPostFlag+"')");
+						sbSql.append("('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + clientCode + "','" + dteBillDate + "','"+strDataPostFlag+"')");
 					}
 					else
 					{
-						sbSql.append(",('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + strHOClientCode + "','" + dteBillDate + "','"+strDataPostFlag+"')");
+						sbSql.append(",('" + billNo + "','" + POSCode + "','" + discAmt + "','" + discPer + "','" + discOnAmt + "','" + discOnType + "','" + discOnValue + "','" + discOnReasonCode + "','" + discRemarks + "','" + userCreated + "'" + ",'" + userEdited + "','" + dateCreated + "','" + dateEdited + "','" + clientCode + "','" + dteBillDate + "','"+strDataPostFlag+"')");
 					}
 					cnt++;
 					flgData = true;
@@ -941,7 +941,7 @@ public class clsPostPOSBillData
 					String dteBillDate = mJsonObject.get("dteBillDate").toString().trim();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbilltaxdtl " + "where strBillNo='" + billNo + "' and strTaxCode='" + taxCode + "' and strClientCode='" + strHOClientCode + "'  and date(dteBillDate)='" + dteBillDate + "' ");
+					sbSqlDelete.append("delete from tblqbilltaxdtl " + "where strBillNo='" + billNo + "' and strTaxCode='" + taxCode + "' and strClientCode='" + clientCode + "'  and date(dteBillDate)='" + dteBillDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 
 					double taxableAmount = Double.parseDouble(mJsonObject.get("TaxableAmount").toString());
@@ -955,11 +955,11 @@ public class clsPostPOSBillData
 					{
 						if (cnt == 0)
 						{
-							sbSql.append("('" + billNo + "','" + taxCode + "','" + taxableAmount + "','" + taxAmount + "','" + strHOClientCode + "','" + dataPostFlag + "','" + dteBillDate + "')");
+							sbSql.append("('" + billNo + "','" + taxCode + "','" + taxableAmount + "','" + taxAmount + "','" + clientCode + "','" + dataPostFlag + "','" + dteBillDate + "')");
 						}
 						else
 						{
-							sbSql.append(",('" + billNo + "','" + taxCode + "','" + taxableAmount + "','" + taxAmount + "','" + strHOClientCode + "','" + dataPostFlag + "','" + dteBillDate + "')");
+							sbSql.append(",('" + billNo + "','" + taxCode + "','" + taxableAmount + "','" + taxAmount + "','" + clientCode + "','" + dataPostFlag + "','" + dteBillDate + "')");
 						}
 						cnt++;
 						flgData = true;
@@ -999,7 +999,7 @@ public class clsPostPOSBillData
 					String BillDate = mJsonObject.get("BillDate").toString();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("delete from tblqbillcomplementrydtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strKOTNo='" + KOTNo + "' " + " and strClientCode='" + strHOClientCode + "' and date(dteBillDate)='" + BillDate + "' ");
+					sbSqlDelete.append("delete from tblqbillcomplementrydtl " + " where strBillNo='" + BillNo + "' and strItemCode='" + ItemCode + "' and strKOTNo='" + KOTNo + "' " + " and strClientCode='" + ClientCode + "' and date(dteBillDate)='" + BillDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 
 					String ItemName = mJsonObject.get("ItemName").toString();
@@ -1028,12 +1028,12 @@ public class clsPostPOSBillData
 					// System.out.println(BillDate+" = "+BillNo);
 					if (cnt == 0)
 					{
-						sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + strHOClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
+						sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
 								+ ",'" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
 					}
 					else
 					{
-						sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + strHOClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
+						sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
 								+ ",'" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
 					}
 					cnt++;
@@ -1072,7 +1072,7 @@ public class clsPostPOSBillData
 					String dteBillDate = mJsonObject.get("dteBillDate").toString();
 
 					sbSqlDelete.setLength(0);
-					sbSqlDelete.append("  delete from tblqbillsettlementdtl " + "where strBillNo='" + BillNo + "' and strClientCode='" + strHOClientCode + "' and date(dteBillDate)='" + dteBillDate + "' ");
+					sbSqlDelete.append("  delete from tblqbillsettlementdtl " + "where strBillNo='" + BillNo + "' and strClientCode='" + ClientCode + "' and date(dteBillDate)='" + dteBillDate + "' ");
 					st.executeUpdate(sbSqlDelete.toString());
 
 					double SettlementAmt = Double.parseDouble(mJsonObject.get("SettlementAmt").toString());
@@ -1095,11 +1095,11 @@ public class clsPostPOSBillData
 					{
 						if (cnt == 0)
 						{
-							sbSql.append("('" + BillNo + "','" + SettlementCode + "','" + SettlementAmt + "','" + PaidAmt + "','" + ExpiryDate + "','" + CardName + "','" + Remark + "','" + strHOClientCode + "','" + CustomerCode + "','" + ActualAmt + "','" + RefundAmt + "'" + ",'" + GiftVoucherCode + "','" + DataPostFlag + "','" + folioNo + "','" + roomNo + "','" + dteBillDate + "')");
+							sbSql.append("('" + BillNo + "','" + SettlementCode + "','" + SettlementAmt + "','" + PaidAmt + "','" + ExpiryDate + "','" + CardName + "','" + Remark + "','" + ClientCode + "','" + CustomerCode + "','" + ActualAmt + "','" + RefundAmt + "'" + ",'" + GiftVoucherCode + "','" + DataPostFlag + "','" + folioNo + "','" + roomNo + "','" + dteBillDate + "')");
 						}
 						else
 						{
-							sbSql.append(",('" + BillNo + "','" + SettlementCode + "','" + SettlementAmt + "','" + PaidAmt + "','" + ExpiryDate + "','" + CardName + "','" + Remark + "','" + strHOClientCode + "','" + CustomerCode + "','" + ActualAmt + "','" + RefundAmt + "'" + ",'" + GiftVoucherCode + "','" + DataPostFlag + "','" + folioNo + "','" + roomNo + "','" + dteBillDate + "')");
+							sbSql.append(",('" + BillNo + "','" + SettlementCode + "','" + SettlementAmt + "','" + PaidAmt + "','" + ExpiryDate + "','" + CardName + "','" + Remark + "','" + ClientCode + "','" + CustomerCode + "','" + ActualAmt + "','" + RefundAmt + "'" + ",'" + GiftVoucherCode + "','" + DataPostFlag + "','" + folioNo + "','" + roomNo + "','" + dteBillDate + "')");
 						}
 						cnt++;
 						flgData = true;
@@ -1198,7 +1198,8 @@ public class clsPostPOSBillData
 			int cnt = 0;
 
 			sbSql.append("INSERT INTO " + tableName + " (`strBillNo`,`strAdvBookingNo`, `dteBillDate`, `strPOSCode`" + ",`strSettelmentMode`, `dblDiscountAmt`,`dblDiscountPer`, `dblTaxAmt`, `dblSubTotal`,`dblGrandTotal`" + ", `strTakeAway`, `strOperationType`,`strUserCreated`, `strUserEdited`, `dteDateCreated`,`dteDateEdited`" + ", `strClientCode`, `strTableNo`,`strWaiterNo`, `strCustomerCode`, `strManualBillNo`,`intShiftCode`" + ", `intPaxNo`, `strDataPostFlag`,`strReasonCode`, `strRemarks`, `dblTipAmount`,`dteSettleDate`" + ", `strCounterCode`, `dblDeliveryCharges`,`strCouponCode`,`strAreaCode`,`strDiscountRemark`" + ",`strTakeAwayRemarks`,`strDiscountOn`,`strCardNo`,`strTransactionType`"
-					+ ",strJioMoneyRRefNo,strJioMoneyAuthCode,strJioMoneyTxnId,strJioMoneyTxnDateTime,strJioMoneyCardNo,strJioMoneyCardType) " + "VALUES");
+					+ ",strJioMoneyRRefNo,strJioMoneyAuthCode,strJioMoneyTxnId,strJioMoneyTxnDateTime,strJioMoneyCardNo,strJioMoneyCardType"
+					+ ",dblRoundOff,intBillSeriesPaxNo,dtBillDate,strCRMRewardId,strNSCTax,strKOTToBillNote,intOrderNo,dblUSDConverionRate) " + "VALUES");
 			JSONObject mJsonObject = new JSONObject();
 
 			for (int i = 0; i < mJsonArray.length(); i++)
@@ -1263,15 +1264,34 @@ public class clsPostPOSBillData
 					String strJioMoneyCardNo = mJsonObject.get("strJioMoneyCardNo").toString();
 					String strJioMoneyCardType = mJsonObject.get("strJioMoneyCardType").toString();
 
-					if (cnt == 0)
+
+					double dblRoundOff = Double.parseDouble(mJsonObject.get("dblRoundOff").toString());
+					String intBillSeriesPaxNo = mJsonObject.get("intBillSeriesPaxNo").toString();
+					String dtBillDate = mJsonObject.get("dtBillDate").toString();
+					String strCRMRewardId = mJsonObject.get("strCRMRewardId").toString();
+					String strNSCTax = mJsonObject.get("strNSCTax").toString();
+					String strKOTToBillNote = mJsonObject.get("strKOTToBillNote").toString();
+
+					String intOrderNo = mJsonObject.get("intOrderNo").toString();
+					String dblUSDConverionRate = mJsonObject.get("dblUSDConverionRate").toString();
+
+					//dblRoundOff,intBillSeriesPaxNo,dtBillDate,strCRMRewardId,strNSCTax,strKOTToBillNote,dblUSDConverionRate
+				if (cnt == 0)
 					{
 						sbSql.append("('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
-								+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "')");
+								+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "',"
+								+ "'"+dblRoundOff+"','"+intBillSeriesPaxNo+"','"+dtBillDate+"','"+strCRMRewardId+"','"+strNSCTax+"','"+strKOTToBillNote+"','"+intOrderNo+"','"+dblUSDConverionRate+"')");
 					}
 					else
 					{
-						sbSql.append(",('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
+						/*sbSql.append(",('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
 								+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "')");
+								
+								*/
+						
+						sbSql.append(",('" + billNo + "','" + advBookingNo + "','" + billDate + "','" + POSCode + "','" + settelmentMode + "'," + "'" + discountAmt + "','" + discountPer + "','" + taxAmt + "','" + subTotal + "','" + grandTotal + "'," + "'" + takeAway + "','" + operationType + "','" + userCreated + "','" + userEdited + "','" + dateCreated + "'," + "'" + dateEdited + "','" + clientCode + "','" + tableNo + "','" + waiterNo + "','" + customerCode + "'," + "'" + manualBillNo + "','" + shiftCode + "','" + paxNo + "','N','" + reasonCode + "'," + "'" + remarks + "','" + tipAmount + "','" + settleDate + "','" + counterCode + "','" + deliveryCharges + "'," + "'" + couponCode + "','" + areaCode + "','" + discRemark + "','" + takeAwayRemark + "'," + "'" + discountOn + "','" + cardNo + "','" + billTransType + "'"
+								+ ",'" + strJioMoneyRRefNo + "','" + strJioMoneyAuthCode + "','" + strJioMoneyTxnId + "','" + strJioMoneyTxnDateTime + "','" + strJioMoneyCardNo + "','" + strJioMoneyCardType + "',"
+								+ "'"+dblRoundOff+"','"+intBillSeriesPaxNo+"','"+dtBillDate+"','"+strCRMRewardId+"','"+strNSCTax+"','"+strKOTToBillNote+"','"+intOrderNo+"','"+dblUSDConverionRate+"')");
 					}
 					cnt++;
 					flgData = true;
@@ -1358,7 +1378,8 @@ public class clsPostPOSBillData
 			Set setBillDtl = new HashSet();
 			int cnt = 0;
 
-			sbSql.append("INSERT INTO " + tableName + " (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`) VALUES");
+			sbSql.append("INSERT INTO " + tableName + " (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`,"
+					+ "strSequenceNo,dtBillDate,tmeOrderPickup) VALUES");
 
 			JSONObject mJsonObject = new JSONObject();
 			for (int i = 0; i < mJsonArray.length(); i++)
@@ -1397,7 +1418,12 @@ public class clsPostPOSBillData
 				String waiterNo = mJsonObject.get("WaiterNo").toString();
 				String discAmt = mJsonObject.get("DiscountAmt").toString();
 				String discPer = mJsonObject.get("DiscountPer").toString();
+				
+				String strSequenceNo = mJsonObject.get("strSequenceNo").toString();
+				String dtBillDate = mJsonObject.get("dtBillDate").toString();
+				String tmeOrderPickup = mJsonObject.get("tmeOrderPickup").toString();
 
+				//+ ",,,
 				String key = BillNo + "#" + ClientCode + "#" + ItemCode + "#" + KOTNo;
 				boolean flgResult = setBillDtl.add(key);
 
@@ -1406,11 +1432,14 @@ public class clsPostPOSBillData
 
 					if (cnt == 0)
 					{
-						sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "')");
+						sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
+								+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
 					}
 					else
 					{
-						sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "')");
+						sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
+								+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+					
 					}
 					cnt++;
 					flgData = true;
@@ -9649,7 +9678,7 @@ public class clsPostPOSBillData
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
 					+ " strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill,strUserWiseShowBill,strDisplayTotalShowBill,strShowNotificationsOnTransaction,strBlankDayEndPrint," // 240
-					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks) "//242
+					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill) "//243
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9929,6 +9958,7 @@ public class clsPostPOSBillData
 					String strBlankDayEndPrint= dataObject.get("strBlankDayEndPrint").toString().trim();//240
 					String strOnlineOrderNotification= dataObject.get("strOnlineOrderNotification").toString().trim();//241
 					String strPostRoundOffToWebBooks= dataObject.get("strPostRoundOffToWebBooks").toString().trim();//242
+					String strShortNameOnDirectBillerAndBill=dataObject.get("strShortNameOnDirectBillerAndBill").toString().trim();//243
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -9957,7 +9987,7 @@ public class clsPostPOSBillData
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
 							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "'" //236
 							+ ", '" + strUserWiseShowBill + "','" + strDisplayTotalShowBill + "','" + strShowNotificationsOnTransaction + "','" + strBlankDayEndPrint + "'," //240
-							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "') "); // 242 
+							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"') "); // 243 
 					flgData = true;
 				}
 			}

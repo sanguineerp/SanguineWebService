@@ -48,6 +48,7 @@ import com.webservice.controller.clsDatabaseConnection;
 
 
 
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
@@ -235,6 +236,7 @@ public class clsWebbooksIntegration
 	String userCode = "";
 	String propertyCode = "01";
 	
+	
 	boolean flgData = false;
 	HashMap<String, clsJVDtlModel> hmJVDtlata = new HashMap<>();
 	try
@@ -247,6 +249,9 @@ public class clsWebbooksIntegration
 	    int year = objDate.getYear() + 1900;
 	    currentDate = year + "-" + month + "-" + day;
 	    propertyCode=objBillData.getString("propertyCode");
+	    if(objBillData.has("JVNo")){
+	    	JVNo=objBillData.getString("JVNo");	
+	    }
 	    
 	    String sql_Code = " select strControlCode,strBillableCode,strSuspenceCode,strDbtrSuspAcctCode,strSancCode,strECSBankcode" + ",strClientCode,strBillableName from tblpropertysetup  ";
 	    ResultSet rs = st.executeQuery(sql_Code);
@@ -270,7 +275,8 @@ public class clsWebbooksIntegration
 //	    POSName = objBillData.getString("POSName");
 	    billDate = objBillData.getString("POSDate");
 	    userCode = objBillData.getString("User");
-	   
+	    
+	    
 	    String billMonth=billDate.split("-")[1];
 	    
 	    
@@ -367,6 +373,21 @@ public class clsWebbooksIntegration
 	    sql = " delete from tbljvdebtordtl where strVouchNo='" + vouchNoToDel + "' and strClientCode='"+clientCode+"' ";
 	    st.execute(sql);
 	    
+	    if(!JVNo.isEmpty()){
+	    	
+	    	sql = " delete from tbljvhd where strVouchNo='" + JVNo + "' and strClientCode='"+clientCode+"' ";
+		    st.execute(sql);
+		    
+		    sql = " delete from tbljvdtl where strVouchNo='" + JVNo + "' and strClientCode='"+clientCode+"'  ";
+		    st.execute(sql);
+		    
+		    sql = " delete from tbljvdebtordtl where strVouchNo='" + JVNo + "' and strClientCode='"+clientCode+"' ";
+		    st.execute(sql);
+		    
+	    }else{
+	    	JVNo = funGenerateDocumentCode(currentDate, clientCode, propertyCode);
+	    }
+
 	    String onlyDate=billDate.split(" ")[0];
 	    String daydateonly=onlyDate.split("-")[2];
 	    if(daydateonly.length()==1)
@@ -376,7 +397,7 @@ public class clsWebbooksIntegration
 	   
 	    String narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0] +" "+POSName;
 	     sql = "";
-	    JVNo = funGenerateDocumentCode(currentDate, clientCode, propertyCode);
+	    
 	    String sql_insertJVHd = " insert into tblJVHd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";
 	    sql_insertJVHd += " ('" + JVNo + "','" + narration + "','" + sancCode + "','None','" + billDate + "','"+billMonth+"','" + totalJVAmt + "' " + ",'R','A','AR','" + POSCode + "','"+userCode+"','"+userCode+"','" + currentDate + "','" + currentDate + "','" + clientCode + "','" + propertyCode + "','')";
 	    res = st.executeUpdate(sql_insertJVHd);
@@ -2025,16 +2046,27 @@ public class clsWebbooksIntegration
 	 	    cmsCon = objDb.funOpenWebbooksCon("mysql", "transaction");
 	 	    Statement st = cmsCon.createStatement();
 	 	    
-	 	    String sbSql = " select a.strType,b.strGroupCode,b.strGroupName,ifnull(d.strCrDr,''),if((c.strVouchNo is null),0,ifnull(sum(d.dblDrAmt),0)),a.strAccountName,a.strAccountCode,if((c.strVouchNo is null),0,ifnull(sum(d.dblCrAmt),0)) from  tblacgroupmaster b, tblsubgroupmaster s,tblacmaster a,   " + 
+	 	   /* String sbSql = " select a.strType,b.strGroupCode,b.strGroupName,ifnull(d.strCrDr,''),if((c.strVouchNo is null),0,ifnull(sum(d.dblDrAmt),0)),a.strAccountName,a.strAccountCode,if((c.strVouchNo is null),0,ifnull(sum(d.dblCrAmt),0)) from  tblacgroupmaster b, tblsubgroupmaster s,tblacmaster a,   " + 
 	 	      dtlTableName + " d ,  " + 
 	 	      "  " + hdTableName + "  c  " + 
 	 	      "where a.strSubGroupCode=s.strSubGroupCode "
 	 	      + " and s.strGroupCode=b.strGroupCode " + 
 	 	      "and b.strCategory like'%EXPENSES' and  a.strAccountCode=d.strAccountCode and c.strVouchNo=d.strVouchNo   and date(c.dteVouchDate) between '" + fromDate + "' and '" + toDate + "' and c.strClientCode='" + clientCode + "' and a.strPropertyCode='" + propCode + "'  " + 
 	 	      "and a.strType='GL Code' " + 
-	 	      "group by a.strAccountCode  ";
+	 	      "group by a.strAccountCode  ";*/
+	 	   StringBuilder sbSql=new StringBuilder();
+			sbSql.setLength(0);
+	 		sbSql.append("select a.strType,b.strGroupCode,b.strGroupName,ifnull(d.strCrDr,''),if((c.strVouchNo is null),0,ifnull(sum(d.dblDrAmt),0)),a.strAccountName,a.strAccountCode,if((c.strVouchNo is null),0,ifnull(sum(d.dblCrAmt),0)) "
+					+ "from  tblacgroupmaster b,tblsubgroupmaster s,tblacmaster a "
+					+" left outer join "+dtlTableName+" d on  a.strAccountCode=d.strAccountCode " 
+					+" left outer join "+hdTableName+"  c on c.strVouchNo=d.strVouchNo   and date(c.dteVouchDate) between '" + fromDate + "' and '" + toDate + "' and c.strClientCode='"+clientCode+"' and a.strPropertyCode='"+propCode+"'  "
+					+ "where a.strSubGroupCode=s.strSubGroupCode "
+					+ " and b.strGroupCode=s.strGroupCode "
+					+ "and b.strCategory like'%EXPENSES' "
+					+ "and a.strType='GL Code' "
+					+ "group by a.strAccountCode  ");
 	 	    
-	 	    ResultSet rsTrans = st.executeQuery(sbSql);
+	 	    ResultSet rsTrans = st.executeQuery(sbSql.toString());
 	 	    
 	 	    if (rsTrans.next())
 	 	    {
