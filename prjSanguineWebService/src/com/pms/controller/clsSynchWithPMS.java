@@ -155,6 +155,7 @@ public class clsSynchWithPMS {
 				String settledAmt=mJsonObject.get("SettledAmt").toString().trim();
 				String clientCode=mJsonObject.get("ClientCode").toString().trim();
 				String billType=mJsonObject.get("BillType").toString().trim();
+				String posName=mJsonObject.get("POSName").toString().trim(); // Sumeet
 				
 				sbSql.setLength(0);
 				sbSql.append("delete from tblfoliodtl where strFolioNo='"+folioNo+"' and strDocNo='"+billNo+"' "
@@ -162,10 +163,14 @@ public class clsSynchWithPMS {
 				st.execute(sbSql.toString());
 				
 				sbSql.setLength(0);
-				sbSql.append("insert into tblfoliodtl (strFolioNo,dteDocDate,strDocNo,strPerticulars"
+				/*sbSql.append("insert into tblfoliodtl (strFolioNo,dteDocDate,strDocNo,strPerticulars"
 					+ ",dblDebitAmt,dblCreditAmt,dblBalanceAmt,strRevenueType,strRevenueCode,strClientCode) "
 					+ "values ('"+folioNo+"','"+billDate+"','"+billNo+"','POS Revenue',"+settledAmt+",0,0"
-							+ ",'"+billType+"','"+POSCode+"','"+clientCode+"')");
+							+ ",'"+billType+"','"+POSCode+"','"+clientCode+"')");*/
+				sbSql.append("insert into tblfoliodtl (strFolioNo,dteDocDate,strDocNo,strPerticulars"
+						+ ",dblDebitAmt,dblCreditAmt,dblBalanceAmt,strRevenueType,strRevenueCode,strClientCode) "
+						+ "values ('"+folioNo+"','"+billDate+"','"+billNo+"','POS Revenue ("+posName+") ',"+settledAmt+",0,0"
+								+ ",'"+billType+"','"+POSCode+"','"+clientCode+"')"); // Sumeet
 				st.execute(sbSql.toString());
 			}
 			response = "true";
