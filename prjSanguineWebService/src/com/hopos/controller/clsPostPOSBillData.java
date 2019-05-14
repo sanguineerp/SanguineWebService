@@ -9678,7 +9678,7 @@ public class clsPostPOSBillData
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
 					+ " strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill,strUserWiseShowBill,strDisplayTotalShowBill,strShowNotificationsOnTransaction,strBlankDayEndPrint," // 240
-					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill) "//243
+					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd) "//244
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -9959,6 +9959,8 @@ public class clsPostPOSBillData
 					String strOnlineOrderNotification= dataObject.get("strOnlineOrderNotification").toString().trim();//241
 					String strPostRoundOffToWebBooks= dataObject.get("strPostRoundOffToWebBooks").toString().trim();//242
 					String strShortNameOnDirectBillerAndBill=dataObject.get("strShortNameOnDirectBillerAndBill").toString().trim();//243
+					String strClearAllTrasactionAtDayEnd=dataObject.get("strClearAllTrasactionAtDayEnd").toString().trim();//243
+					
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -9987,7 +9989,7 @@ public class clsPostPOSBillData
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
 							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "'" //236
 							+ ", '" + strUserWiseShowBill + "','" + strDisplayTotalShowBill + "','" + strShowNotificationsOnTransaction + "','" + strBlankDayEndPrint + "'," //240
-							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"') "); // 243 
+							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"') "); // 244 
 					flgData = true;
 				}
 			}
