@@ -18194,7 +18194,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         objSales.put("TableSubHeader","Total Amount");
         while (rsSales.next()) 
         {
-        	objSales.put("SalesAchieved",rsSales.getDouble(1));
+        	objSales.put("SalesAchieved",formatter.format(rsSales.getDouble(1)));
         }
         arrObj.put(objSales);
         rsSales.close();
@@ -18646,7 +18646,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	            }
 	            else
 	            {
-	            	sql=" SELECT temp.ItemName, sum(temp.Amount), (sum(temp.Amount)/"+subTotal+")*100,SUM(temp.Qty) FROM "
+	            	sql=" SELECT temp.ItemName, sum(temp.Amount), (sum(temp.Amount)/"+subTotal+")*100,SUM(temp.Qty) AS Quantity FROM "
 		            		+ "( SELECT a.strItemCode as ItemCode,a.strItemName AS ItemName, SUM(a.dblAmount) AS Amount,SUM(a.dblQuantity) as Qty FROM tblbilldtl a, tblbillhd b "
 		            		+ "WHERE a.strBillNo=b.strBillNo AND DATE(b.dteBillDate)='"+POSDate+"' AND b.strClientCode='"+clientCode+"' and a.dblAmount>0 "
 		            		+ "GROUP BY a.strItemCode "
@@ -18655,7 +18655,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 		            		+ "WHERE a.strBillNo=b.strBillNo AND DATE(b.dteBillDate) BETWEEN DATE(DATE_SUB('"+POSDate+"', INTERVAL 21 DAY)) AND '"+POSDate+"' "
 		            		+ "AND b.strClientCode='"+clientCode+"' and a.dblAmount>0 "
 		            		+ "GROUP BY a.strItemCode) "
-		            		+ "temp group by ItemCode ORDER BY amount LIMIT 10; ";
+		            		+ "temp group by ItemCode ORDER BY Quantity LIMIT 10; ";
 	            }
 	            ResultSet rsSellingItems=st.executeQuery(sql);
 	            while(rsSellingItems.next())
