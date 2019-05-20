@@ -241,51 +241,7 @@ public class clsTextFileGenerator
 				if (printKOTYN.equals("Y"))
 				{
 					result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter, noOfCopiesSecPrinter,reprint);
-					//int pendingcopiesOfPrimaryPrinter = 0,pendingcopiesOfSecondaryPrinter=0;
-					/*if(printOnBothPrinter.equalsIgnoreCase("Y")){
-						
-					}else{
-						for(int i=0;i<noOfCopiesPrimaryPrinter-1;i++)
-					    {	
-					    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter-1, 0,"Reprint");
-					    }
-					}*/
 					
-					/*if(noOfCopiesPrimaryPrinter>1){
-						
-						pendingcopiesOfPrimaryPrinter=1;
-					    if(noOfCopiesSecPrinter>0)
-					    { 
-					    	pendingcopiesOfSecondaryPrinter=1;    
-					    result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, copiesOfPrimaryPrinter, copiesOfSecondaryPrinter,reprint);
-					    }
-					    else
-					    {
-					    	pendingcopiesOfSecondaryPrinter=0;    
-					      result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, copiesOfPrimaryPrinter, copiesOfSecondaryPrinter,reprint);    
-
-					    }    
-							
-					}else{
-						  result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, copiesOfPrimaryPrinter, copiesOfSecondaryPrinter,reprint);
-					}*/
-				    
-				    /*if (multipleKOTPrint.equals("Y"))
-				    {
-				    	
-//				    	if (!isReprint)
-//					    {
-//						funAppendDuplicate(fileName);
-//					    }
-					    for(int i=0;i<noOfCopiesPrimaryPrinter-1;i++)
-					    {	
-					    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter-1, 0,"Reprint");
-					    }
-					    for(int i=0;i<noOfCopiesSecPrinter-1;i++)
-					    {	
-					    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, 0, noOfCopiesSecPrinter-1,"Reprint");
-					    }
-				    }*/
 				}
 				else
 				{
@@ -301,54 +257,6 @@ public class clsTextFileGenerator
     }
     
     
-    /*if (type.equalsIgnoreCase("kot"))
-		{
-		    //System.out.println("G Print YN="+clsGlobalVarClass.gPrintKOTYN);
-		    if (clsGlobalVarClass.gPrintKOTYN)
-		    {
-			int copiesOfPrimaryPrinter = 0,copiesOfSecondaryPrinter=0;
-			String sql = "select a.intPrimaryPrinterNoOfCopies,a.intSecondaryPrinterNoOfCopies from tblcostcentermaster a where a.strCostCenterCode='"+costCenterCode+"'";
-			ResultSet rsNoOfCopies = clsGlobalVarClass.dbMysql.executeResultSet(sql);
-			if(rsNoOfCopies.next())
-			{
-			
-			if(rsNoOfCopies.getInt(1)>0)
-			{  
-			    copiesOfPrimaryPrinter=1;
-			    if(rsNoOfCopies.getInt(2)>0)
-			    { 
-			    copiesOfSecondaryPrinter=1;    
-			    funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,copiesOfPrimaryPrinter,copiesOfSecondaryPrinter);
-			    }
-			    else
-			    {
-			      copiesOfSecondaryPrinter=0;    
-			      funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,copiesOfPrimaryPrinter,copiesOfSecondaryPrinter);    
-
-			    }    
-			}
-			
-			if (clsGlobalVarClass.gMultipleKOTPrint)
-			{
-			    if (!isReprint)
-			    {
-				funAppendDuplicate(fileName);
-			    }
-			    for(int i=0;i<rsNoOfCopies.getInt(1)-1;i++)
-			    {	
-			    funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,rsNoOfCopies.getInt(1)-1,0);
-			    }
-			    for(int i=0;i<rsNoOfCopies.getInt(2)-1;i++)
-			    {	
-			    funPrintKOTWindows(primaryPrinterName, secPrinterName, printOnBothPrinters,0,rsNoOfCopies.getInt(2)-1);
-			    }
-			    
-			    
-			    }			    
-			}
-			   
-		    }
-		}*/
     
     
     
@@ -421,10 +329,12 @@ public class clsTextFileGenerator
 				if(printOnBothPrinter.equalsIgnoreCase("Y")){
 					if(noOfCopiesSecPrinter>0){
 						result=funPrintOnSecPrinter(secPrinterName, filename,result); //for printing single print
-						if(!reprint.equalsIgnoreCase("Reprint")){
+						/*if(!reprint.equalsIgnoreCase("Reprint")){
 							reprint="Reprint";
 							funAppendDuplicate(filename);	
-						}
+						}*/
+						reprint="Reprint";
+						funAppendDuplicate(filename);
 						
 						for(int i=0;i<noOfCopiesSecPrinter-1;i++){
 							job = printService[printerIndex].createPrintJob();

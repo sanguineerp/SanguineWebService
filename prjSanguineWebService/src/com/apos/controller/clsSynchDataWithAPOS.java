@@ -10339,11 +10339,13 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		   			    			if(rsPrint.getString(11).equalsIgnoreCase("Y")){// both printer
 		   			    				if(noOfCopiesSecPrinter>0){
 		   			    					// single print on secondary
-		   			    					objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
-				   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, reprint, 
+		   			    					// All copies on Secondary printer is duplicate - Reprint 
+		   			    					/*objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
+				   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "Reprint", 
 				   			    					"Not", rsPrint.getString(4), rsPrint.getString(5), printYN, rsPrint.getString(6), rsPrint.getString(7),
 				   			    					POSName,POSCode,rsPrint.getInt(9),rsPrint.getInt(10),rsPrint.getString(11),deviceName, macAddress);
-		   			    					for(int k=0;k<noOfCopiesSecPrinter-1;k++){
+		   			    					*/
+		   			    					for(int k=0;k<noOfCopiesSecPrinter;k++){
 		   			    						// remaining reprint on secondary
 		   			    						objKOTJasperFileGenerationForMakeKOT.funGenerateJasperForTableWiseKOT(tableNo,
 					   			    					rsPrint.getString(2), AreaCodeForAll, KOTNo, "Reprint", 
@@ -18686,6 +18688,138 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	        	e.printStackTrace();	
 	        }
 		return response;
+	}
+	
+	
+	@GET 
+	@Path("/funSalesSummary")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONArray funSalesSummary(@QueryParam("POSDate") String POSDate,@QueryParam("clientCode") String clientCode,@QueryParam("SelectDate") String date)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONArray response = new JSONArray();
+        NumberFormat formatter = new DecimalFormat("#0");
+        
+        try {
+        		con=objDb.funOpenAPOSCon("mysql","master");
+	            st = con.createStatement();
+	            String sql="";
+	            /*String posDate[]= date.split("-");
+	            String newDate=posDate[2]+"-"+posDate[1]+"-"+posDate[0];*/
+	            
+		        if(POSDate.equals(date))
+		        {
+		        	sql="SELECT IFNULL((temp4.homedel/billno)*100,0) AS homdel,IFNULL((temp4.dinein/billno)*100,0) AS dinin,IFNULL((temp4.takeaway/billno)*100,0) AS takaway"
+		        		+ " FROM (SELECT temp.billno,temp1.homedel,temp2.dinein,temp3.takeaway FROM ( SELECT COUNT(a.strBillNo) AS billno "
+		        		+ " FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery' OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,"
+		        		+ " (SELECT COUNT(a.strBillNo) AS homedel FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1,"
+		        		+ " (SELECT COUNT(a.strBillNo) AS dinein FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2,"
+		        		+ " (SELECT COUNT(a.strBillNo) AS takeaway FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3) temp4 ";
+		        	ResultSet rsOrders=st.executeQuery(sql);
+			        while(rsOrders.next())
+			        {
+			        	JSONObject obj =  new JSONObject();
+			        	obj.put("OrderHD", formatter.format(Double.parseDouble(rsOrders.getString(1))));
+			        	obj.put("OrderDI", formatter.format(Double.parseDouble(rsOrders.getString(2))));
+			        	obj.put("OrderTA", formatter.format(Double.parseDouble(rsOrders.getString(3))));
+			        	response.put(obj);
+			        }
+			        rsOrders.close();
+			        sql="SELECT IFNULL((temp4.homedel/totalsub)*100,0) AS homdel,IFNULL((temp4.dinein/totalsub)*100,0) AS dinin,IFNULL((temp4.takeaway/totalsub)*100,0) AS takaway"
+			        		+ " FROM (SELECT temp.totalsub,temp1.homedel,temp2.dinein,temp3.takeaway FROM ( SELECT COUNT(a.dblSubTotal) AS totalsub "
+			        		+ " FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery' OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,"
+			        		+ " (SELECT COUNT(a.dblSubTotal) AS homedel FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1,"
+			        		+ " (SELECT COUNT(a.dblSubTotal) AS dinein FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2,"
+			        		+ " (SELECT COUNT(a.dblSubTotal) AS takeaway FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3) temp4 ";
+			        ResultSet rsSubTotal=st.executeQuery(sql);
+			        while(rsSubTotal.next())
+			        {
+			        	JSONObject obj =  new JSONObject();
+			        	obj.put("SubHD", formatter.format(Double.parseDouble(rsSubTotal.getString(1))));
+			        	obj.put("SubDI", formatter.format(Double.parseDouble(rsSubTotal.getString(2))));
+			        	obj.put("SubTA", formatter.format(Double.parseDouble(rsSubTotal.getString(3))));
+			        	response.put(obj);
+			        }
+			        rsSubTotal.close();
+			        sql="SELECT IFNULL((temp4.homedel/totaltax)*100,0) AS homdel,IFNULL((temp4.dinein/totaltax)*100,0) AS dinin,IFNULL((temp4.takeaway/totaltax)*100,0) AS takaway"
+			        		+ " FROM (SELECT temp.totaltax,temp1.homedel,temp2.dinein,temp3.takeaway FROM ( SELECT COUNT(a.dblTaxAmt) AS totaltax "
+			        		+ " FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery' OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,"
+			        		+ " (SELECT COUNT(a.dblTaxAmt) AS homedel FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1,"
+			        		+ " (SELECT COUNT(a.dblTaxAmt) AS dinein FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2,"
+			        		+ " (SELECT COUNT(a.dblTaxAmt) AS takeaway FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3) temp4 ";
+			        ResultSet rsTax=st.executeQuery(sql);
+			        while(rsTax.next())
+			        {
+			        	JSONObject obj =  new JSONObject();
+			        	obj.put("TaxHD", formatter.format(Double.parseDouble(rsTax.getString(1))));
+			        	obj.put("TaxDI", formatter.format(Double.parseDouble(rsTax.getString(2))));
+			        	obj.put("TaxTA", formatter.format(Double.parseDouble(rsTax.getString(3))));
+			        	response.put(obj);
+			        }
+			        rsTax.close();
+		        }
+		        else
+		        {
+		        	sql="SELECT IFNULL((temp4.homedel/billno)*100,0) AS homdel,IFNULL((temp4.dinein/billno)*100,0) AS dinin,IFNULL((temp4.takeaway/billno)*100,0) AS takaway"
+			        		+ " FROM (SELECT temp.billno,temp1.homedel,temp2.dinein,temp3.takeaway FROM ( SELECT COUNT(a.strBillNo) AS billno "
+			        		+ " FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery' OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,"
+			        		+ " (SELECT COUNT(a.strBillNo) AS homedel FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1,"
+			        		+ " (SELECT COUNT(a.strBillNo) AS dinein FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2,"
+			        		+ " (SELECT COUNT(a.strBillNo) AS takeaway FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3) temp4 ";
+			        	ResultSet rsOrders=st.executeQuery(sql);
+				        if(rsOrders.next())
+				        {
+				        	JSONObject obj =  new JSONObject();
+				        	obj.put("OrderHD", formatter.format(Double.parseDouble(rsOrders.getString(1))));
+				        	obj.put("OrderDI", formatter.format(Double.parseDouble(rsOrders.getString(2))));
+				        	obj.put("OrderTA", formatter.format(Double.parseDouble(rsOrders.getString(3))));
+				        	response.put(obj);
+				        }
+				        rsOrders.close();
+				        sql="SELECT IFNULL((temp4.homedel/totalsub)*100,0) AS homdel,IFNULL((temp4.dinein/totalsub)*100,0) AS dinin,IFNULL((temp4.takeaway/totalsub)*100,0) AS takaway"
+				        		+ " FROM (SELECT temp.totalsub,temp1.homedel,temp2.dinein,temp3.takeaway FROM ( SELECT COUNT(a.dblSubTotal) AS totalsub "
+				        		+ " FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery' OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,"
+				        		+ " (SELECT COUNT(a.dblSubTotal) AS homedel FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1,"
+				        		+ " (SELECT COUNT(a.dblSubTotal) AS dinein FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2,"
+				        		+ " (SELECT COUNT(a.dblSubTotal) AS takeaway FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3) temp4 ";
+				        ResultSet rsSubTotal=st.executeQuery(sql);
+				        if(rsSubTotal.next())
+				        {
+				        	JSONObject obj =  new JSONObject();
+				        	obj.put("SubHD", formatter.format(Double.parseDouble(rsSubTotal.getString(1))));
+				        	obj.put("SubDI", formatter.format(Double.parseDouble(rsSubTotal.getString(2))));
+				        	obj.put("SubTA", formatter.format(Double.parseDouble(rsSubTotal.getString(3))));
+				        	response.put(obj);
+				        }
+				        rsSubTotal.close();
+				        sql="SELECT IFNULL((temp4.homedel/totaltax)*100,0) AS homdel,IFNULL((temp4.dinein/totaltax)*100,0) AS dinin,IFNULL((temp4.takeaway/totaltax)*100,0) AS takaway"
+				        		+ " FROM (SELECT temp.totaltax,temp1.homedel,temp2.dinein,temp3.takeaway FROM ( SELECT COUNT(a.dblTaxAmt) AS totaltax "
+				        		+ " FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery' OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,"
+				        		+ " (SELECT COUNT(a.dblTaxAmt) AS homedel FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1,"
+				        		+ " (SELECT COUNT(a.dblTaxAmt) AS dinein FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2,"
+				        		+ " (SELECT COUNT(a.dblTaxAmt) AS takeaway FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3) temp4 ";
+				        ResultSet rsTax=st.executeQuery(sql);
+				        if(rsTax.next())
+				        {
+				        	JSONObject obj =  new JSONObject();
+				        	obj.put("TaxHD", formatter.format(Double.parseDouble(rsTax.getString(1))));
+				        	obj.put("TaxDI", formatter.format(Double.parseDouble(rsTax.getString(2))));
+				        	obj.put("TaxTA", formatter.format(Double.parseDouble(rsTax.getString(3))));
+				        	response.put(obj);
+				        }
+				        rsTax.close();
+		        }
+		        st.close();
+		        con.close();
+        	}
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        
+        return response;
 	}
 	
 	

@@ -410,10 +410,10 @@ public class clsKOTJasperFileGenerationForMakeKOT {
 		
 		 int selectedService = 0;
 	     //String billPrinterName = strBillPrinterPort;
-		 String filePath = System.getProperty("user.dir");
+	/*	 String filePath = System.getProperty("user.dir");
 		    String filename = "";
 		    filename = (filePath + "/Temp/TempBill1.pdf");
-		    
+		    */
 	     billPrinterName = billPrinterName.replaceAll("#", "\\\\");
 	     printServiceAttributeSet.add(new PrinterName(billPrinterName, null));
 
