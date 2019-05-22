@@ -18701,6 +18701,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         Statement st=null;
         JSONArray response = new JSONArray();
         NumberFormat formatter = new DecimalFormat("#0");
+        NumberFormat format = new DecimalFormat("#0.0");
         
         try {
         		con=objDb.funOpenAPOSCon("mysql","master");
@@ -18721,9 +18722,9 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 			        while(rsOrders.next())
 			        {
 			        	JSONObject obj =  new JSONObject();
-			        	obj.put("OrderHD", formatter.format(Double.parseDouble(rsOrders.getString(1))));
-			        	obj.put("OrderDI", formatter.format(Double.parseDouble(rsOrders.getString(2))));
-			        	obj.put("OrderTA", formatter.format(Double.parseDouble(rsOrders.getString(3))));
+			        	obj.put("OrderHD", format.format(Double.parseDouble(rsOrders.getString(1))));
+			        	obj.put("OrderDI", format.format(Double.parseDouble(rsOrders.getString(2))));
+			        	obj.put("OrderTA", format.format(Double.parseDouble(rsOrders.getString(3))));
 			        	response.put(obj);
 			        }
 			        rsOrders.close();
@@ -18737,9 +18738,9 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 			        while(rsSubTotal.next())
 			        {
 			        	JSONObject obj =  new JSONObject();
-			        	obj.put("SubHD", formatter.format(Double.parseDouble(rsSubTotal.getString(1))));
-			        	obj.put("SubDI", formatter.format(Double.parseDouble(rsSubTotal.getString(2))));
-			        	obj.put("SubTA", formatter.format(Double.parseDouble(rsSubTotal.getString(3))));
+			        	obj.put("SubHD", format.format(Double.parseDouble(rsSubTotal.getString(1))));
+			        	obj.put("SubDI", format.format(Double.parseDouble(rsSubTotal.getString(2))));
+			        	obj.put("SubTA", format.format(Double.parseDouble(rsSubTotal.getString(3))));
 			        	response.put(obj);
 			        }
 			        rsSubTotal.close();
@@ -18753,12 +18754,48 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 			        while(rsTax.next())
 			        {
 			        	JSONObject obj =  new JSONObject();
-			        	obj.put("TaxHD", formatter.format(Double.parseDouble(rsTax.getString(1))));
-			        	obj.put("TaxDI", formatter.format(Double.parseDouble(rsTax.getString(2))));
-			        	obj.put("TaxTA", formatter.format(Double.parseDouble(rsTax.getString(3))));
+			        	obj.put("TaxHD", format.format(Double.parseDouble(rsTax.getString(1))));
+			        	obj.put("TaxDI", format.format(Double.parseDouble(rsTax.getString(2))));
+			        	obj.put("TaxTA", format.format(Double.parseDouble(rsTax.getString(3))));
 			        	response.put(obj);
 			        }
 			        rsTax.close();
+			        sql="SELECT (temp1.homedel/temp.total)*100,(temp2.dinein/temp.total)*100,(temp3.takeaway/temp.total)*100 FROM (SELECT SUM(a.dblGrandTotal) AS total "
+			        		+ "	FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery' "
+			        		+ "OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,(SELECT SUM(a.dblGrandTotal) AS homedel "
+			        		+ "FROM tblbillhd a, tblbillsettlementdtl b	WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1, "
+			        		+ "(SELECT SUM(a.dblGrandTotal) AS dinein FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2, "
+			        		+ " (SELECT SUM(a.dblGrandTotal) AS takeaway FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3 ";
+			        ResultSet rsTotal=st.executeQuery(sql);
+			        while(rsTotal.next())
+			        {
+			        	JSONObject obj =  new JSONObject();
+			        	obj.put("TotalHD", format.format(Double.parseDouble(rsTotal.getString(1))));
+			        	obj.put("TotalDI", format.format(Double.parseDouble(rsTotal.getString(2))));
+			        	obj.put("TotalTA", format.format(Double.parseDouble(rsTotal.getString(3))));
+			        	response.put(obj);
+			        }
+			        rsTotal.close();
+			        
+			        sql=" SELECT (temp1.food/temp.total)*100,(temp2.beverages/temp.total)*100,(temp3.alcohol/temp.total)*100 "
+				        	+ "FROM(SELECT SUM(a.dblGrandTotal) AS total FROM tblbillhd a, tblbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+POSDate+"' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp, "
+				        	+ "(SELECT SUM(a.dblGrandTotal) AS food FROM tblbillhd a, tblbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+POSDate+"' AND e.strGroupName='FOOD' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp1, "
+				        	+ "(SELECT SUM(a.dblGrandTotal) AS beverages FROM tblbillhd a, tblbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+POSDate+"' AND e.strGroupName='BEVERAGES' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp2, "
+				        	+ "(SELECT SUM(a.dblGrandTotal) AS alcohol FROM tblbillhd a, tblbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+POSDate+"' AND e.strGroupName='ALCOHOL' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp3 ";
+				        ResultSet rsGroup=st.executeQuery(sql);
+				        while(rsGroup.next())
+				        {
+				        	JSONObject obj =  new JSONObject();
+				        	obj.put("Food", formatter.format(Double.parseDouble(rsGroup.getString(1))));
+				        	obj.put("Beverages", formatter.format(Double.parseDouble(rsGroup.getString(2))));
+				        	obj.put("Alcohol", formatter.format(Double.parseDouble(rsGroup.getString(3))));
+				        	response.put(obj);
+				        }
+				        rsGroup.close();
 		        }
 		        else
 		        {
@@ -18772,9 +18809,9 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 				        if(rsOrders.next())
 				        {
 				        	JSONObject obj =  new JSONObject();
-				        	obj.put("OrderHD", formatter.format(Double.parseDouble(rsOrders.getString(1))));
-				        	obj.put("OrderDI", formatter.format(Double.parseDouble(rsOrders.getString(2))));
-				        	obj.put("OrderTA", formatter.format(Double.parseDouble(rsOrders.getString(3))));
+				        	obj.put("OrderHD", format.format(Double.parseDouble(rsOrders.getString(1))));
+				        	obj.put("OrderDI", format.format(Double.parseDouble(rsOrders.getString(2))));
+				        	obj.put("OrderTA", format.format(Double.parseDouble(rsOrders.getString(3))));
 				        	response.put(obj);
 				        }
 				        rsOrders.close();
@@ -18788,9 +18825,9 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 				        if(rsSubTotal.next())
 				        {
 				        	JSONObject obj =  new JSONObject();
-				        	obj.put("SubHD", formatter.format(Double.parseDouble(rsSubTotal.getString(1))));
-				        	obj.put("SubDI", formatter.format(Double.parseDouble(rsSubTotal.getString(2))));
-				        	obj.put("SubTA", formatter.format(Double.parseDouble(rsSubTotal.getString(3))));
+				        	obj.put("SubHD", format.format(Double.parseDouble(rsSubTotal.getString(1))));
+				        	obj.put("SubDI", format.format(Double.parseDouble(rsSubTotal.getString(2))));
+				        	obj.put("SubTA", format.format(Double.parseDouble(rsSubTotal.getString(3))));
 				        	response.put(obj);
 				        }
 				        rsSubTotal.close();
@@ -18804,12 +18841,48 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 				        if(rsTax.next())
 				        {
 				        	JSONObject obj =  new JSONObject();
-				        	obj.put("TaxHD", formatter.format(Double.parseDouble(rsTax.getString(1))));
-				        	obj.put("TaxDI", formatter.format(Double.parseDouble(rsTax.getString(2))));
-				        	obj.put("TaxTA", formatter.format(Double.parseDouble(rsTax.getString(3))));
+				        	obj.put("TaxHD", format.format(Double.parseDouble(rsTax.getString(1))));
+				        	obj.put("TaxDI", format.format(Double.parseDouble(rsTax.getString(2))));
+				        	obj.put("TaxTA", format.format(Double.parseDouble(rsTax.getString(3))));
 				        	response.put(obj);
 				        }
 				        rsTax.close();
+				        sql="SELECT (temp1.homedel/temp.total)*100,(temp2.dinein/temp.total)*100,(temp3.takeaway/temp.total)*100 FROM (SELECT SUM(a.dblGrandTotal) AS total "
+				        		+ "	FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery' "
+				        		+ "OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,(SELECT SUM(a.dblGrandTotal) AS homedel "
+				        		+ "FROM tblqbillhd a, tblqbillsettlementdtl b	WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1, "
+				        		+ "(SELECT SUM(a.dblGrandTotal) AS dinein FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2, "
+				        		+ " (SELECT SUM(a.dblGrandTotal) AS takeaway FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3 ";
+				        ResultSet rsTotal=st.executeQuery(sql);
+				        while(rsTotal.next())
+				        {
+				        	JSONObject obj =  new JSONObject();
+				        	obj.put("TotalHD", format.format(Double.parseDouble(rsTotal.getString(1))));
+				        	obj.put("TotalDI", format.format(Double.parseDouble(rsTotal.getString(2))));
+				        	obj.put("TotalTA", format.format(Double.parseDouble(rsTotal.getString(3))));
+				        	response.put(obj);
+				        }
+				        rsTotal.close();
+				        
+				        sql=" SELECT (temp1.food/temp.total)*100,(temp2.beverages/temp.total)*100,(temp3.alcohol/temp.total)*100 "
+				        	+ "FROM(SELECT SUM(a.dblGrandTotal) AS total FROM tblqbillhd a, tblqbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+date+"' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp, "
+				        	+ "(SELECT SUM(a.dblGrandTotal) AS food FROM tblqbillhd a, tblqbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+date+"' AND e.strGroupName='FOOD' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp1, "
+				        	+ "(SELECT SUM(a.dblGrandTotal) AS beverages FROM tblqbillhd a, tblqbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+date+"' AND e.strGroupName='BEVERAGES' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp2, "
+				        	+ "(SELECT SUM(a.dblGrandTotal) AS alcohol FROM tblqbillhd a, tblqbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
+				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+date+"' AND e.strGroupName='ALCOHOL' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp3 ";
+				        ResultSet rsGroup=st.executeQuery(sql);
+				        while(rsGroup.next())
+				        {
+				        	JSONObject obj =  new JSONObject();
+				        	obj.put("Food", formatter.format(Double.parseDouble(rsGroup.getString(1))));
+				        	obj.put("Beverages", formatter.format(Double.parseDouble(rsGroup.getString(2))));
+				        	obj.put("Alcohol", formatter.format(Double.parseDouble(rsGroup.getString(3))));
+				        	response.put(obj);
+				        }
+				        rsGroup.close();
 		        }
 		        st.close();
 		        con.close();
@@ -18822,6 +18895,67 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         return response;
 	}
 	
+	@GET 
+	@Path("/funGetAlerts")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetAlerts(@QueryParam("clientCode") String clientCode,@QueryParam("Date") String date)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONArray response = new JSONArray();
+        JSONArray responseComp = new JSONArray();
+        JSONObject resp = new JSONObject();
+        
+        try 
+        {
+        	con=objDb.funOpenAPOSCon("mysql","master");
+	        st = con.createStatement();
+	        String sql="";
+	        
+	        sql="SELECT a.strBillNo,c.strReasonName,a.dblActualAmount,a.strTransType, IFNULL(b.dblDiscountAmt,0),d.strPosName, DATE_FORMAT(a.dteModifyVoidBill,'%d %M %Y %H:%i:%s'),a.strUserEdited "
+	        		+ "FROM tblvoidbillhd a LEFT OUTER JOIN tblbillhd b ON a.strBillNo=b.strBillNo LEFT OUTER "
+	        		+ "JOIN tblreasonmaster c ON a.strReasonCode=c.strReasonCode LEFT OUTER JOIN tblposmaster d "
+	        		+ "ON a.strPosCode=d.strPosCode WHERE DATE(a.dteBillDate)='"+date+"' AND a.strClientCode='"+clientCode+"' ";
+	        ResultSet rsAlerts=st.executeQuery(sql);
+	        while(rsAlerts.next())
+	        {
+	        	JSONObject obj =  new JSONObject();
+	        	obj.put("BillNo",rsAlerts.getString(1));
+	        	obj.put("Reason",rsAlerts.getString(2));
+	        	obj.put("Amount",rsAlerts.getString(3));
+	        	obj.put("TransType",rsAlerts.getString(4));
+	        	obj.put("Discount",rsAlerts.getString(5));
+	        	obj.put("POSName",rsAlerts.getString(6));
+	        	obj.put("ModifyDate",rsAlerts.getString(7));
+	        	obj.put("User",rsAlerts.getString(8));
+	        	response.put(obj);
+	        }
+	        rsAlerts.close();
+	        resp.put("Alerts", response);
+	        sql="SELECT a.strBillNo,a.strSettelmentMode,c.strPosName,DATE_FORMAT(a.dteDateEdited,'%d %M %Y %H:%i:%s'),SUM(d.dblAmount),a.strUserEdited FROM tblbillhd a,tblposmaster c, tblbillcomplementrydtl d "
+	        		+ "WHERE a.strBillNo=d.strBillNo AND a.strPOSCode=c.strPosCode AND a.dblGrandTotal=0.0 AND a.strSettelmentMode='NC' AND a.strClientCode='"+clientCode+"' GROUP BY a.strBillNo ";
+	        ResultSet rsComp=st.executeQuery(sql);
+	        while(rsComp.next())
+	        {
+	        	JSONObject objComp =  new JSONObject();
+	        	objComp.put("BillNo",rsComp.getString(1));
+	        	objComp.put("TransType",rsComp.getString(2));
+	        	objComp.put("POSName",rsComp.getString(3));
+	        	objComp.put("ModifyDate",rsComp.getString(4));
+	        	objComp.put("Amount",rsComp.getString(5));
+	        	objComp.put("User",rsComp.getString(6));
+	        	responseComp.put(objComp);
+	        }
+	        rsComp.close();
+	        resp.put("Comp", responseComp);
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        return resp;
+	}
 	
 	
 	
