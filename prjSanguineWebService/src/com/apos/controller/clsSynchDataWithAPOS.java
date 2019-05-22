@@ -18956,14 +18956,5 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         }
         return resp;
 	}
-	
-	
-	
-	
-	
-	
-
-	
-	
 		
 }
