@@ -1916,9 +1916,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	            }
 	            jsTaxDtl.put("listOfTax", jAyyTaxList);
 	            jsTaxDtl.put("totalTaxAmt", taxAmt);
-	            cmsCon.close(); 
+	           
 	            st.close(); 
 	            st2.close();
+	            cmsCon.close(); 
 
             
 		} catch (Exception e) {
@@ -16046,8 +16047,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			sql = "SELECT a.strItemCode,b.strItemName,a.strTextColor,a.strPriceMonday,a.strPriceTuesday, a.strPriceWednesday, "
 				+ " a.strPriceThursday,a.strPriceFriday, a.strPriceSaturday,a.strPriceSunday,a.tmeTimeFrom,a.strAMPMFrom,a.tmeTimeTo,a.strAMPMTo, "
 				+ " a.strCostCenterCode,a.strHourlyPricing,a.strSubMenuHeadCode,a.dteFromDate,a.dteToDate,b.strExternalCode,b.strItemImage,a.strAreaCode "
-				+ " ,a.strMenuCode,b.strItemVoiceCaptureText "
-				+ " FROM tblmenuitempricingdtl a,tblitemmaster b "
+				+ " ,a.strMenuCode,b.strItemVoiceCaptureText,IF(c.strItemCode!='','Y','N') "
+				+ " FROM tblmenuitempricingdtl a,tblitemmaster b LEFT OUTER JOIN tblnonavailableitems c ON b.strItemCode=c.strItemCode AND c.strPOSCode='"+POSCode+"' AND DATE(c.dteDate)='"+fromDate+"' "
 				+ " WHERE a.strItemCode=b.strItemCode  AND (a.strPosCode='"+POSCode+"' OR a.strPosCode='All') "
 				+ " AND DATE(a.dteFromDate)<='"+fromDate+"' AND DATE(a.dteToDate)>='"+toDate+"' "
 				+ " ORDER BY b.strItemName ,a.strHourlyPricing ASC ";
@@ -16082,6 +16083,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	obj.put("AreaCode",rsMasterData.getString(22));
             	obj.put("MenuCode",rsMasterData.getString(23));
             	obj.put("strVoiceTextSaved",rsMasterData.getString(24));
+            	obj.put("NAStatus",rsMasterData.getString(25));
             	
             	arrObj.put(obj);
             }
@@ -18847,12 +18849,12 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 				        	response.put(obj);
 				        }
 				        rsTax.close();
-				        sql="SELECT (temp1.homedel/temp.total)*100,(temp2.dinein/temp.total)*100,(temp3.takeaway/temp.total)*100 FROM (SELECT SUM(a.dblGrandTotal) AS total "
+				        sql="SELECT IFNULL((temp1.homedel/temp.total)*100,0),IFNULL((temp2.dinein/temp.total)*100,0),IFNULL((temp3.takeaway/temp.total)*100,0) FROM (SELECT SUM(a.dblGrandTotal) AS total "
 				        		+ "	FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery' "
-				        		+ "OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,(SELECT SUM(a.dblGrandTotal) AS homedel "
+				        		+ "OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,(SELECT IFNULL(SUM(a.dblGrandTotal),0) AS homedel "
 				        		+ "FROM tblqbillhd a, tblqbillsettlementdtl b	WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1, "
 				        		+ "(SELECT SUM(a.dblGrandTotal) AS dinein FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='DineIn') AND a.strClientCode='"+clientCode+"') temp2, "
-				        		+ " (SELECT SUM(a.dblGrandTotal) AS takeaway FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3 ";
+				        		+ " (SELECT IFNULL(SUM(a.dblGrandTotal),0) AS takeaway FROM tblqbillhd a, tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+date+"' AND (a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp3 ";
 				        ResultSet rsTotal=st.executeQuery(sql);
 				        while(rsTotal.next())
 				        {
@@ -18864,7 +18866,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 				        }
 				        rsTotal.close();
 				        
-				        sql=" SELECT (temp1.food/temp.total)*100,(temp2.beverages/temp.total)*100,(temp3.alcohol/temp.total)*100 "
+				        sql=" SELECT IFNULL((temp1.food/temp.total)*100,0),IFNULL((temp2.beverages/temp.total)*100,0),IFNULL((temp3.alcohol/temp.total)*100,0) "
 				        	+ "FROM(SELECT SUM(a.dblGrandTotal) AS total FROM tblqbillhd a, tblqbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
 				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+date+"' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp, "
 				        	+ "(SELECT SUM(a.dblGrandTotal) AS food FROM tblqbillhd a, tblqbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
@@ -18948,6 +18950,8 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	        	responseComp.put(objComp);
 	        }
 	        rsComp.close();
+	        st.close();
+	        con.close();
 	        resp.put("Comp", responseComp);
         }
         catch(Exception e)
@@ -18955,6 +18959,6 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         	e.printStackTrace();
         }
         return resp;
-	}
+	}	
 		
 }
