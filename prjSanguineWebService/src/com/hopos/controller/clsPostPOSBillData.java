@@ -1116,6 +1116,63 @@ public class clsPostPOSBillData
 					res = 1;
 				}
 			}
+			
+
+            // Code to insert tblqBillPromotionDtl Table
+		if(null != objSalesData.get("BillPromotionDtl"))
+		{
+	
+			JSONArray jsonArrBillPromotionDtl = objSalesData.getJSONArray("BillPromotionDtl");
+			flgData = false;
+			  int cnt = 0;
+				sbSql.setLength(0);
+			    sbSql.append("INSERT INTO tblqbillpromotiondtl "  + "(`strBillNo`, `strItemCode`, `strPromotionCode`, `dblQuantity`, `dblRate`, `strClientCode`,`strDataPostFlag`" + ",`strPromoType`,`dblAmount`,`dblDiscountPer`,`dblDiscountAmt`,dteBillDate) VALUES");
+	
+				JSONObject mJsonObject = new JSONObject();
+				for (int i = 0; i < jsonArrBillPromotionDtl.length(); i++)
+				{
+					mJsonObject = (JSONObject) jsonArrBillPromotionDtl.get(i);
+					String billNo = mJsonObject.get("BillNo").toString().trim();
+					String clientCode = mJsonObject.get("ClientCode").toString().trim();
+					String itemCode = mJsonObject.get("ItemCode").toString().trim();
+					String promotionCode = mJsonObject.get("PromotionCode").toString().trim();
+	
+					sbSqlDelete.setLength(0);
+					sbSqlDelete.append("delete from tblqbillpromotiondtl " + " where strBillNo='" + billNo + "' and strItemCode='" + itemCode + "' and strPromotionCode='" + promotionCode + "' " + " and strClientCode='" + clientCode + "'");
+					st.executeUpdate(sbSqlDelete.toString());
+	
+					double quantity = Double.parseDouble(mJsonObject.get("Quantity").toString());
+					double rate = Double.parseDouble(mJsonObject.get("Rate").toString());
+					String promotionType = mJsonObject.get("PromoType").toString();
+					double amount = Double.parseDouble(mJsonObject.get("Amount").toString());
+					double discPer = Double.parseDouble(mJsonObject.get("DiscPer").toString());
+					double discAmt = Double.parseDouble(mJsonObject.get("DiscAmount").toString());
+					String dteBillDate = mJsonObject.get("dteBillDate").toString();
+	
+					if (cnt == 0)
+					{
+						sbSql.append("('" + billNo + "','" + itemCode + "','" + promotionCode + "','" + quantity + "','" + rate + "'" + ",'" + clientCode + "','N','" + promotionType + "','" + amount + "','" + discPer + "','" + discAmt + "','" + dteBillDate + "')");
+					}
+					else
+					{
+						sbSql.append(",('" + billNo + "','" + itemCode + "','" + promotionCode + "','" + quantity + "','" + rate + "'" + ",'" + clientCode + "','N','" + promotionType + "','" + amount + "','" + discPer + "','" + discAmt + "','" + dteBillDate + "')");
+					}
+					cnt++;
+					flgData = true;
+				}
+				if (flgData)
+				{
+					res = st.executeUpdate(sbSql.toString());
+					tableUpdated += ",BillPromoDtl";
+				}
+				else
+				{
+					res = 1;
+				}
+				
+			
+		}
+			
 
 		}
 		catch (Exception e)
