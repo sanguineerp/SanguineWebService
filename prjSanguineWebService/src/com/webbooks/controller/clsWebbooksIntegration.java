@@ -272,7 +272,10 @@ public class clsWebbooksIntegration
 	    
 	    clientCode = objBillData.getString("ClientCode");
 	    POSCode = objBillData.getString("POSCode");
-//	    POSName = objBillData.getString("POSName");
+	    if(objBillData.has("POSName")){
+	    	POSName = objBillData.getString("POSName");	
+	    }
+	    
 	    billDate = objBillData.getString("POSDate");
 	    userCode = objBillData.getString("User");
 	    
@@ -395,7 +398,7 @@ public class clsWebbooksIntegration
 	    	daydateonly = "0"+onlyDate.split("-")[2];
 	    }
 	   
-	    String narration = "REVENUE POSTED For " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0] +" "+POSName;
+	    String narration = POSName+" Sales Data for " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0];
 	     sql = "";
 	    
 	    String sql_insertJVHd = " insert into tblJVHd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";

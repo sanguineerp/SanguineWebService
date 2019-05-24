@@ -336,7 +336,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
            }
            else{
         	 
-        	   rsPrinter = st.executeQuery("select a.strPrinterPort,a.strSecondaryPrinterPort,a.strPrintOnBothPrinters from tblcostcentermaster  a where a.strCostCenterCode='" + CostCenterCode + "' ");
+        	   /*rsPrinter = st.executeQuery("select a.strPrinterPort,a.strSecondaryPrinterPort,a.strPrintOnBothPrinters from tblcostcentermaster  a where a.strCostCenterCode='" + CostCenterCode + "' ");
                
                if (rsPrinter.next())
                {
@@ -344,7 +344,7 @@ public class clsKOTJasperFileGenerationForMakeKOT {
             	   secondaryPrinterName = rsPrinter.getString(2);
                     printOnBothPrinters = rsPrinter.getString(3);
                }
-               rsPrinter.close();   
+               rsPrinter.close();   */
            }
             
            
