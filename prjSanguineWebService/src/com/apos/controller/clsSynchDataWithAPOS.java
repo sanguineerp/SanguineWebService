@@ -18762,7 +18762,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 			        	response.put(obj);
 			        }
 			        rsTax.close();
-			        sql="SELECT (temp1.homedel/temp.total)*100,(temp2.dinein/temp.total)*100,(temp3.takeaway/temp.total)*100 FROM (SELECT SUM(a.dblGrandTotal) AS total "
+			        sql="SELECT IFNULL((temp1.homedel/temp.total)*100,0),IFNULL((temp2.dinein/temp.total)*100,0),IFNULL((temp3.takeaway/temp.total)*100,0) FROM (SELECT SUM(a.dblGrandTotal) AS total "
 			        		+ "	FROM tblbillhd a, tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery' "
 			        		+ "OR a.strOperationType='DineIn' OR a.strOperationType='TakeAway') AND a.strClientCode='"+clientCode+"') temp,(SELECT SUM(a.dblGrandTotal) AS homedel "
 			        		+ "FROM tblbillhd a, tblbillsettlementdtl b	WHERE a.strBillNo=b.strBillNo AND a.dtBillDate='"+POSDate+"' AND (a.strOperationType='HomeDelivery') AND a.strClientCode='"+clientCode+"') temp1, "
@@ -18779,7 +18779,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 			        }
 			        rsTotal.close();
 			        
-			        sql=" SELECT (temp1.food/temp.total)*100,(temp2.beverages/temp.total)*100,(temp3.alcohol/temp.total)*100 "
+			        sql=" SELECT IFNULL((temp1.food/temp.total)*100,0),IFNULL((temp2.beverages/temp.total)*100,0),IFNULL((temp3.alcohol/temp.total)*100,0) "
 				        	+ "FROM(SELECT SUM(a.dblGrandTotal) AS total FROM tblbillhd a, tblbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
 				        	+ "WHERE a.strBillNo=b.strBillNo AND b.strItemCode=c.strItemCode AND c.strSubGroupCode=d.strSubGroupCode AND d.strGroupCode=e.strGroupCode AND a.dtBillDate='"+POSDate+"' AND a.dblGrandTotal>0.0 AND a.strClientCode='"+clientCode+"') temp, "
 				        	+ "(SELECT SUM(a.dblGrandTotal) AS food FROM tblbillhd a, tblbilldtl b, tblitemmaster c, tblsubgrouphd d, tblgrouphd e "
