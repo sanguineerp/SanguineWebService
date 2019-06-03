@@ -196,6 +196,65 @@ public class clsSynchWithPMS {
 		}
 	}
 	
+	@SuppressWarnings("rawtypes")
+	@POST
+	@Path("/funPostPOSDayEnd")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response funPostPOSDayEnd(JSONObject objDayEnd)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection pmsCon=null;
+        Statement st=null;
+        StringBuilder sbSql=new StringBuilder();
+        String response="false";
+        try
+		{
+			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
+            st = pmsCon.createStatement();
+			JSONArray mJsonArray = (JSONArray) objDayEnd.get("PostDayEnd");
+			for (int i = 0; i < mJsonArray.length(); i++) 
+			{
+				JSONObject mJsonObject =(JSONObject) mJsonArray.get(i);
+		        String posCode=mJsonObject.get("POSCode").toString().trim();
+				String posName=mJsonObject.get("POSName").toString().trim();
+				String dayEndDate=mJsonObject.get("DayEndDate").toString().trim();
+				String userCreated=mJsonObject.get("UserCreated").toString().trim();
+				String userEdited=mJsonObject.get("UserEdited").toString().trim();
+				String dateCreated=mJsonObject.get("DateCreated").toString().trim();
+				String dateEdited=mJsonObject.get("DateEdited").toString().trim();
+				String status=mJsonObject.get("PostStatus").toString().trim();
+				String clientCode=mJsonObject.get("ClientCode").toString().trim();
+				dayEndDate = dayEndDate.substring(0,9);
+				sbSql.setLength(0);
+				sbSql.append(" DELETE FROM tblposdayend WHERE strPOSCode='"+posCode+"' AND DATE(dteDayEndDate)='"+dayEndDate+"'; ");
+				st.execute(sbSql.toString());
+				
+				sbSql.setLength(0);
+				sbSql.append(" INSERT INTO tblposdayend (strPOSCode,strPOSName,dteDayEndDate,strUserCreated,strUserEdited,dteDateCreated,dteDateEdited,strStatus,strClientCode)"
+						+ " VALUES('"+posCode+"','"+posName+"','"+dayEndDate+"','"+userCreated+"','"+userEdited+"','"+dateCreated+"',"
+						+ " '"+dateEdited+"','"+status+"','"+clientCode+"') ");
+				st.execute(sbSql.toString());
+			}
+			response = "true";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				st.close();
+				pmsCon.close();
+				
+			}catch(Exception ex)
+			{
+				ex.printStackTrace();
+			}
+			
+			return Response.status(201).entity(response).build();
+		}
+	}
+	
 	
 	
 	

@@ -334,18 +334,6 @@ public class clsKOTJasperFileGenerationForMakeKOT {
        		    }
        		    rsPrinter.close();   
            }
-           else{
-        	 
-        	   /*rsPrinter = st.executeQuery("select a.strPrinterPort,a.strSecondaryPrinterPort,a.strPrintOnBothPrinters from tblcostcentermaster  a where a.strCostCenterCode='" + CostCenterCode + "' ");
-               
-               if (rsPrinter.next())
-               {
-            	   primaryPrinterName = rsPrinter.getString(1);
-            	   secondaryPrinterName = rsPrinter.getString(2);
-                    printOnBothPrinters = rsPrinter.getString(3);
-               }
-               rsPrinter.close();   */
-           }
             
            
             hm.put("listOfItemDtl", listOfKOTDetail);
