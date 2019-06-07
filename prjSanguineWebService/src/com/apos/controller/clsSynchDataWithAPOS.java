@@ -18989,5 +18989,44 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         }
         return resp;
 	}	
+	
+	@GET 
+	@Path("/funGetPromotions")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetPromotions(@QueryParam("clientCode") String clientCode,@QueryParam("Date") String date)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONObject resp = new JSONObject();
+        JSONArray response = new JSONArray();
+        try 
+        {
+        	con=objDb.funOpenAPOSCon("mysql","master");
+	        st = con.createStatement();
+	        String sql="";
+	        String remark="";
+	        sql="SELECT a.strPromoCode AS promocode,a.strPromoName,a.dblBuyQty,b.dblGetQty FROM tblpromotionmaster a, "
+	        	+ "tblpromotiondtl b WHERE a.strPromoCode=b.strPromoCode AND DATE(a.dteDateEdited)='"+date+"' AND a.strClientCode='"+clientCode+"' ";
+	        ResultSet rsPromotions=st.executeQuery(sql);
+	        while(rsPromotions.next())
+	        {
+	        	JSONObject obj =  new JSONObject();
+	        	obj.put("PromoName",rsPromotions.getString(2));
+	        	obj.put("BuyQty",rsPromotions.getString(3));
+	        	obj.put("GetQty",rsPromotions.getString(4));
+	        	response.put(obj);
+	        }
+	        rsPromotions.close();
+	        st.close();
+	        con.close();
+	        resp.put("Promotions", response);
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        return resp;
+	}
 		
 }
