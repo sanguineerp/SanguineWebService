@@ -283,8 +283,4 @@ public class clsSynchWithPMS {
 			return Response.status(201).entity(response).build();
 		}
 	}
-	
-	
-	
-	
 }
