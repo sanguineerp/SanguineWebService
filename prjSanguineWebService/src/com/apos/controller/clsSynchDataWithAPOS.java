@@ -18172,9 +18172,12 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	
 	private void funFillOpenOrders(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
 	{
-		String sql="SELECT SUM(a.dblAmount) FROM tblitemrtemp a, tbltablemaster b WHERE a.strTableNo=b.strTableNo "
-				+ "AND b.strClientCode='"+clientCode+"'; ";
-	    ResultSet rsOpenOrder = st.executeQuery(sql);
+		/*String sql="SELECT SUM(a.dblAmount) FROM tblitemrtemp a, tbltablemaster b WHERE a.strTableNo=b.strTableNo "
+				+ "AND b.strClientCode='"+clientCode+"'; ";*/
+		String sql=" SELECT amount1+amount2 FROM (SELECT IFNULL(SUM(a.dblAmount),0) amount1 FROM tblitemrtemp a, tbltablemaster b"
+				+ " WHERE a.strTableNo=b.strTableNo AND DATE(a.dteDateCreated)='"+POSDate+"' AND b.strClientCode='"+clientCode+"') a,(SELECT IFNULL(SUM(a.dblGrandTotal),0) amount2 FROM tblbillhd a"
+				+ " WHERE a.strBillNo NOT IN(SELECT k.strBillNo FROM tblbillsettlementdtl k) AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"') b ";
+		ResultSet rsOpenOrder = st.executeQuery(sql);
 	    JSONObject objOpen=new JSONObject();
 	    objOpen.put("TableHeader","Open Order Values");
 	    objOpen.put("TableSubHeader","Number of Open Order Values");
@@ -18189,13 +18192,15 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	
 	private void funFillSalesAchieved(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
 	{
-		String sql="SELECT IFNULL(SUM(b.dblamount),0) FROM tblbillhd a,tblbilldtl b,tblitemmaster c WHERE a.strBillNo=b.strBillNo "
-				+ "AND b.strItemcode=c.strItemCode AND a.dtBillDate='"+POSDate+"' AND a.strClientCode='"+clientCode+"'; ";
+		/*String sql="SELECT IFNULL(SUM(b.dblamount),0) FROM tblbillhd a,tblbilldtl b,tblitemmaster c WHERE a.strBillNo=b.strBillNo "
+				+ "AND b.strItemcode=c.strItemCode AND a.dtBillDate='"+POSDate+"' AND a.strClientCode='"+clientCode+"'; ";*/
+		String sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
+				+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
         ResultSet rsSales = st.executeQuery(sql);
         JSONObject objSales=new JSONObject();
         objSales.put("TableHeader","Sales Achieved");
         objSales.put("TableSubHeader","Total Amount");
-        while (rsSales.next()) 
+        if (rsSales.next()) 
         {
         	objSales.put("SalesAchieved",formatter.format(rsSales.getDouble(1)));
         }

@@ -138,9 +138,38 @@ public class clsSynchWithPMS {
        
 		try
 		{
+		
 			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
             st = pmsCon.createStatement();
-			JSONArray mJsonArray = (JSONArray) objBillData.get("FolioDtl");
+            JSONArray mJsonArray = (JSONArray) objBillData.get("FolioTaxDtl");
+            for (int i = 0; i < mJsonArray.length(); i++) {
+            	JSONObject mJsonObject =(JSONObject) mJsonArray.get(i);
+	            
+				String billNo=mJsonObject.get("BillNo").toString().trim();
+				String folioNo=mJsonObject.get("FolioNo").toString().trim();
+				String POSCode=mJsonObject.get("PosCode").toString().trim();
+				String posName=mJsonObject.get("PosName").toString().trim();
+				String billDate=mJsonObject.get("Billdate").toString().trim();
+				double taxableAmt=Double.parseDouble(mJsonObject.get("TaxableAmt").toString().trim());
+				double taxAmt=Double.parseDouble(mJsonObject.get("TaxAmt").toString().trim());
+				String taxCode=mJsonObject.get("TaxCode").toString().trim();
+				String taxDesc=mJsonObject.get("TaxDesc").toString().trim();
+				String roomNo=mJsonObject.get("RoomNo").toString().trim();
+				String clientCode=mJsonObject.get("ClientCode").toString().trim();
+				String userName=mJsonObject.get("UserName").toString().trim();
+				
+				sbSql.setLength(0);
+				/*sbSql.append("insert into tblposfoliotax(strFolioNo,strBillNo,dteDocDate,strRoomNo,strPosCode,strPosName,strTaxCode,strTaxDesc,dblTaxableAmount,dblTaxAmount,strUserCreated,strClientCode)"
+						+ " values ('"+folioNo+"','"+billNo+"','"+billDate+"','"+roomNo+"','"+POSCode+"','"+posName+"','"+taxCode+"','"+taxDesc+"',"
+								+ ""+taxableAmt+","+taxAmt+",'"+userName+"','"+clientCode+"');");
+				st.execute(sbSql.toString());*/
+				sbSql.append("insert into tblfoliotaxdtl(strFolioNo,strDocNo,strTaxCode,strTaxDesc,dblTaxableAmt,dblTaxAmt,strClientCode) "
+						+ " values ('"+folioNo+"','"+billNo+"','"+taxCode+"','"+taxDesc+"',"+taxableAmt+","+taxAmt+",'"+clientCode+"')");
+				st.execute(sbSql.toString());
+				
+            }
+            
+			mJsonArray = (JSONArray) objBillData.get("FolioDtl");
 			
 			for (int i = 0; i < mJsonArray.length(); i++) 
 			{
