@@ -517,10 +517,22 @@ public class clsPostPOSBillData
 					response = "false";
 				}
 			}
-			if (key.equalsIgnoreCase("tbldayendprocess") && mJsonArray != null)
+			else if (key.equalsIgnoreCase("tbldayendprocess") && mJsonArray != null)
 			{
 				System.out.println(key);
 				if (funInsertDayEndDtlData(mJsonArray) > 0)
+				{
+					response = "true";
+				}
+				else
+				{
+					response = "false";
+				}
+			}
+			else if (key.equalsIgnoreCase("CashDenominationInfo") && mJsonArray != null)
+			{
+				System.out.println(key);
+				if (funInsertCashDenominationInfo(mJsonArray) > 0)
 				{
 					response = "true";
 				}
@@ -9501,6 +9513,117 @@ public class clsPostPOSBillData
 			return res;
 		}
 	}
+
+@SuppressWarnings("finally")
+	private int funInsertCashDenominationInfo(JSONArray mJsonArray)
+	{
+		int res = 0;
+		// clsDatabaseConnection objDb = new clsDatabaseConnection();
+		boolean flgData = false;
+		Connection cmsCon = null;
+		Statement st = null;
+		Statement st1 = null;
+		String insert_qry = "";
+		String sql = "";
+		Map<String, String> hmPOSMaster = new HashMap<String, String>();
+
+		try
+		{
+			// cmsCon = objDb.funOpenPOSCon("mysql", "transaction");
+			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
+			st = cmsCon.createStatement();
+			st1 = cmsCon.createStatement();
+
+			sql = "select strPOSCode,strPropertyPOSCode from tblposmaster";
+			ResultSet rsPOS = st1.executeQuery(sql);
+			while (rsPOS.next())
+			{
+				hmPOSMaster.put(rsPOS.getString(2), rsPOS.getString(1));
+			}
+			rsPOS.close();
+			sql = "";
+
+			insert_qry = "INSERT INTO tblcashdenominations (`strCashDenomCode`,`strPOSCode`, `strCashDenominations`, `intCount`" + ",`dblAmount`, `strClientCode`,`intShiftNo`,`dtePOSDate`, `strDataPostFlag`, `strUserCreated`" + ",`strUserUpdated`, `dteDateCreated`,`dteDateUpdated` ) " + "VALUES ";
+			JSONObject mJsonObject = new JSONObject();
+            String deleteSql="";
+			for (int i = 0; i < mJsonArray.length(); i++)
+			{
+				mJsonObject = (JSONObject) mJsonArray.get(i);
+
+				String clientCode = mJsonObject.get("ClientCode").toString().trim();
+				String POSCode = mJsonObject.get("POSCode").toString().trim();
+
+				String propertyPOSCode = clientCode + "." + POSCode;
+				POSCode = hmPOSMaster.get(propertyPOSCode);
+
+				
+				String CashDenomCode = mJsonObject.get("CashDenomCode").toString();
+				String strPOSCode = mJsonObject.get("POSCode").toString();
+				String CashDenominations = mJsonObject.get("CashDenominations").toString();
+				double amount = Double.parseDouble(mJsonObject.get("Amount").toString());
+				int count = Integer.parseInt(mJsonObject.get("Count").toString());
+				String ClientCode = mJsonObject.get("ClientCode").toString();
+				int ShiftNo = Integer.parseInt(mJsonObject.get("ShiftNo").toString());
+				String posdate = mJsonObject.get("POSDate").toString();
+				String DataPostFlag  = mJsonObject.get("DataPostFlag").toString();
+				String userCreated = mJsonObject.get("UserCreated").toString();
+				String userUpdated = mJsonObject.get("UserUpdated").toString();
+				String dateCreated = mJsonObject.get("DateCreated").toString();
+				String dateUpdated = mJsonObject.get("DateUpdated").toString();
+				
+				
+
+				deleteSql = "delete from tblcashdenominations " + "where strCashDenomCode='" + CashDenomCode + "' and strClientCode='" + clientCode + "' and strPOSCode='" + POSCode + "' and strCashDenominations='"+CashDenominations+"' ";
+				st.executeUpdate(deleteSql);
+
+				sql += ",('" + CashDenomCode + "','" + strPOSCode + "','" + CashDenominations + "'," + count + "," + amount + ",'" + ClientCode + "'," + ShiftNo + ",'" + posdate + "','" + DataPostFlag + "'," + "'" + userCreated + "','" + userUpdated + "','" + dateCreated + "','" + dateUpdated + "')";
+				flgData = true;
+			}
+
+			if (flgData)
+			{
+				sql = sql.substring(1, sql.length());
+				insert_qry += " " + sql;
+				res = st.executeUpdate(insert_qry);
+			}
+			else
+			{
+				res = 1;
+			}
+
+		}
+		catch (Exception e)
+		{
+			clsUtilityFunctions objUtility = new clsUtilityFunctions();
+			objUtility.funWriteErrorLog(e);
+			res = 0;
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != st1)
+				{
+					st1.close();
+				}
+				// if (null != cmsCon)
+				// {
+				// cmsCon.close();
+				// }
+			}
+			catch (SQLException e)
+			{
+				e.printStackTrace();
+			}
+			return res;
+		}
+	}
+
 
 	@SuppressWarnings("finally")
 	private int funInsertCashManagementData(JSONArray mJsonArray)
