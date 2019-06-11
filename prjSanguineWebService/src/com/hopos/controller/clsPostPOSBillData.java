@@ -9603,7 +9603,7 @@ public class clsPostPOSBillData
 		{
 			try
 			{
-				if (null != st)
+				if (null != st) 
 				{
 					st.close();
 				}
