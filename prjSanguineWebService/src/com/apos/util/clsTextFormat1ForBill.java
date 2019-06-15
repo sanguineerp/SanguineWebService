@@ -18,7 +18,7 @@ public class clsTextFormat1ForBill {
 	@Autowired
 	clsTextFileGenerator objTextFileGenerator;
 	
-	   public void funGenerateTextFileForBill(String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName)
+	   public void funGenerateTextFileForBill(String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName,String multiBillPrint)
 	    {
 		clsDatabaseConnection objDb = new clsDatabaseConnection();
 		Connection cmsCon = null;
@@ -58,7 +58,6 @@ public class clsTextFormat1ForBill {
 		    String billFooter = "";
 		    String printVatNo = "";
 		    String printServiceTaxNo = "";
-		    String multiBillPrint = "N";
 		    String customerCode = "";
 		    String customerName = "";
 		    String mobileNo = "";

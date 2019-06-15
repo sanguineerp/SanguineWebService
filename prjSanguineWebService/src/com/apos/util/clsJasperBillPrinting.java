@@ -77,7 +77,7 @@ public class clsJasperBillPrinting {
      
      String Linefor5 = "  --------------------------------------";
 	
-	 public void funCredateJasper(ResponseBuilder resp,String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName){
+	 public void funCredateJasper(ResponseBuilder resp,String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName,String multiBillPrint){
 		 //String billNo, String reprint, String formName, String transType, String billDate, String posCode, String viewORprint
 		 strPOSCode=posCode;
 		 Date dteBillDate;
@@ -95,7 +95,7 @@ public class clsJasperBillPrinting {
 			    String addressLine1 = "", addressLine2 = "",addressLine3 = "";
 			    String city = "",telephone = "",email = "";
 			    String serviceTaxNo = "", printVatNo = "", printServiceTaxNo = "";
-			    String multiBillPrint = "N", posName = "";
+			    String posName = "";
 			    int paxNo = 0;
 			    String memberCode = "", memberName = "", customerCode = "", customerName = "";
 			    String mobileNo = "", address = "", printInclusiveOfAllTaxesOnBill="";

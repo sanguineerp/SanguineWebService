@@ -89,14 +89,16 @@ public class clsTextFileGenerator
 		Statement st = null;
 		String sql = null;
 		String billFormat = "";
+		String multiBillPrint="";
 		ResultSet rs = null;
 		cmsCon = objDb.funOpenAPOSCon("mysql", "Master");
 		st = cmsCon.createStatement();
-		sql = "select a.strBillFormatType from tblsetup a;";
+		sql = "select a.strBillFormatType,a.strMultipleBillPrinting from tblsetup a;";
 		rs = st.executeQuery(sql);
 		if (rs.next())
 		{
 		    billFormat = rs.getString(1);
+		    multiBillPrint = rs.getString(2);
 		}
 		rs.close();
 		
@@ -104,29 +106,29 @@ public class clsTextFileGenerator
 		
 		if (billFormat.equalsIgnoreCase("Text 1"))
 		{
-			objTextFormat1ForBill.funGenerateTextFileForBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			objTextFormat1ForBill.funGenerateTextFileForBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 5"))
 		{
-			objTextFormat5ForBill.funGenerateTextFileForBillFormat5(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			objTextFormat5ForBill.funGenerateTextFileForBillFormat5(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 11"))
 		{
-			objTextFormat11ForBill.funGenerateTextFileForBillFormat11(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			objTextFormat11ForBill.funGenerateTextFileForBillFormat11(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 12"))
 		{
-			objTextFormat12ForBill.funGenerateTextFileForBillFormat12(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			objTextFormat12ForBill.funGenerateTextFileForBillFormat12(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
 		else if(billFormat.equalsIgnoreCase("Jasper 5")){
-			obJasperPrint.funCredateJasper(resp,billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			obJasperPrint.funCredateJasper(resp,billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
 		else if (billFormat.equalsIgnoreCase("Text 21"))
 		{
-			objTextFormat21ForBill.funGenerateTextFileForBillFormat21(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			objTextFormat21ForBill.funGenerateTextFileForBillFormat21(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}else if(billFormat.equalsIgnoreCase("Text Foreign"))
 		{
-			objTextFormatForeignForBill.funGenerateTextFileForForeignBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
+			objTextFormatForeignForBill.funGenerateTextFileForForeignBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
     }
     

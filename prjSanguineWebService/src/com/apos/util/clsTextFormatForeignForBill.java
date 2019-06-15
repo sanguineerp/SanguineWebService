@@ -22,7 +22,7 @@ public class clsTextFormatForeignForBill {
 	clsTextFileGenerator objTextFileGenerator;
 	
 	 
-   public void funGenerateTextFileForForeignBill(String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName)
+   public void funGenerateTextFileForForeignBill(String billNo, String posCode, String clientCode,String reprint,String strServerBillPrinterName,String multiBillPrint)
     {
 	clsDatabaseConnection objDb = new clsDatabaseConnection();
 	Connection cmsCon = null;
@@ -65,7 +65,6 @@ public class clsTextFormatForeignForBill {
 	    String billFooter = "";
 	    String printVatNo = "";
 	    String printServiceTaxNo = "";
-	    String multiBillPrint = "N";
 	    String posName = "";
 	    int paxNo = 0;
 	    String memberCode = "";
