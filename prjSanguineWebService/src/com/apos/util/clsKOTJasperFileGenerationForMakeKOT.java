@@ -244,7 +244,8 @@ public class clsKOTJasperFileGenerationForMakeKOT {
             //String hostName = ipAddress.getHostName();
             if(strPrintDeviceAndUserDtlOnKOTYN.equalsIgnoreCase("Y")){
             	hm.put("KOT From", deviceName);
-                hm.put("kotByUser", userName);	
+                hm.put("kotByUser", userName);
+                hm.put("macAddress", macAddress);
             }
             
 
