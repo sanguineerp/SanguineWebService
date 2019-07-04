@@ -54,6 +54,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -62,6 +63,7 @@ import com.POSLicence.controller.clsEncryptDecryptClientCode;
 import com.apos.bean.clsAPCReport;
 import com.apos.bean.clsBillSeriesBillDtl;
 import com.apos.bean.clsBillSettlementDtl;
+import com.apos.bean.clsMakeKotItemDtlBean;
 import com.apos.bean.clsSalesFlashColumns;
 import com.apos.listener.intfSynchDataWithAPOS;
 import com.apos.util.clsAPOSKOT;
@@ -752,14 +754,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             
             if(flgCMSIntegration)
             {
-            	sql = "select b.strTableNo,a.strTableName "
+            	sql = "select b.strTableNo,a.strTableName,b.strKOTNo "
             		+ "from tbltablemaster a,tblitemrtemp b "
                     + "where a.strTableNo=b.strTableNo and b.strPOSCode='"+POSCode+"' "
                     + "group by b.strTableNo order by a.strTableNo;";
             }
             else
             {
-            	sql = "select b.strTableNo,a.strTableName "
+            	sql = "select b.strTableNo,a.strTableName,b.strKOTNo "
             		+ "from tbltablemaster a,tblitemrtemp b "
                     + "where a.strTableNo=b.strTableNo and b.strPOSCode='"+POSCode+"' "
                     + "group by b.strTableNo order by a.strTableNo;";
@@ -773,6 +775,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	JSONObject obj=new JSONObject();
             	obj.put("TableName",rsTableInfo.getString(2));
             	obj.put("TableNo",rsTableInfo.getString(1));
+            	obj.put("KOTNo",rsTableInfo.getString(3));
             	arrObj.put(obj);
             }
             rsTableInfo.close();
@@ -3040,7 +3043,9 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	    			+ "or a.strModuleName='POS Wise Sales' or a.strModuleName='Customer Order' "
 	    			//+ "or a.strModuleName='Non Available Items' or a.strModuleName='Mini Make KOT' "
 	    			+ "or a.strModuleName='Day End' or a.strModuleName='KDSForKOTBookAndProcess' "
-	    			+ "or a.strModuleName='Kitchen Process System' or a.strModuleName='Change Settlement' or a.strModuleName='Customer Master') ";																		  
+	    			+ "or a.strModuleName='Kitchen Process System' or a.strModuleName='Change Settlement' "
+	    			+ "or a.strModuleName='Customer Master' or a.strModuleName='Move KOT' or a.strModuleName='Move Table' "
+	    			+ "or a.strModuleName='Move Items To Table') ";																		  
 	    	}
 	    }
 	    else
@@ -3104,7 +3109,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ ",'Make Bill','Sales Report','Reprint','SettleBill','TableStatusReport'"
 				+ ",'NCKOT','Take Away','Table Reservation','POS Wise Sales','Customer Order'"
 				//+ ",'Non Available Items','Mini Make KOT','Day End','KDSForKOTBookAndProcess','Kitchen Process System') "
-				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement','Customer Master') "
+				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement','Customer Master','Move KOT','Move Table','Move Items To Table') "
 				+ " order by b.intSequence";
 	    		
 	    	}
@@ -19033,6 +19038,489 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         }
         return resp;
 	}
+	
+	@GET 
+	@Path("/funGetNonAvailableList")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetNonAvailable(@QueryParam("POSCode") String posCode,@QueryParam("POSDate") String posDate,@QueryParam("clientCode") String clientCode)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONObject resp = new JSONObject();
+        JSONArray response = new JSONArray();
+        try 
+        {
+        	con=objDb.funOpenAPOSCon("mysql","master");
+	        st = con.createStatement();
+	        String sql="";
+	        sql="SELECT a.strItemCode,a.strItemName,a.dteDate FROM tblnonavailableitems a WHERE DATE(a.dteDate)='"+posDate+"' AND a.strClientCode='"+clientCode+"' AND a.strPOSCode='"+posCode+"' ";
+	        ResultSet rsNonAvailable=st.executeQuery(sql);
+	        while(rsNonAvailable.next())
+	        {
+	        	JSONObject obj =  new JSONObject();
+	        	obj.put("ItemCode",rsNonAvailable.getString(1));
+	        	obj.put("ItemName",rsNonAvailable.getString(2));
+	        	obj.put("ItemDate",rsNonAvailable.getString(3));
+	        	response.put(obj);
+	        }
+	        rsNonAvailable.close();
+	        st.close();
+	        con.close();
+	        resp.put("NonAvailable", response);
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        return resp;
+	}
+	
+	@POST 
+	@Path("/funMoveKOT")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funMoveKOT(JSONObject object)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONObject resp = new JSONObject();
+        /*JSONArray response = new JSONArray();*/
+        clsUtilityFunctions utilityfunctions = new clsUtilityFunctions();
+        try 
+        {
+        	con=objDb.funOpenAPOSCon("mysql","master");
+	        st = con.createStatement();
+	        
+	        String fromTableNo= object.get("fromTableNo").toString();
+	        String fromKOTNo= object.get("fromKOTNo").toString();
+	        String fromTableName= object.get("fromTableName").toString();
+	        String toTableNo= object.get("toTableNo").toString();
+	        String toTableName= object.get("toTableName").toString();
+	        String posCode = object.get("POSCode").toString();
+	        String clientCode = object.get("ClientCode").toString();
+	        String userName = object.get("User").toString();
+	        String reasonCode=object.get("Reason").toString();
+	        int pax=0;
+	        String sql="";
+	        String updateSql="";
+	        sql="select strStatus,intPaxNo,strTableName from tbltablemaster where strTableNo='"+fromTableNo+"' ";
+	        ResultSet rMoveKOT=st.executeQuery(sql);
+	        if(rMoveKOT.next())
+	        {
+	        	String status = rMoveKOT.getString(1);
+	    		//String fromTableName = rMoveKOT.getString(3);
+	    		pax = rMoveKOT.getInt(2);
+	    		updateSql = "update tbltablemaster set strStatus='"+status+"',intPaxNo="+pax+" where strTableNo='" + toTableNo + "' ";
+	    		st.executeUpdate(updateSql);
+	        }
+	        rMoveKOT.close();
+	        
+	        String remarks = "Shifted from " + fromTableName + " To " + toTableName + ".";
+	        
+	        sql = "select a.strItemCode,a.strItemName,sum(a.dblItemQuantity),sum(a.dblAmount),dteDateCreated,a.strWaiterNo "
+	    		    + "from tblitemrtemp a where strKOTNo='" + fromKOTNo + "' group by a.strItemCode ";
+	    	ResultSet rsFromTableItems = st.executeQuery(sql);
+	    	String itemCode = "", itemName = "", waiterNo = "",createdDate="";
+	    	String strType = "MVKot", voidedDate = utilityfunctions.funGetCurrentDateTime("yyyy-MM-dd");
+	    	double quantity = 0.0, amount = 0.0;
+	    	String insertQuery = "insert into tblvoidkot(strTableNo,strPOSCode,strItemCode, "
+	    			+ " strItemName,dblItemQuantity,dblAmount,strWaiterNo,strKOTNo,intPaxNo,strType,strReasonCode, "
+	    			+ " strUserCreated,dteDateCreated,dteVoidedDate,strClientCode,strRemark,strVoidBillType ) "
+	    			+ " values ";
+	    	while(rsFromTableItems.next())
+	    	{
+	    		itemCode = rsFromTableItems.getString(1);
+	    		itemName = rsFromTableItems.getString(2);
+	    		quantity = rsFromTableItems.getDouble(3);
+	    		amount = rsFromTableItems.getDouble(4);
+	    		createdDate = rsFromTableItems.getString(5);
+	    		waiterNo = rsFromTableItems.getString(6);
+	    		//listOfItemsForFromTable.add(objKotItemDtl);
+	    			
+	    		insertQuery += "('" + toTableNo + "','" + posCode + "','" + itemCode + "','" + itemName + "',"
+	    			+ "'" + quantity + "','" + amount + "','" + waiterNo + "','" + fromKOTNo + "','" + pax + "','" + strType + "'"
+	    			+ ",'" + reasonCode + "','" + userName + "','" + createdDate + "','" + voidedDate + "' "
+	    			+ ",'" + clientCode + "','" + remarks + "','Move KOT'),";  
+	    	}
+	    	rsFromTableItems.close();
+	    	
+	    	st.executeUpdate(insertQuery.substring(0, insertQuery.length()-1));
+	    	
+	    	updateSql = "update tblitemrtemp set strTableNo='" + toTableNo + "' where strKOTNo='" + fromKOTNo + "' ";
+	    	st.executeUpdate(updateSql);
+	    	
+	    	updateSql = "update tblkottaxdtl set strTableNo='" + toTableNo + "' where strKOTNo='" + fromKOTNo + "' ";
+    	    st.executeUpdate(updateSql);
+
+    	    sql = "select strPOSCode from tbltablemaster where strTableNo='" + toTableNo + "'";
+    	    rMoveKOT = st.executeQuery(sql);
+    	    if (rMoveKOT.next())
+    	    {
+	    		String strPosCode = rMoveKOT.getString(1);
+	    		updateSql = "update tblitemrtemp set strPOSCode='" + strPosCode + "' where strKOTNo='" + fromKOTNo + "' ";
+	    		st.executeUpdate(updateSql);
+    	    }
+    	    rMoveKOT.close();
+
+    	    sql = "select strKOTNo,dteDateCreated from tblitemrtemp where strTableNo='" + fromTableNo + "' and strNCKotYN='N' ";
+    	    rMoveKOT = st.executeQuery(sql);
+
+    	    if (!rMoveKOT.next())
+    	    {
+	    		updateSql = "update tbltablemaster set strStatus='Normal',intPaxNo=0 where strTableNo='" + fromTableNo + "'";
+	    		st.executeUpdate(updateSql);
+    	    }
+    	    
+    	    funInsertIntoTblItemRTempBck(fromTableNo,st);
+    	    funInsertIntoTblItemRTempBck(toTableNo,st);
+	        resp.put("Success","Shifted from " + fromKOTNo + " To " + toTableName + ".");
+    	    st.close();
+	        con.close();
+	        
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        return resp;
+	}
+	
+	@POST 
+	@Path("/funMoveTable")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funMoveTable(JSONObject object)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONObject resp = new JSONObject();
+        clsUtilityFunctions utilityfunctions = new clsUtilityFunctions();
+        try 
+        {
+        	con=objDb.funOpenAPOSCon("mysql","master");
+	        st = con.createStatement();
+	        
+	        String fromTableNo= object.get("fromTableNo").toString();
+	        String fromTableName= object.get("fromTableName").toString();
+	        String toTableNo= object.get("toTableNo").toString();
+	        String toTableName= object.get("toTableName").toString();
+	        String posCode = object.get("POSCode").toString();
+	        String clientCode = object.get("ClientCode").toString();
+	        String userName = object.get("User").toString();
+	        int pax=0;
+	        String sql="";
+	        String updateSql="";
+	        sql = "select a.strItemCode,a.strItemName,sum(a.dblItemQuantity),sum(a.dblAmount) from tblitemrtemp a "
+	    			+ "where a.strTableNo='" + fromTableNo + "' group by a.strItemCode ";
+	    	ResultSet rsMoveTable = st.executeQuery(sql);
+	    	String itemCode="",itemName="";
+	    	double quantity=0.0,amount=0.0;
+    		while (rsMoveTable.next())
+    		{
+    			itemCode=rsMoveTable.getString(1);
+    		    itemName=rsMoveTable.getString(2);
+    		    quantity=rsMoveTable.getDouble(3);
+    		    amount=rsMoveTable.getDouble(4);
+    		    //listOfItemsForFromTable.add(objKotItemDtl);
+    		}
+    		rsMoveTable.close();
+
+	    	sql = "update tblitemrtemp set strTableNo='" + toTableNo + "' where strTableNo='" + fromTableNo + "' ";
+	    	st.executeUpdate(sql);
+
+    		sql = "update tblkottaxdtl set strTableNo='" + toTableNo + "' where strTableNo='" + fromTableNo + "' ";
+    		st.executeUpdate(sql);
+
+    		sql = "select strStatus,intPaxNo,strTableName from tbltablemaster where strTableNo='" + fromTableNo + "'";
+    		ResultSet rs = st.executeQuery(sql);
+    		if (rs.next())
+    		{
+    		    String status = rs.getString(1);
+    		    int paxNo = rs.getInt(2);
+    		    String tableName = rs.getString(3);
+
+    		    sql = "update tbltablemaster set strStatus='"+status+"',intPaxNo="+paxNo+" where strTableNo='"+toTableNo+"' ";
+    		    st.executeUpdate(sql);
+
+    		    sql = "update tbltablemaster set strStatus='Normal',intPaxNo=0 where strTableNo='" + fromTableNo + "'";
+    		    st.executeUpdate(sql);
+    		}
+    		rs.close();
+    		
+    		sql = "select strPOSCode from tbltablemaster where strTableNo='" + toTableNo + "' ";
+    		rs = st.executeQuery(sql);
+			if (rs.next())
+			{
+			    String strPosCode = rs.getString(1);
+			    sql = "update tblitemrtemp set strPOSCode='" + strPosCode + "' where strTableNo='" + toTableNo + "' ";
+			    st.executeUpdate(sql);
+			}
+			rs.close();
+	        
+			funInsertIntoTblItemRTempBck(fromTableNo,st);
+    	    funInsertIntoTblItemRTempBck(toTableNo,st);
+	        
+	        resp.put("Success","Shifted from " + fromTableName + " To " + toTableName + ".");
+    	    st.close();
+	        con.close();
+	        
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        return resp;
+	}
+	
+	@POST 
+	@Path("/funMoveItemsToTable")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funMoveItemsToTable(JSONObject object)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection con=null;
+        Statement st=null;
+        JSONObject resp = new JSONObject();
+        clsUtilityFunctions utilityfunctions = new clsUtilityFunctions();
+        List<clsMakeKotItemDtlBean> listOfItemsForToTable = new ArrayList<clsMakeKotItemDtlBean>();
+        List<clsMakeKotItemDtlBean> listOfItemsForFromTable = new ArrayList<clsMakeKotItemDtlBean>();
+        try 
+        {
+        	con=objDb.funOpenAPOSCon("mysql","master");
+	        st = con.createStatement();
+	        boolean isItemSelected=false;
+	        String itemCode="";
+	        String fromTableNo= object.get("fromTableNo").toString();
+	        String toTableNo= object.get("toTableNo").toString();
+	        String toTableName= object.get("toTableName").toString();
+	        String posCode = object.get("POSCode").toString();
+	        String clientCode = object.get("ClientCode").toString();
+	        String userName = object.get("User").toString();
+	        JSONObject jobjItem=(JSONObject)object.get("Item");
+	        Iterator itr=jobjItem.keys();
+	        while(itr.hasNext())
+	        {
+	        	itemCode+=itr.next().toString()+",";
+	        }
+	        JSONObject obj = funGetPreviousKOTDetails(fromTableNo);
+        	if(obj.length()>0)
+        	{
+        		JSONArray objPrevious=(JSONArray)obj.get("PreviousKOTDtls");
+        		for(int i=0;i<objPrevious.length();i++)
+        		{
+        			JSONObject objectInnerPrev=(JSONObject)objPrevious.get(i);
+        			if(itemCode.contains(objectInnerPrev.get("ItemCode").toString()))
+    				{
+	        			isItemSelected=true;
+    				}
+        		}
+        	}
+	        
+	        String sql = "select strStatus,intPaxNo,strTableName from tbltablemaster where strTableNo='" + fromTableNo + "'";
+		    ResultSet rs = st.executeQuery(sql);
+		    int pax = 0;
+		    if (rs.next())
+		    {
+				String status = rs.getString(1);
+				String fromTableName = rs.getString(3);
+				pax = rs.getInt(2);
+				sql = "update tbltablemaster set strStatus='" + status + "',intPaxNo=" + pax + " where strTableNo='" + toTableNo + "'";
+				st.executeUpdate(sql);
+		    }
+		    rs.close();
+		    
+		    String oldKOTNo = "";
+		    String sqlOldKOTNo = "select a.strKOTNo from tblitemrtemp a where strTableNo='" + fromTableNo + "'  "
+			    + "and strPosCode='" + posCode + "' and strNcKotYN='N' limit 1 ";
+		    ResultSet rsKOT = st.executeQuery(sqlOldKOTNo);
+		    if (rsKOT.next())
+		    {
+		    	oldKOTNo = rsKOT.getString(1);
+		    }
+		    rsKOT.close();
+
+		    String newKOTNo = funGenerateKOTNo();
+		    for(int i=0;i<jobjItem.length();i++)
+		    {
+		    	JSONArray objSelectedItem=(JSONArray)jobjItem.get(itemCode.split(",")[i]);
+		    	String strItemCode=objSelectedItem.get(0).toString();
+		    	String itemName=objSelectedItem.get(1).toString();
+		    	double itemQty=Double.parseDouble(objSelectedItem.get(2).toString());
+		    	double moveQty = Double.parseDouble(objSelectedItem.get(2).toString());
+		    	double firedQty = Double.parseDouble(objSelectedItem.get(2).toString());
+		    	double itemRate=Double.parseDouble(objSelectedItem.get(3).toString());
+		    	String waiterNo=objSelectedItem.get(4).toString();
+		    	if (isItemSelected)
+				{
+				    itemQty = itemQty - moveQty;
+				}
+		    	//for original items
+				double itemAmt = itemRate * itemQty;
+				clsMakeKotItemDtlBean objItemForFromTable = new clsMakeKotItemDtlBean(String.valueOf(i), oldKOTNo, fromTableNo, waiterNo, itemName, strItemCode, itemQty, itemAmt, pax, "Y", "N", false, "", "", "", "N", itemRate);
+				objItemForFromTable.setDblFiredQty(firedQty);
+				listOfItemsForFromTable.add(objItemForFromTable);
+				
+				//for move items 
+				if (isItemSelected)
+				{
+				    double moveItemAmt = itemRate * moveQty;
+				    clsMakeKotItemDtlBean objItemForToTable = new clsMakeKotItemDtlBean(String.valueOf(i), newKOTNo, toTableNo, waiterNo, itemName, strItemCode, moveQty, moveItemAmt, pax, "Y", "N", false, "", "", "", "N", itemRate);
+				    objItemForToTable.setDblFiredQty(firedQty);
+	
+				    listOfItemsForToTable.add(objItemForToTable);
+				}	
+		    }
+		    
+		    funUpdateDataInTempTable("Update", listOfItemsForFromTable, fromTableNo,st,userName,posCode,utilityfunctions);
+		    funInsertDataInTempTable("Insert", listOfItemsForToTable, fromTableNo,st,userName,posCode,utilityfunctions);
+
+		    sql = "select strKOTNo,dteDateCreated from tblitemrtemp where strTableNo='" + fromTableNo + "' and strNCKotYN='N' ";
+		    rs = st.executeQuery(sql);
+		    if (!rs.next())
+		    {
+				sql = "update tbltablemaster set strStatus='Normal',intPaxNo=0 where strTableNo='" + fromTableNo + "'";
+				st.executeUpdate(sql);
+		    }
+
+		    //insert into itemrtempbck tabl
+		    funInsertIntoTblItemRTempBck(fromTableNo,st);
+		    funInsertIntoTblItemRTempBck(toTableNo,st);
+		    
+		    resp.put("Success", "Items Shifted to " + toTableName);
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        }
+        return resp;
+	}
+	
+	
+	public void funInsertIntoTblItemRTempBck(String tableNo,Statement st)
+	{
+		try
+		{
+			String sql = "select strSerialNo from tblitemrtemp ";
+    	    st.executeQuery(sql);//to check is exists or not tblitemrtemp
+		
+		    sql = "delete from tblitemrtemp_bck where strTableNo='" + tableNo + "'  ";
+		    st.executeUpdate(sql);
+		
+		    sql = "insert into tblitemrtemp_bck (select * from tblitemrtemp where strTableNo='" + tableNo + "'  )";
+		    st.executeUpdate(sql);
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+	}
+	
+	private void funUpdateDataInTempTable(String type, List<clsMakeKotItemDtlBean> listOfMakeKOTItemDtl, String fromTableNo,Statement st,String userName,String posCode,clsUtilityFunctions utilityfunctions)
+    {
+		try
+		{
+			for (clsMakeKotItemDtlBean itemDtl : listOfMakeKOTItemDtl)
+		    {
+				String itemCode = itemDtl.getItemCode();
+				double itemQty = itemDtl.getQty();
+				if (itemQty <= 0)
+				{
+				    String deleteQuery = "delete from tblitemrtemp where strItemCode='" + itemCode + "' and strTableNo='" + fromTableNo + "' "
+					    + "and strNCKotYN='N' ";
+				    st.executeUpdate(deleteQuery);
+				}
+				else
+				{
+				    String deleteQuery = "delete from tblitemrtemp where strItemCode='" + itemCode + "' and strTableNo='" + fromTableNo + "' "
+					    + "and strNCKotYN='N' ";
+				    st.executeUpdate(deleteQuery);
+		
+				    String insertQuery = "insert into tblitemrtemp (strSerialNo,strTableNo,strCardNo,dblRedeemAmt,strPosCode,strItemCode"
+					    + ",strHomeDelivery,strCustomerCode,strItemName,dblItemQuantity,dblAmount,strWaiterNo"
+					    + ",strKOTNo,intPaxNo,strPrintYN,strUserCreated,strUserEdited,dteDateCreated"
+					    + ",dteDateEdited,strTakeAwayYesNo,strNCKotYN,strCustomerName,strCounterCode"
+					    + ",dblRate,dblTaxAmt,strDelBoyCode,dblFiredQty ) values ";
+		
+				    insertQuery += "('" + itemDtl.getSequenceNo() + "','" + fromTableNo + "'"
+					    + ",'','0.00','" + posCode + "'"
+					    + ",'" + itemDtl.getItemCode() + "','NO','' "
+					    + ",'" + itemDtl.getItemName() + "','" + itemQty + "','" + itemDtl.getAmt() + "'"
+					    + ",'" + itemDtl.getWaiterNo() + "','" + itemDtl.getKOTNo() + "'"
+					    + ",'" + itemDtl.getPaxNo() + "','" + itemDtl.getPrintYN() + "'"
+					    + ",'" + userName + "','" + userName + "'"
+					    + ",'" + utilityfunctions.funGetCurrentDateTime("yyyy-MM-dd") + "','" + utilityfunctions.funGetCurrentDateTime("yyyy-MM-dd") + "'"
+					    + ",'','N','','' "
+					    + ",'" + itemDtl.getItemRate() + "','0.00','','"+itemDtl.getDblFiredQty()+"')";
+				    st.executeUpdate(insertQuery);
+				}
+		    }
+			//insert into itemrtempbck table
+		    funInsertIntoTblItemRTempBck(fromTableNo,st);
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		    
+		}
+    }
+	
+	private void funInsertDataInTempTable(String type, List<clsMakeKotItemDtlBean> listOfMakeKOTItemDtl, String fromTableNo,Statement st,String userName,String posCode,clsUtilityFunctions utilityfunctions)
+    {
+		try
+		{
+		    String homeDelivery = "No", customerName = "", customerCode = "";
+		    String takeAway = "No";
+		    String counterCode = "NA";
+		    /*if (clsGlobalVarClass.gCounterWise.equals("Yes"))
+		    {
+		    	counterCode = clsGlobalVarClass.gCounterCode;
+		    }*/
+	
+		    String tableNo = "";
+		    String KOTNo = "";
+		    double KOTAmt = 0, taxAmt = 0;
+		    String delBoyCode = "";
+	
+		    String insertQuery = "insert into tblitemrtemp (strSerialNo,strTableNo,strCardNo,dblRedeemAmt,strPosCode,strItemCode"
+			    + ",strHomeDelivery,strCustomerCode,strItemName,dblItemQuantity,dblAmount,strWaiterNo"
+			    + ",strKOTNo,intPaxNo,strPrintYN,strUserCreated,strUserEdited,dteDateCreated"
+			    + ",dteDateEdited,strTakeAwayYesNo,strNCKotYN,strCustomerName,strCounterCode"
+			    + ",dblRate,dblTaxAmt,strDelBoyCode,dblFiredQty ) values ";
+		    for (clsMakeKotItemDtlBean listItemDtl : listOfMakeKOTItemDtl)
+		    {
+		    	tableNo = listItemDtl.getTableNo();
+				KOTNo = listItemDtl.getKOTNo();
+		
+				insertQuery += "('" + listItemDtl.getSequenceNo() + "','" + listItemDtl.getTableNo() + "'"
+					+ ",'','0.00','" + posCode + "'"
+					+ ",'" + listItemDtl.getItemCode() + "','" + homeDelivery + "','" + customerCode + "'"
+					+ ",'" + listItemDtl.getItemName() + "','" + listItemDtl.getQty() + "','" + listItemDtl.getAmt() + "'"
+					+ ",'" + listItemDtl.getWaiterNo() + "','" + listItemDtl.getKOTNo() + "'"
+					+ ",'" + listItemDtl.getPaxNo() + "','" + listItemDtl.getPrintYN() + "'"
+					+ ",'" + userName + "','" + userName + "'"
+					+ ",'" + utilityfunctions.funGetCurrentDateTime("yyyy-MM-dd") + "','" + utilityfunctions.funGetCurrentDateTime("yyyy-MM-dd") + "'"
+					+ ",'" + takeAway + "','N','" + customerName + "','" + counterCode + "'"
+					+ ",'" + listItemDtl.getItemRate() + "','0.00','" + delBoyCode + "','"+listItemDtl.getDblFiredQty()+"'),";
+				KOTAmt += listItemDtl.getAmt();
+		    }
+		    StringBuilder sb = new StringBuilder(insertQuery);
+		    int index = sb.lastIndexOf(",");
+		    insertQuery = sb.delete(index, sb.length()).toString();
+		    st.executeUpdate(insertQuery);
+	
+		    String sql = "insert into tblkottaxdtl values ('" + tableNo + "','" + KOTNo + "'," + KOTAmt + "," + taxAmt + ")";
+		    st.executeUpdate(sql);
+	
+		    //insert into itemrtempbck table
+		    funInsertIntoTblItemRTempBck(tableNo,st);
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+    }
+	
 	
 		
 }
