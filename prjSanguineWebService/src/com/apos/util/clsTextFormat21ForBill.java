@@ -105,7 +105,7 @@ public class clsTextFormat21ForBill {
 		    dteBillDate=format1.parse(strBillDate);
 		    
 		    
-			    sql = " select a.strClientName,a.strAddressLine1,a.strAddressLine2, a.strAddressLine3,a.strCityName,a.intTelephoneNo, a.strEmail,a.strVatNo,a.strServiceTaxNo,a.strBillFooter,a.strPrintServiceTaxNo,a.strPrintVatNo,a.strMultipleBillPrinting ,a.strPrintInclusiveOfAllTaxesOnBill,a.dblUSDConverionRate,a.dblNoOfDecimalPlace from tblsetup a where a.strClientCode='"+clientCode+"' ;";
+			    sql = " select a.strClientName,a.strAddressLine1,a.strAddressLine2, a.strAddressLine3,a.strCityName,a.intTelephoneNo, a.strEmail,a.strVatNo,a.strServiceTaxNo,a.strBillFooter,a.strPrintServiceTaxNo,a.strPrintVatNo,a.strMultipleBillPrinting ,a.strPrintInclusiveOfAllTaxesOnBill,a.dblUSDConverionRate,a.dblNoOfDecimalPlace from tblsetup a where a.strClientCode='"+clientCode+"' and a.strPOSCode='"+posCode+"';";
 			    // System.out.println(sql);
 			    st.close();
 			    st = cmsCon.createStatement();
