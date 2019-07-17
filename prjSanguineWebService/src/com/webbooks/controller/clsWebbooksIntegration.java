@@ -401,11 +401,11 @@ public class clsWebbooksIntegration
 	    String narration = POSName+" Sales Data for " +daydateonly+"-"+billDate.split("-")[1]+"-"+billDate.split("-")[0];
 	     sql = "";
 	    
-	    String sql_insertJVHd = " insert into tblJVHd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";
+	    String sql_insertJVHd = " insert into tbljvhd (strVouchNo,strNarration,strSancCode,strType,dteVouchDate, " + " intVouchMonth,dblAmt,strTransType,strTransMode,strModuleType,strMasterPOS,strUserCreated,strUserEdited, " + " dteDateCreated ,dteDateEdited,strClientCode,strPropertyCode,intVouchNum) values ";
 	    sql_insertJVHd += " ('" + JVNo + "','" + narration + "','" + sancCode + "','None','" + billDate + "','"+billMonth+"','" + totalJVAmt + "' " + ",'R','A','AR','" + POSCode + "','"+userCode+"','"+userCode+"','" + currentDate + "','" + currentDate + "','" + clientCode + "','" + propertyCode + "','')";
 	    res = st.executeUpdate(sql_insertJVHd);
 	    
-	    sql_insertRV = "insert into tblJVDtl (strVouchNo,strAccountCode,strAccountName,strCrDr,dblDrAmt,dblCrAmt,strNarration," + "strOneLine,strClientCode,strPropertyCode) values ";
+	    sql_insertRV = "insert into tbljvdtl (strVouchNo,strAccountCode,strAccountName,strCrDr,dblDrAmt,dblCrAmt,strNarration," + "strOneLine,strClientCode,strPropertyCode) values ";
 	    for (Map.Entry<String, clsJVDtlModel> entry : hmJVDtlModel.entrySet())
 	    {
 			clsJVDtlModel obj = entry.getValue();
@@ -434,7 +434,7 @@ public class clsWebbooksIntegration
 	    flgData = false;
 	    
 	    JSONArray mJsonMemberCLDataArray = (JSONArray) objBillData.get("MemberCLData");
-	    String sql_insertDebtorDtl = "insert into tblJVDebtorDtl (strVouchNo,strDebtorCode,strDebtorName,strCrDr,dblAmt  " + ",strBillNo,strInvoiceNo,strNarration,strGuest,strAccountCode,strCreditNo,dteBillDate,dteInvoiceDate,dteDueDate " + ",strClientCode,strPropertyCode,StrPosCode,StrPosName,strRegistrationNo) values ";
+	    String sql_insertDebtorDtl = "insert into tbljvdebtordtl (strVouchNo,strDebtorCode,strDebtorName,strCrDr,dblAmt  " + ",strBillNo,strInvoiceNo,strNarration,strGuest,strAccountCode,strCreditNo,dteBillDate,dteInvoiceDate,dteDueDate " + ",strClientCode,strPropertyCode,StrPosCode,StrPosName,strRegistrationNo) values ";
 	    sql = "";
 	    JSONObject mJsonObject = new JSONObject();
 	    for (int i = 0; i < mJsonMemberCLDataArray.length(); i++)

@@ -503,7 +503,7 @@ public class clsSynchPOSDataWithMMS
 	    rsCust.close();
 	    
 	    double totalAmt = 0;
-	    SOCode = funSalesOrderCode(clientCode, locCode);
+	    SOCode = funSalesOrderCode(clientCode, locCode,SOOrderDate);
 	    index = Integer.parseInt(SOCode.split(",")[1]);
 	    SOCode = SOCode.split(",")[0];
 	    
@@ -618,7 +618,7 @@ public class clsSynchPOSDataWithMMS
     }
     
     
-    private String funSalesOrderCode(String clientCode, String locCode)
+    private String funSalesOrderCode(String clientCode, String locCode,String SOOrderDate)
     {
 	String propCode = "01";
 	//clsDatabaseConnection objDb = new clsDatabaseConnection();
@@ -642,23 +642,40 @@ public class clsSynchPOSDataWithMMS
 		propCode = rs.getString(1);
 	    }
 	    rs.close();
-	    
-	    sql = " select a.dtStart from tblcompanymaster a  " + " where a.strClientCode='" + clientCode + "' ";
+	    String transYear="A";
+	   // sql = " select a.dtStart from tblcompanymaster a  " + " where a.strClientCode='" + clientCode + "' ";
+	    sql=" select a.strFinYear,a.strYear from tblcompanymaster a where  a.strClientCode='"+clientCode+"' order by a.intId desc ";
 	    rs = st.executeQuery(sql);
-	    while (rs.next())
+	    if(rs.next())
 	    {
-		startDate = rs.getString(1);
+			startDate = rs.getString(1).split("-")[0];
+			transYear= rs.getString(2);
 	    }
 	    rs.close();
+	    String[] spDate = SOOrderDate.split("-");
+	    String transMonth =  objUtility.funGetAlphabet(Integer.parseInt(spDate[1])-1);
+	  
+	    sql = "select ifnull(max(MID(a.strSOCode,7,6)),'' )as strSOCode " + " from tblsalesorderhd a where MID(a.strSOCode,5,1) = '" + transYear + "' " + " and MID(a.strSOCode,6,1) = '" + transMonth + "' " + " and MID(a.strSOCode,1,2) = '" + propCode + "' and strClientCode='" + clientCode + "' ";
+	    rs = st.executeQuery(sql);
+	    long lastnoLive=0;
+	    if(rs.next())
+	    {
+	    	lastnoLive=rs.getLong(1);
+	    }
 	    
-	    long lastNo = funGetLastNo("tblsalesorderhd", "SOCode", "strSOCode", clientCode);
+	    retValue = propCode + "SO" + transYear + transMonth + String.format("%06d", lastnoLive + 1);
+	    retValue=retValue+","+lastnoLive;
+	    //  sql = "select ifnull(max(MID(a.strSOCode,7,6)),'' )as strSOCode " + " from tblsalesorderhd a where MID(a.strSOCode,5,1) = '" + transYear + "' " + " and MID(a.strSOCode,6,1) = '" + transMonth + "' " + " and MID(a.strSOCode,1,2) = '" + propCode + "' and strClientCode='" + clientCode + "' ";
+
+	    
+	   // long lastNo = funGetLastNo("tblsalesorderhd", "SOCode", "strSOCode", clientCode);
 	    // System.out.println("lastNo:"+lastNo);
-	    String year = startDate.split("-")[0];
+	   /* String year = startDate.split("-")[0];
 	    // System.out.println("propCode:="+propCode+"year:="+year);
 	    String cd = objUtility.funGetTransactionCode("SO", propCode, year);
 	    salesOrderCode = cd + String.format("%06d", lastNo);
 	    
-	    retValue = salesOrderCode + "," + lastNo;
+	    retValue = salesOrderCode + "," + lastNo;*/
 	    
 	}
 	catch (Exception ex)
