@@ -62,9 +62,13 @@ public class clsTextFileGenerator
 	@Autowired
 	clsTextFormat12ForBill objTextFormat12ForBill;
     
-	
 	@Autowired
 	clsTextFormatForeignForBill objTextFormatForeignForBill;
+	
+	@Autowired
+	clsTextFormat23ForBill objTextFormat23ForBill;
+	
+	
 	public void funCreateTempFolder()
     {
 	try
@@ -126,9 +130,14 @@ public class clsTextFileGenerator
 		else if (billFormat.equalsIgnoreCase("Text 21"))
 		{
 			objTextFormat21ForBill.funGenerateTextFileForBillFormat21(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
-		}else if(billFormat.equalsIgnoreCase("Text Foreign"))
+		}
+		else if(billFormat.equalsIgnoreCase("Text Foreign"))
 		{
 			objTextFormatForeignForBill.funGenerateTextFileForForeignBill(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
+		}
+		else if (billFormat.equalsIgnoreCase("Text 23"))
+		{
+			objTextFormat23ForBill.funGenerateTextFileForBillFormat23(billNo, posCode, clientCode,reprint,strServerBillPrinterName);
 		}
     }
     
