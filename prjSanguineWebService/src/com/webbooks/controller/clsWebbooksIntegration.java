@@ -204,10 +204,11 @@ public class clsWebbooksIntegration
 	public Response funPostRevenueInfo(JSONObject objBillData)
 	{
 		String response = "NA";
-		if(!funInsertRevenueData(objBillData).equals("NA"))
+		response = funInsertRevenueData(objBillData);
+		/*if(!funInsertRevenueData(objBillData).equals("NA"))
 		{
-			response = funInsertRevenueData(objBillData);
-		}
+			
+		}*/
 		return Response.status(201).entity(response).build();
 	}
 

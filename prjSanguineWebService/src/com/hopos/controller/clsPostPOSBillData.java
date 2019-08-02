@@ -736,7 +736,7 @@ public class clsPostPOSBillData
 				Set setBillDtl = new HashSet();
 				sbSql.setLength(0);
 				sbSql.append("INSERT INTO tblqbilldtl (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`"
-						+ ",strSequenceNo,dtBillDate,tmeOrderPickup) VALUES");
+						+ ",strSequenceNo,dtBillDate,tmeOrderPickup,strKOTUser) VALUES");
 
 				JSONObject mJsonObject = new JSONObject();
 				for (int i = 0; i < jsonArrBillDtl.length(); i++)
@@ -781,6 +781,7 @@ public class clsPostPOSBillData
 					String strSequenceNo = mJsonObject.get("strSequenceNo").toString();
 					//String dtBillDate = mJsonObject.get("dtBillDate").toString();
 					String tmeOrderPickup = mJsonObject.get("tmeOrderPickup").toString();
+					String strKOTUser= mJsonObject.get("strKOTUser").toString();
 
 					String key = BillNo + "#" + ClientCode + "#" + ItemCode + "#" + KOTNo;
 					boolean flgResult = setBillDtl.add(key);
@@ -791,12 +792,12 @@ public class clsPostPOSBillData
 						if (cnt == 0)
 						{
 							sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
-									+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+									+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "','"+strKOTUser+"' )");
 						}
 						else
 						{
 							sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
-									+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+									+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "','"+strKOTUser+"' )");
 						}
 						cnt++;
 						flgData = true;
@@ -997,7 +998,7 @@ public class clsPostPOSBillData
 				int cnt = 0;
 				sbSql.setLength(0);
 				sbSql.append("INSERT INTO tblqbillcomplementrydtl (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`"
-						+ ",strSequenceNo,strType,dtBillDate,tmeOrderPickup) VALUES");
+						+ ",strSequenceNo,strType,dtBillDate,tmeOrderPickup,strKOTUser) VALUES");
 
 				JSONObject mJsonObject = new JSONObject();
 				for (int i = 0; i < jsonArrBillComplDtl.length(); i++)
@@ -1036,17 +1037,18 @@ public class clsPostPOSBillData
 					String strType = mJsonObject.get("strType").toString();
 					String dtBillDate = mJsonObject.get("dtBillDate").toString();
 					String tmeOrderPickup = mJsonObject.get("tmeOrderPickup").toString();
-
+					String strKOTUser = mJsonObject.get("strKOTUser").toString();
+						
 					// System.out.println(BillDate+" = "+BillNo);
 					if (cnt == 0)
 					{
 						sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
-								+ ",'" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+								+ ",'" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "','" + strKOTUser + "')");
 					}
 					else
 					{
 						sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
-								+ ",'" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+								+ ",'" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "','" + strKOTUser + "')");
 					}
 					cnt++;
 					flgData = true;
@@ -1448,7 +1450,7 @@ public class clsPostPOSBillData
 			int cnt = 0;
 
 			sbSql.append("INSERT INTO " + tableName + " (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`,"
-					+ "strSequenceNo,dtBillDate,tmeOrderPickup) VALUES");
+					+ "strSequenceNo,dtBillDate,tmeOrderPickup,strKOTUser) VALUES");
 
 			JSONObject mJsonObject = new JSONObject();
 			for (int i = 0; i < mJsonArray.length(); i++)
@@ -1491,7 +1493,8 @@ public class clsPostPOSBillData
 				String strSequenceNo = mJsonObject.get("strSequenceNo").toString();
 				String dtBillDate = mJsonObject.get("dtBillDate").toString();
 				String tmeOrderPickup = mJsonObject.get("tmeOrderPickup").toString();
-
+				String strKOTUser= mJsonObject.get("strKOTUser").toString();
+				
 				//+ ",,,
 				String key = BillNo + "#" + ClientCode + "#" + ItemCode + "#" + KOTNo;
 				boolean flgResult = setBillDtl.add(key);
@@ -1502,12 +1505,12 @@ public class clsPostPOSBillData
 					if (cnt == 0)
 					{
 						sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
-								+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+								+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "','" + strKOTUser + "')");
 					}
 					else
 					{
 						sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "'"
-								+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "')");
+								+ ",'" + strSequenceNo + "','" + dtBillDate + "','" + tmeOrderPickup + "','" + strKOTUser + "')");
 					
 					}
 					cnt++;
@@ -1685,7 +1688,7 @@ public class clsPostPOSBillData
 			st = cmsCon.createStatement();
 
 			int cnt = 0;
-			sbSql.append("INSERT INTO " + tableName + " (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`) VALUES");
+			sbSql.append("INSERT INTO " + tableName + " (`strItemCode`, `strItemName`," + " `strBillNo`, `strAdvBookingNo`, `dblRate`, `dblQuantity`, " + "`dblAmount`, `dblTaxAmount`, `dteBillDate`, `strKOTNo`, " + "`strClientCode`, `strCustomerCode`, `tmeOrderProcessing`, " + "`strDataPostFlag`, `strMMSDataPostFlag`, `strManualKOTNo`, " + "`tdhYN`, `strPromoCode`,`strCounterCode`,`strWaiterNo`,`dblDiscountAmt`, " + "`dblDiscountPer`,`strSequenceNo`,`strType`,`dtBillDate`,`tmeOrderPickup`,`strKOTUser`) VALUES");
 
 			JSONObject mJsonObject = new JSONObject();
 			for (int i = 0; i < mJsonArray.length(); i++)
@@ -1718,15 +1721,20 @@ public class clsPostPOSBillData
 				String waiterNo = mJsonObject.get("WaiterNo").toString();
 				String discAmt = mJsonObject.get("DiscountAmt").toString();
 				String discPer = mJsonObject.get("DiscountPer").toString();
-
+				
+				String strKOTUser= mJsonObject.get("strKOTUser").toString();
+				String tmeOrderPickup= mJsonObject.get("tmeOrderPickup").toString();
+				String dtBillDate= mJsonObject.get("dtBillDate").toString();
+				String strType= mJsonObject.get("strType").toString();
+				String strSequenceNo= mJsonObject.get("strSequenceNo").toString();
 				// System.out.println(BillDate+" = "+BillNo);
 				if (cnt == 0)
 				{
-					sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "')");
+					sbSql.append("('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "','" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "','" + strKOTUser + "')");
 				}
 				else
 				{
-					sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "')");
+					sbSql.append(",('" + ItemCode + "','" + ItemName + "','" + BillNo + "','" + AdvBookingNo + "','" + Rate + "'," + "'" + Quantity + "','" + Amount + "','" + TaxAmount + "','" + BillDate + "'," + "'" + KOTNo + "','" + ClientCode + "','" + CustomerCode + "','" + OrderProcessing + "','N'," + "'" + MMSDataPostFlag + "','" + ManualKOTNo + "','" + tdhYN + "','" + promoCode + "'," + "'" + counterCode + "','" + waiterNo + "','" + discAmt + "','" + discPer + "','" + strSequenceNo + "','" + strType + "','" + dtBillDate + "','" + tmeOrderPickup + "','" + strKOTUser + "')");
 				}
 				cnt++;
 				flgData = true;
@@ -9858,7 +9866,7 @@ public class clsPostPOSBillData
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
 					+ " strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill,strUserWiseShowBill,strDisplayTotalShowBill,strShowNotificationsOnTransaction,strBlankDayEndPrint," // 240
-					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd,strCashDenominationCompulsary,strCashManagementCompulsary) "//246
+					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd,strCashDenominationCompulsary,strCashManagementCompulsary,strShowItemCodeOnPLU) "//247
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -10142,6 +10150,9 @@ public class clsPostPOSBillData
 					String strClearAllTrasactionAtDayEnd=dataObject.get("strClearAllTrasactionAtDayEnd").toString().trim();//244
 					String strCashDenominationCompulsary=dataObject.get("strCashDenominationCompulsary").toString().trim();//245
 					String strCashManagementCompulsary=dataObject.get("strCashManagementCompulsary").toString().trim();//246
+					
+					String strShowItemCodeOnPLU=dataObject.get("strShowItemCodeOnPLU").toString().trim();//247
+					
 					if (i == 0)
 					{
 						sbSqlInsert.append("(");
@@ -10170,7 +10181,7 @@ public class clsPostPOSBillData
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
 							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "'" //236
 							+ ", '" + strUserWiseShowBill + "','" + strDisplayTotalShowBill + "','" + strShowNotificationsOnTransaction + "','" + strBlankDayEndPrint + "'," //240
-							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"','"+strCashDenominationCompulsary+"','"+strCashManagementCompulsary+"') "); // 246 
+							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"','"+strCashDenominationCompulsary+"','"+strCashManagementCompulsary+"','"+strShowItemCodeOnPLU+"') "); // 247 
 					flgData = true;
 				}
 			}
