@@ -5136,6 +5136,16 @@ public JSONObject funGenerateTextDayEndReportPreview(String posCode, String bill
 		 }
 		 return jObjRet;
 	    }
+
+		public int funGetDiffrenceOfDates(String strStartDate,String strEndDate) throws Exception
+		{
+			 SimpleDateFormat myFormat = new SimpleDateFormat("dd-MM-yyyy");
+			 Date dateBefore = myFormat.parse(strStartDate);
+		    Date dateAfter = myFormat.parse(strEndDate);
+		    long difference = dateAfter.getTime() - dateBefore.getTime();
+		    int daysBetween = (int)(difference / (1000*60*60*24));
+		    return daysBetween;
+		}
 	 
 	
 	

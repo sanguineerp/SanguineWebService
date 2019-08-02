@@ -18100,7 +18100,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         try {
         	cmsCon=objDb.funOpenAPOSCon("mysql","master");
             st = cmsCon.createStatement();
-            String sql="", POSDate="";
+            String sql="", POSDate="",strPOSType="";
             
             
             sql = "select date(max(dtePOSDate)),intShiftCode,strShiftEnd,strDayEnd "
@@ -18112,36 +18112,44 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	        {
 	            POSDate=rsDay.getString(1);
 	        }
+	        rsDay.close();
+	        sql="select a.strPOSType,a.strPOSCode from tblsetup a,tblposmaster b where a.strPOSCode=b.strPosCode "
+	        		+ "and LEFT(b.strPropertyPOSCode,7)='"+clientCode+"' and a.strPOSCode='"+POSCode+"' ";
+	        rsDay=st.executeQuery(sql);
+	        if(rsDay.next())
+	        {
+	            strPOSType=rsDay.getString(1);
+	        }
             
 	        /* Table / PAX */
-	        funFillTablePerPax(POSCode, POSDate, clientCode, st, arrObj);
+	        funFillTablePerPax(POSCode, POSDate, clientCode, st, arrObj,strPOSType);
             
             /* Open Orders / Value */
-            funFillOpenOrders(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillOpenOrders(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             /* Sales Achieved */
-            funFillSalesAchieved(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillSalesAchieved(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             /* Average Per Cover */
-            funFillAveragePerCover(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillAveragePerCover(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
 	    	/* Hourly Average Sales */
-            funFillHourlyAvgSales(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillHourlyAvgSales(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             /* Month To Date Sales */
-            funFillMonthToDateSales(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillMonthToDateSales(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             /* Previous Month Sales */
-            funFillPreviousMonthSales(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillPreviousMonthSales(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             /* Sales Growth */
-            funFillSalesGrowth(POSCode, POSDate, clientCode, st, arrObj, format);
+            funFillSalesGrowth(POSCode, POSDate, clientCode, st, arrObj, format,strPOSType);
             
             /*Best Day */
-            funFillBestDay(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillBestDay(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             /* Table Reservation */
-            funFillTableReservation(POSCode, POSDate, clientCode, st, arrObj, formatter);
+            funFillTableReservation(POSCode, POSDate, clientCode, st, arrObj, formatter,strPOSType);
             
             dashboard.put("dashboard", arrObj);
             st.close();
@@ -18157,7 +18165,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
     }
 	
 	
-	private void funFillTablePerPax(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj) throws Exception
+	private void funFillTablePerPax(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj,String strPOSType) throws Exception
 	{
 		String sql="SELECT COUNT(a.strTableNo), IFNULL(SUM(a.intPaxNo),0) FROM tbltablemaster a WHERE  a.strStatus='Occupied' "
 				+ "AND a.strClientCode='"+clientCode+"'; ";
@@ -18175,7 +18183,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillOpenOrders(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillOpenOrders(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		/*String sql="SELECT SUM(a.dblAmount) FROM tblitemrtemp a, tbltablemaster b WHERE a.strTableNo=b.strTableNo "
 				+ "AND b.strClientCode='"+clientCode+"'; ";*/
@@ -18195,13 +18203,22 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillSalesAchieved(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillSalesAchieved(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		/*String sql="SELECT IFNULL(SUM(b.dblamount),0) FROM tblbillhd a,tblbilldtl b,tblitemmaster c WHERE a.strBillNo=b.strBillNo "
 				+ "AND b.strItemcode=c.strItemCode AND a.dtBillDate='"+POSDate+"' AND a.strClientCode='"+clientCode+"'; ";*/
-		String sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
-				+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
-        ResultSet rsSales = st.executeQuery(sql);
+		String sql="";
+		if(strPOSType.equals("HOPOS"))
+		{
+			sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblqbillhd a,tblqbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
+				+ "AND DATE(a.dteBillDate)=DATE(b.dteBillDate) AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
+		}
+		else
+		{
+			sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
+					+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
+		}
+		ResultSet rsSales = st.executeQuery(sql);
         JSONObject objSales=new JSONObject();
         objSales.put("TableHeader","Sales Achieved");
         objSales.put("TableSubHeader","Total Amount");
@@ -18214,7 +18231,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillAveragePerCover(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillAveragePerCover(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		StringBuilder sqlNonComplimentaryBuilder=new StringBuilder();
         StringBuilder sqlComplimentaryBuilder=new StringBuilder();
@@ -18334,7 +18351,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillHourlyAvgSales(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillHourlyAvgSales(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		String sql="SELECT SUM(a.dblGrandTotal) FROM tblbillhd a WHERE a.dteBillDate BETWEEN "
 				+ " DATE_SUB(SYSDATE(), INTERVAL 1 HOUR) AND SYSDATE() AND a.strClientCode='"+clientCode+"' ORDER BY a.dteBillDate LIMIT 1; ";
@@ -18352,17 +18369,30 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillMonthToDateSales(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillMonthToDateSales(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		String firstDateOfMonth= POSDate.split(" ")[0].split("-")[0]+"-"+POSDate.split(" ")[0].split("-")[1]+"-01";
-	    String sql="SELECT SUM(grandtotal) grandTotal "
-	    		+ "FROM ( SELECT SUM(c.dblSettlementAmt) grandtotal FROM tblbillhd a,tblbillsettlementdtl c "
-	    		+ "WHERE a.strBillNo=c.strBillNo AND DATE(a.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
-	    		+ "AND a.strClientCode='"+clientCode+"' "
-	    		+ "UNION SELECT SUM(d.dblSettlementAmt) grandtotal FROM tblqbillhd b,tblqbillsettlementdtl d "
-	    		+ "WHERE b.strBillNo=d.strBillNo AND DATE(b.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
-	    		+ "AND b.strClientCode='"+clientCode+"') e; ";
-	    ResultSet rsFirstDate = st.executeQuery(sql);
+		String sql="";
+		if(strPOSType.equals("HOPOS"))
+		{
+			sql="SELECT SUM(grandtotal) grandTotal FROM ( SELECT SUM(b.dblGrandTotal) grandTotal FROM tblbillhd b "
+			    + "WHERE b.strBillNo IN (SELECT d.strBillNo from tblbillsettlementdtl d) AND DATE(b.dteBillDate) BETWEEN '"+firstDateOfMonth+"' "
+			    + "AND DATE_SUB('"+POSDate+"', INTERVAL 1 DAY) AND b.strClientCode='"+clientCode+"' "
+			    + "UNION "
+			    + "SELECT SUM(b.dblGrandTotal) FROM tblqbillhd b WHERE b.strBillNo IN (SELECT d.strBillNo from tblqbillsettlementdtl d) "
+			    + "AND DATE(b.dteBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"', INTERVAL 1 DAY) AND b.strClientCode='"+clientCode+"') e; ";
+		}
+		else
+		{
+			sql="SELECT SUM(grandtotal) grandTotal "
+		    	+ "FROM ( SELECT SUM(c.dblSettlementAmt) grandtotal FROM tblbillhd a,tblbillsettlementdtl c "
+		    	+ "WHERE a.strBillNo=c.strBillNo AND DATE(a.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
+		    	+ "AND a.strClientCode='"+clientCode+"' "
+		    	+ "UNION SELECT SUM(d.dblSettlementAmt) grandtotal FROM tblqbillhd b,tblqbillsettlementdtl d "
+		    	+ "WHERE b.strBillNo=d.strBillNo AND DATE(b.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
+		    	+ "AND b.strClientCode='"+clientCode+"') e; ";
+		}
+		ResultSet rsFirstDate = st.executeQuery(sql);
 	    JSONObject objFirstDate=new JSONObject();
 	    objFirstDate.put("TableHeader","Month to Date Sales");
 	    objFirstDate.put("TableSubHeader","Current Month Sale Amount");
@@ -18375,7 +18405,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillPreviousMonthSales(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillPreviousMonthSales(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		int month=Integer.parseInt(POSDate.split(" ")[0].split("-")[1]);
 		month=month-1;
@@ -18395,7 +18425,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillSalesGrowth(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat format) throws Exception
+	private void funFillSalesGrowth(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat format,String strPOSType) throws Exception
 	{
 		String sql="SELECT SUM(a.dblGrandTotal) FROM tblbillhd a WHERE DATE(dteBillDate) = '"+POSDate+"' "
     		+ " and a.strClientCode='"+clientCode+"'; ";
@@ -18429,7 +18459,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 		
 	
-	private void funFillBestDay(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillBestDay(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		String sql="SELECT IFNULL(sum(a.dblGrandTotal),''),DAYNAME(date(a.dteBillDate)) FROM tblqbillhd a where date(dteBillDate) "
         	+ "between date(DATE_SUB('"+POSDate+"', INTERVAL 7 DAY)) and '"+POSDate+"' "
@@ -18449,7 +18479,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	}
 	
 	
-	private void funFillTableReservation(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter) throws Exception
+	private void funFillTableReservation(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
 		String sql="SELECT COUNT(a.strResCode) FROM tblreservation a, tbltablemaster b,tblcustomermaster c "
     		+ "WHERE a.strTableNo=b.strTableNo AND a.strCustomerCode=c.strCustomerCode "
@@ -19584,8 +19614,9 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	
 	private void funFillMainSalesAchieved(String POSCode, String POSDate, String clientCode, Statement st, JSONObject jObj,JSONArray arrObj, NumberFormat formatter,JSONObject dashboard) throws Exception
 	{
-		String sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
-				+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
+		String sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblqbillhd a,tblqbillsettlementdtl b "
+				+ "WHERE a.strBillNo=b.strBillNo AND DATE(a.dtBillDate)=DATE(b.dteBillDate) AND DATE(a.dteBillDate)='"+POSDate+"' "
+				+ "AND a.strPOSCode='"+POSCode+"'; ";
         ResultSet rsSales = st.executeQuery(sql);
         JSONObject objSales=new JSONObject();
         if (rsSales.next()) 
@@ -19597,13 +19628,12 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         dashboard.put("dashboardSales", arrObj);
         
         String firstDateOfMonth= POSDate.split(" ")[0].split("-")[0]+"-"+POSDate.split(" ")[0].split("-")[1]+"-01";
-	    sql="SELECT SUM(grandtotal) grandTotal "
-	    		+ "FROM ( SELECT SUM(c.dblSettlementAmt) grandtotal FROM tblbillhd a,tblbillsettlementdtl c "
-	    		+ "WHERE a.strBillNo=c.strBillNo AND DATE(a.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
-	    		+ "AND a.strClientCode='"+clientCode+"' "
-	    		+ "UNION SELECT SUM(d.dblSettlementAmt) grandtotal FROM tblqbillhd b,tblqbillsettlementdtl d "
-	    		+ "WHERE b.strBillNo=d.strBillNo AND DATE(b.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
-	    		+ "AND b.strClientCode='"+clientCode+"') e; ";
+	    sql="SELECT SUM(grandtotal) grandTotal FROM ( SELECT SUM(b.dblGrandTotal) grandTotal FROM tblbillhd b "
+	    	+ "WHERE b.strBillNo IN (SELECT d.strBillNo from tblbillsettlementdtl d) AND DATE(b.dteBillDate) BETWEEN '"+firstDateOfMonth+"' "
+	    	+ "AND DATE_SUB('"+POSDate+"', INTERVAL 1 DAY) AND b.strClientCode='"+clientCode+"' "
+	    	+ "UNION "
+	    	+ "SELECT SUM(b.dblGrandTotal) FROM tblqbillhd b WHERE b.strBillNo IN (SELECT d.strBillNo from tblqbillsettlementdtl d) "
+	    	+ "AND DATE(b.dteBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"', INTERVAL 1 DAY) AND b.strClientCode='"+clientCode+"') e; ";
 	    ResultSet rsFirstDate = st.executeQuery(sql);
 	    JSONObject objFirstDate=new JSONObject();
 	    while (rsFirstDate.next()) 
