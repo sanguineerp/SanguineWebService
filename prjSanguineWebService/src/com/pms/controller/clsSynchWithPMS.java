@@ -1048,9 +1048,17 @@ public class clsSynchWithPMS {
 						+ " values ('"+folioNo+"','"+billNo+"','"+billDate+"','"+roomNo+"','"+POSCode+"','"+posName+"','"+taxCode+"','"+taxDesc+"',"
 								+ ""+taxableAmt+","+taxAmt+",'"+userName+"','"+clientCode+"');");
 				st.execute(sbSql.toString());*/
+				if(!folioNo.equals(""))
+				{
+				
 				sbSql.append("insert into tblfoliotaxdtl(strFolioNo,strDocNo,strTaxCode,strTaxDesc,dblTaxableAmt,dblTaxAmt,strClientCode) "
 						+ " values ('"+folioNo+"','"+billNo+"','"+taxCode+"','"+taxDesc+"',"+taxableAmt+","+taxAmt+",'"+clientCode+"')");
 				st.execute(sbSql.toString());
+				}
+				else
+				{
+					response="false";
+				}
 
 			}
 
@@ -1081,13 +1089,23 @@ public class clsSynchWithPMS {
 					+ ",dblDebitAmt,dblCreditAmt,dblBalanceAmt,strRevenueType,strRevenueCode,strClientCode) "
 					+ "values ('"+folioNo+"','"+billDate+"','"+billNo+"','POS Revenue',"+settledAmt+",0,0"
 							+ ",'"+billType+"','"+POSCode+"','"+clientCode+"')");*/
-				sbSql.append("insert into tblfoliodtl (strFolioNo,dteDocDate,strDocNo,strPerticulars"
-						+ ",dblDebitAmt,dblCreditAmt,dblBalanceAmt,strRevenueType,strRevenueCode,strClientCode) "
-						+ "values ('"+folioNo+"','"+billDate+"','"+billNo+"','POS Revenue ("+posName+") ',"+settledAmt+",0,0"
-						+ ",'"+billType+"','"+POSCode+"','"+clientCode+"')"); // Sumeet
-				st.execute(sbSql.toString());
+				if(!folioNo.equals(""))
+				{
+					sbSql.append("insert into tblfoliodtl (strFolioNo,dteDocDate,strDocNo,strPerticulars"
+							+ ",dblDebitAmt,dblCreditAmt,dblBalanceAmt,strRevenueType,strRevenueCode,strClientCode) "
+							+ "values ('"+folioNo+"','"+billDate+"','"+billNo+"','POS Revenue ("+posName+") ',"+settledAmt+",0,0"
+							+ ",'"+billType+"','"+POSCode+"','"+clientCode+"')"); // Sumeet
+					st.execute(sbSql.toString());
+					
+					response = "true";
+				}
+				else
+				{
+					response="false";
+				}
+				
 			}
-			response = "true";
+		
 
 
 		} catch (Exception e) {
