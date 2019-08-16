@@ -485,7 +485,7 @@ public class clsSynchWithPMS {
 			JSONObject obj=new JSONObject() ;
 			ResultSet rsRoomInfo = st.executeQuery(sql);	
 			while(rsRoomInfo.next()) 
-			{
+			{ 
 				if(rsRoomInfo.getString(2)!=null)
 				{	
 					if(obj.has(rsRoomInfo.getString(2)))
