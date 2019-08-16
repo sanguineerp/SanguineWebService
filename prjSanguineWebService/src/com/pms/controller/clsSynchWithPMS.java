@@ -452,7 +452,7 @@ public class clsSynchWithPMS {
 			dblTotalRooms=Double.parseDouble(rsHeaderInfo.getString(1));
 			if(dblTotalRooms==0)
 			{
-				obj.put("AveragePerRoomAmt", "0.0");
+				obj.put("AveragePerRoomAmt", "0.00");
 			}
 			else
 			{
@@ -632,19 +632,30 @@ public class clsSynchWithPMS {
 		JSONArray mainArrObj=new JSONArray();
 		Connection pmsCon=null;
 		Statement st=null;
-		NumberFormat formatter = new DecimalFormat("#0");
-		NumberFormat decformat = new DecimalFormat("#0.00");
+		Statement sTime1=null;
+		Statement sTime2=null;
 		String dd = PMSDate.split("-")[2]; 
 		String mm=	 PMSDate.split("-")[1];
 		String yy= PMSDate.split("-")[0];
-		try{
-			//and date(b.dteDepartureDate)>='"+PMSDate+"'
+		String strCheckoutDate="";
+		ResultSet rsRoomInfo=null;
+		ResultSet rsTime1=null;
+		ResultSet rsTime2=null;
+		try
+		{
 			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
 			st = pmsCon.createStatement();
-			JSONObject obj=new JSONObject() ;
+			sTime1 = pmsCon.createStatement();
+			sTime2 = pmsCon.createStatement();
+			String sql="SELECT a.tmeCheckOutTime FROM tblpropertysetup a "; 
+			ResultSet rs = st.executeQuery(sql);
+			if(rs.next())
+			{
+				strCheckoutDate=rs.getString(1);
+			}
+			rs.close();
 			
-			
-			String sql=" Select s.roomdesc,s.fname,s.lname,s.roomstatus,s.checkindate,s.deptdate,s.arrivaltme,"
+			sql=" Select s.roomdesc,s.fname,s.lname,s.roomstatus,s.checkindate,s.deptdate,s.arrivaltme,"
 					+ " s.depttime,s.staySingleday,s.roomtype from"
 					+ " (select a.strRoomDesc as roomdesc,d.strFirstName as fname,d.strLastName as lname,"
 					+ " a.strStatus as roomstatus ,date(b.dteCheckInDate) as checkindate, date(b.dteDepartureDate) as deptdate"
@@ -658,7 +669,7 @@ public class clsSynchWithPMS {
 					+ " from tblroom p  WHERE p.strStatus in('Free','Occupied')) s"
 					+ " Group by s.roomdesc"
 					+ " ORDER BY s.roomdesc";
-			ResultSet rsRoomInfo = st.executeQuery(sql);
+			rsRoomInfo = st.executeQuery(sql);
 			JSONArray arrObj=null;
 			JSONArray arrDouble=new JSONArray();
 			JSONObject objJson= new JSONObject();
@@ -676,24 +687,41 @@ public class clsSynchWithPMS {
 					arrObj.put(rsRoomInfo.getString(6));
 					arrObj.put(rsRoomInfo.getString(7));
 					arrObj.put(rsRoomInfo.getString(8));
-					//arrObj.put(rsRoomInfo.getString(9));
 					if(!rsRoomInfo.getString(9).isEmpty())
 					{
 						String dateBeforeString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", PMSDate);
 						String dateAfterString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", rsRoomInfo.getString(6));
 						int daysBetween=new clsUtilityFunctions().funGetDiffrenceOfDates(dateBeforeString, dateAfterString);
-						if(daysBetween>=0)
+						if(daysBetween>0)
 						{
-							daysBetween=daysBetween+1;
+							/*daysBetween=daysBetween+1;*/
 							arrObj.put(daysBetween);
 						}
 						else
 						{
+							daysBetween=daysBetween+1;
 							arrObj.put(daysBetween);
 						}
 					}
 					arrObj.put(rsRoomInfo.getString(9));
 					arrObj.put(rsRoomInfo.getString(10));
+					if(!rsRoomInfo.getString(8).equals(""))
+					{
+						String sqlTime="SELECT LEFT(TIMEDIFF(a.tmeCheckOutTime,'"+rsRoomInfo.getString(8).substring(0,5)+"'),6) FROM tblpropertysetup a";
+						rsTime1 = sTime1.executeQuery(sqlTime);
+						if(rsTime1.next())
+						{
+							String time=rsTime1.getString(1);
+							if(time.contains("-"))
+							{
+								arrObj.put("0");
+							}
+							else
+							{
+								arrObj.put("1");
+							}
+						}
+					}
 					arrDouble.put(arrObj);
 					objJson.put(rsRoomInfo.getString(10),arrDouble);
 				}
@@ -715,23 +743,44 @@ public class clsSynchWithPMS {
 						String dateBeforeString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", PMSDate);
 						String dateAfterString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", rsRoomInfo.getString(6));
 						int daysBetween=new clsUtilityFunctions().funGetDiffrenceOfDates(dateBeforeString, dateAfterString);
-						if(daysBetween>=0)
+						if(daysBetween>0)
 						{
-							daysBetween=daysBetween+1;
+							/*daysBetween=daysBetween+1;*/
 							arrObj.put(daysBetween);
 						}
 						else
 						{
+							daysBetween=daysBetween+1;
 							arrObj.put(daysBetween);
 						}
 					}
 					arrObj.put(rsRoomInfo.getString(9));
 					arrObj.put(rsRoomInfo.getString(10));
+					if(!rsRoomInfo.getString(8).equals(""))
+					{
+						String sqlTime="SELECT LEFT(TIMEDIFF(a.tmeCheckOutTime,'"+rsRoomInfo.getString(8).substring(0,5)+"'),6) FROM tblpropertysetup a";
+						rsTime2 = sTime2.executeQuery(sqlTime);
+						if(rsTime2.next())
+						{
+							String time=rsTime2.getString(1);
+							if(time.contains("-"))
+							{
+								arrObj.put("0");
+							}
+							else
+							{
+								arrObj.put("1");
+							}
+						}
+					}
 					arrDouble.put(arrObj);
 					objJson.put(rsRoomInfo.getString(10),arrDouble);
 				}
-			}	
+			}
 			jObjStayViewData.put("RoomStatusData", objJson);
+			/*rsRoomInfo.close();
+			rsTime1.close();
+			rsTime2.close();*/
 			
 			try
 			{
@@ -784,11 +833,9 @@ public class clsSynchWithPMS {
 			{
 				e.printStackTrace();
 			}
-			
 		}
 		catch (Exception e) 
 		{
-
 			e.printStackTrace(); 
 		}
 		finally
@@ -934,6 +981,157 @@ public class clsSynchWithPMS {
 			return jObjArrivalListData;
 		}
 	}
+	
+	@GET
+	@Path("/funGetReservationData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public JSONObject funGetReservationListData(@QueryParam("clientCode") String clientCode,@QueryParam("PMSDate") String PMSDate)
+	{
+		JSONObject jObjArrivalListData=new JSONObject();
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+		JSONArray mainArrObj=new JSONArray();
+		Connection pmsCon=null;
+		Statement st=null;
+		try{
+			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
+			st = pmsCon.createStatement();
+			JSONObject objArrList=new JSONObject() ;
+			String sql=" SELECT IFNULL(a.strReservationNo,' '),IFNULL(b.strWalkinNo,''), IFNULL(f.strFolioNo,' '), IFNULL(e.strGuestPrefix,' '), "
+					+ "IFNULL(CONCAT(e.strFirstName,' ',e.strMiddleName,' ',e.strLastName),' '), LEFT(IFNULL(DATE_FORMAT(b.dteCheckInDate,'%d-%M-%Y'),' '),6), "
+					+ "LEFT(IFNULL(DATE_FORMAT(b.dteDepartureDate,'%d-%M-%Y'),' '),6), ROUND(IFNULL(f.dblDebitAmt,0)+IFNULL(SUM(h.dblTaxAmt),0)) "
+					+ "FROM tblreservationhd a,tblcheckinhd b,tblcheckindtl c,tblroom d,tblguestmaster e, tblfoliodtl f,tblfoliohd g, tblfoliotaxdtl h "
+					+ "WHERE a.strReservationNo=b.strReservationNo AND b.strCheckInNo=c.strCheckInNo AND c.strGuestCode=e.strGuestCode "
+					+ "AND c.strRoomNo=d.strRoomCode AND g.strCheckInNo=b.strCheckInNo AND f.strFolioNo=g.strFolioNo AND g.strGuestCode=e.strGuestCode "
+					+ "AND g.strRoomNo=d.strRoomCode AND g.strRoomNo=c.strRoomNo AND a.strReservationNo=g.strReservationNo  "
+					+ "AND DATE(b.dteArrivalDate) <='"+PMSDate+"' AND DATE(b.dteDepartureDate) >='"+PMSDate+"' AND g.strFolioNo=h.strFolioNo AND b.strClientCode='"+clientCode+"' "
+					+ "AND b.strCheckInNo NOT IN (SELECT p.strCheckInNo FROM tblbillhd p) GROUP BY f.strFolioNo ";
+			ResultSet resReservationList=st.executeQuery(sql);
+			JSONArray arrReservationList=null;
+			while(resReservationList.next())
+			{
+				arrReservationList=new JSONArray();
+				arrReservationList.put(resReservationList.getString(1));
+				arrReservationList.put(resReservationList.getString(2));
+				arrReservationList.put(resReservationList.getString(3));
+				arrReservationList.put(resReservationList.getString(4));
+				arrReservationList.put(resReservationList.getString(5));
+				arrReservationList.put(resReservationList.getString(6));
+				arrReservationList.put(resReservationList.getString(7));
+				arrReservationList.put(resReservationList.getDouble(8));
+				objArrList.put(resReservationList.getString(3), arrReservationList);
+			}
+			mainArrObj.put(objArrList);
+			jObjArrivalListData.put("ReservationListData", mainArrObj);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		finally
+		{
+			return jObjArrivalListData;
+		}
+	}
+	
+	@GET
+	@Path("/funGetInhouseData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public JSONObject funGetInhouseData(@QueryParam("clientCode") String clientCode,@QueryParam("PMSDate") String PMSDate)
+	{
+		JSONObject jObjInhouseData=new JSONObject();
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+		JSONArray mainArrObj=new JSONArray();
+		Connection pmsCon=null;
+		Statement st=null;
+		try{
+			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
+			st = pmsCon.createStatement();
+			JSONObject objArrList=new JSONObject();
+			String sql=" SELECT IFNULL(b.strReservationNo,' '), IFNULL(b.strWalkinNo,''), IFNULL(f.strFolioNo,' '), IFNULL(e.strGuestPrefix,' '), IFNULL(CONCAT(e.strFirstName,' ',e.strMiddleName,' ',e.strLastName),' '),"
+					+ " LEFT(IFNULL(DATE_FORMAT(b.dteCheckInDate,'%d-%M-%Y'),' '),6), LEFT(IFNULL(DATE_FORMAT(b.dteDepartureDate,'%d-%M-%Y'),' '),6), ROUND(IFNULL(f.dblDebitAmt,0)+ IFNULL(SUM(h.dblTaxAmt),0)) "
+					+ "FROM tblcheckinhd b,tblcheckindtl c,tblroom d,tblguestmaster e, tblfoliodtl f,tblfoliohd g, tblfoliotaxdtl h "
+					+ "WHERE b.strCheckInNo=c.strCheckInNo AND c.strGuestCode=e.strGuestCode AND c.strRoomNo=d.strRoomCode AND g.strCheckInNo=b.strCheckInNo AND f.strFolioNo=g.strFolioNo AND g.strGuestCode=e.strGuestCode "
+					+ "AND g.strRoomNo=d.strRoomCode AND g.strRoomNo=c.strRoomNo AND DATE(b.dteArrivalDate) <='"+PMSDate+"' AND DATE(b.dteDepartureDate) >='"+PMSDate+"' "
+					+ "AND g.strFolioNo=h.strFolioNo AND b.strClientCode='"+clientCode+"' AND b.strCheckInNo NOT IN (SELECT p.strCheckInNo FROM tblbillhd p) "
+					+ "GROUP BY f.strFolioNo ";
+			ResultSet resInhouseList=st.executeQuery(sql);
+			JSONArray arrInhouseList=null;
+			while(resInhouseList.next())
+			{
+				arrInhouseList=new JSONArray();
+				arrInhouseList.put(resInhouseList.getString(1));
+				arrInhouseList.put(resInhouseList.getString(2));
+				arrInhouseList.put(resInhouseList.getString(3));
+				arrInhouseList.put(resInhouseList.getString(4));
+				arrInhouseList.put(resInhouseList.getString(5));
+				arrInhouseList.put(resInhouseList.getString(6));
+				arrInhouseList.put(resInhouseList.getString(7));
+				arrInhouseList.put(resInhouseList.getDouble(8));
+				objArrList.put(resInhouseList.getString(3), arrInhouseList);
+			}
+			mainArrObj.put(objArrList);
+			jObjInhouseData.put("InhouseListData", mainArrObj);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		finally
+		{
+			return jObjInhouseData;
+		}
+	}
+	
+	@GET
+	@Path("/funGetBookingData")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public JSONObject funGetBookingData(@QueryParam("clientCode") String clientCode,@QueryParam("PMSDate") String PMSDate)
+	{
+		JSONObject jObjBookingData=new JSONObject();
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+		JSONArray mainArrObj=new JSONArray();
+		Connection pmsCon=null;
+		Statement st=null;
+		try{
+			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
+			st = pmsCon.createStatement();
+			JSONObject objArrList=new JSONObject();
+			String sql=" SELECT IFNULL(a.strReservationNo,' '), IFNULL(b.strWalkinNo,''), IFNULL(f.strFolioNo,' '), IFNULL(e.strGuestPrefix,' '), "
+					+ "IFNULL(CONCAT(e.strFirstName,' ',e.strMiddleName,' ',e.strLastName),' '), LEFT(IFNULL(DATE_FORMAT(b.dteCheckInDate,'%d-%M-%Y'),' '),6), "
+					+ "LEFT(IFNULL(DATE_FORMAT(b.dteDepartureDate,'%d-%M-%Y'),' '),6), ROUND(IFNULL(f.dblDebitAmt,0)+ IFNULL(SUM(h.dblTaxAmt),0)) "
+					+ "FROM tblreservationhd a,tblcheckinhd b,tblcheckindtl c,tblroom d,tblguestmaster e, tblfoliodtl f,tblfoliohd g, tblfoliotaxdtl h "
+					+ "WHERE a.strReservationNo=b.strReservationNo AND b.strCheckInNo=c.strCheckInNo AND c.strGuestCode=e.strGuestCode "
+					+ "AND c.strRoomNo=d.strRoomCode AND g.strCheckInNo=b.strCheckInNo AND f.strFolioNo=g.strFolioNo AND g.strGuestCode=e.strGuestCode "
+					+ "AND g.strRoomNo=d.strRoomCode AND g.strRoomNo=c.strRoomNo AND a.strReservationNo=g.strReservationNo "
+					+ "AND DATE(b.dteArrivalDate) ='"+PMSDate+"' AND g.strFolioNo=h.strFolioNo AND b.strClientCode='"+clientCode+"' "
+					+ "AND b.strCheckInNo NOT IN (SELECT p.strCheckInNo FROM tblbillhd p) GROUP BY f.strFolioNo ";
+			ResultSet resBookingList=st.executeQuery(sql);
+			JSONArray arrBookingList=null;
+			while(resBookingList.next())
+			{
+				arrBookingList=new JSONArray();
+				arrBookingList.put(resBookingList.getString(1));
+				arrBookingList.put(resBookingList.getString(2));
+				arrBookingList.put(resBookingList.getString(3));
+				arrBookingList.put(resBookingList.getString(4));
+				arrBookingList.put(resBookingList.getString(5));
+				arrBookingList.put(resBookingList.getString(6));
+				arrBookingList.put(resBookingList.getString(7));
+				arrBookingList.put(resBookingList.getDouble(8));
+				objArrList.put(resBookingList.getString(3), arrBookingList);
+			}
+			mainArrObj.put(objArrList);
+			jObjBookingData.put("BookingListData", mainArrObj);
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		finally
+		{
+			return jObjBookingData;
+		}
+	}
 
 	@GET
 	@Path("/funGetFolioDetails")
@@ -979,36 +1177,6 @@ public class clsSynchWithPMS {
 			return jObjFolio.toString();
 		}
 	}
-	
-	@GET
-	@Path("/funGetData")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public String funGetTestData()
-	{
-		JSONObject jObjStudent=new JSONObject();
-		try
-		{
-			JSONArray arrObjFolioDtl=new JSONArray();
-			JSONObject objFolio=new JSONObject();
-			objFolio.put("StudCode", "ST00001");
-			objFolio.put("StudName", "ABCD");
-			arrObjFolioDtl.put(objFolio);
-			objFolio=new JSONObject();
-			objFolio.put("StudCode", "ST00002");
-			objFolio.put("StudName", "XYZ");
-			arrObjFolioDtl.put(objFolio);
-			jObjStudent.put("Students", arrObjFolioDtl);
-
-		}catch(Exception e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			return jObjStudent.toString();
-		}
-	}
-	
 	
 	@SuppressWarnings("rawtypes")
 	@POST
