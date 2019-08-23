@@ -5722,7 +5722,16 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        String sql="";
 	       
 			JSONArray mJsonArray=(JSONArray)objKOTData.get("KOTDtl");
-			String lockTable=objKOTData.getString("lockTable");
+			boolean status=objKOTData.has("lockTable");
+			String lockTable="";
+			if(status)
+			{
+				lockTable=objKOTData.getString("lockTable");
+			}
+			else
+			{
+				lockTable="N";
+			}
 			boolean isKOTSave=false;
 			if(lockTable.equalsIgnoreCase("Y")){
 				if(mJsonArray.length()>0){

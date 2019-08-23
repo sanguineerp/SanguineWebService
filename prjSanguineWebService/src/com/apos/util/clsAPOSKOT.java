@@ -741,7 +741,7 @@ public class clsAPOSKOT {
            
            if(areaWisePricing.equals("Y"))
            {
-               sql = "select LEFT(a.strItemCode,7),b.strItemName,"+ printItemQty + ",a.strKOTNo,a.strSerialNo,d.strShortName "
+               sql = "select LEFT(a.strItemCode,7),d.strItemName,"+ printItemQty + ",a.strKOTNo,a.strSerialNo,d.strShortName "
                    + " from tblitemrtemp a,tblmenuitempricingdtl b,tblprintersetup c,tblitemmaster d "
                    + " where a.strTableNo='"+tableNo+"' and a.strKOTNo='"+KOTNo+"' and b.strCostCenterCode=c.strCostCenterCode "
                    + " and b.strCostCenterCode='"+costCenterCode+"' and a.strItemCode=d.strItemCode "
@@ -753,7 +753,7 @@ public class clsAPOSKOT {
            }
            else
            {
-               sql = "select LEFT(a.strItemCode,7),b.strItemName,"+ printItemQty + ",a.strKOTNo,a.strSerialNo,d.strShortName "
+               sql = "select LEFT(a.strItemCode,7),d.strItemName,"+ printItemQty + ",a.strKOTNo,a.strSerialNo,d.strShortName "
                    + " from tblitemrtemp a,tblmenuitempricingdtl b,tblprintersetup c,tblitemmaster d "
                    + " where a.strTableNo='"+tableNo+"' and a.strKOTNo='"+KOTNo+"' and b.strCostCenterCode=c.strCostCenterCode "
                    + " and b.strCostCenterCode='"+costCenterCode+"' and a.strItemCode=d.strItemCode "

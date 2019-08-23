@@ -119,10 +119,10 @@ public class clsConfigFile
 		    onlineorderDBPortNo = configData[41].trim();
 		    
 		    posDBBackupPath = configData[42].trim();
-		    posExcelReportExportPath = configData[43].trim();  	 
+		    posExcelReportExportPath = configData[43].trim();
 		   
-		  /*  
-		    posDBServerName = "mysql";
+		    
+		    /*posDBServerName = "mysql";
 		    posDBName = "sanguine_sk";
 		    posDBUserId = "swapnil";
 		    posDBPassword = "sanguine";
@@ -173,11 +173,11 @@ public class clsConfigFile
 		    onlineorderDBPortNo = "";
 		    
 		    posDBBackupPath = "";
-		    posExcelReportExportPath = "";
+		    posExcelReportExportPath = "";*/
 
 //----------------------------------------------------------------------------------------
 	// Aria Hosting
-		 /*   posDBServerName = "mysql";
+		    /*posDBServerName = "mysql";
 		    posDBName = "ariasalu_jpos";
 		    posDBUserId = "ariasalu_root";
 		    posDBPassword = "sanguine";
@@ -229,6 +229,63 @@ public class clsConfigFile
 		    
 		    posDBBackupPath = "";
 		    posExcelReportExportPath = "";*/
+		    
+//------------------------------------------------------------------------------------------
+		   // Savari Hosting
+		    
+		    /*posDBServerName = "mysql";
+		    posDBName = "sanguine_sk";
+		    posDBUserId = "swapnil";
+		    posDBPassword = "sanguine";
+		    posDBIPAddress = "localhost";
+		    posDBPortNo = "3306";
+		    
+		    mmsDatabaseName = "ariasalu_dbwebmms";
+		    mmsDBUserId = "ariasalu_root";
+		    mmsDBPassword = "sanguine";
+		    mmsDBIPAddress = "localhost";
+		    mmsDBPortNo = "3306";
+		    
+		    cmsDBServerName = "";
+		    cmsDBName = "";
+		    cmsDBUserId = "";
+		    cmsDBPassword = "";
+		    cmsDBIpAddress = "";
+		    cmsDBPortNo = "";
+		    
+		    exciseDatabaseName = "";
+		    exciseDBUserId = "";
+		    exciseDBPassword = "";
+		    exciseDBIPAddress = "";
+		    exciseDBPortNo = "";
+		    
+		    webbooksDatabaseName = "ariasalu_webbooks";
+		    webbooksDBUserId = "ariasalu_root";
+		    webbooksDBPassword = "sanguine";
+		    webbooksDBIPAddress = "localhost";
+		    webbooksDBPortNo = "3306";
+		    
+		    aposDatabaseName = "sanguine_sk";
+		    aposDBUserId = "swapnil";
+		    aposDBPassword = "sanguine";
+		    aposDBIPAddress = "localhost";
+		    aposDBPortNo = "3306";
+		    
+		    webpmsDatabaseName = "";
+		    webpmsDBUserId = "";
+		    webpmsDBPassword = "";
+		    webpmsDBIPAddress = "";
+		    webpmsDBPortNo = "";
+		    
+		    onlineorderDatabaseName = "";
+		    onlineorderDBUserId = "";
+		    onlineorderDBPassword = "";
+		    onlineorderDBIPAddress = "";
+		    onlineorderDBPortNo = "";
+		    
+		    posDBBackupPath = "";
+		    posExcelReportExportPath = "";*/
+		    
 		    
 		}
 		catch (Exception e)
