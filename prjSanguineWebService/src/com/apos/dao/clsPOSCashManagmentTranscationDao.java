@@ -20,18 +20,18 @@ import com.apos.model.clsPOSCashManagmentTranscationModel;
 public class clsPOSCashManagmentTranscationDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 		public String funSavePOSCashManagmentTranscation(clsPOSCashManagmentTranscationModel objModel) throws Exception
 		{
-			WebPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
+			webPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
 			return objModel.getStrTransID();
 		}
 		 public String funGenerateCashManagementCode() throws Exception
 		    {
 				String customerAreaCode = "";
 				String sql = "select ifnull(max(strTransID),0) from tblcashmanagement";
-				Query query = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+				Query query = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 				List list = query.list();
 				
 				if (!list.get(0).toString().equals("0"))
@@ -84,7 +84,7 @@ public class clsPOSCashManagmentTranscationDao{
 		            + " where strUserCreated='"+User+"' and strAgainst='Rolling' "
 		            + "and date(dteTransDate)='"+Date+"'";
 		        //System.out.println(sql);
-		    	Query query = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+		    	Query query = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 		    	List list = query.list();
 		        if(list.size()>0)
 		        {
@@ -110,7 +110,7 @@ public class clsPOSCashManagmentTranscationDao{
 		            + " where date(a.dteTransDate) between '"+fromDate+"' and '"+toDate+"' and a.strAgainst='Rolling' "
 		            + " and a.strPOSCode='"+POSCode+"' "
 		            + " order by a.strUserEdited ");
-		        Query rsRollingEntry= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		        Query rsRollingEntry= webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		        List list = rsRollingEntry.list();
 		        for(int i=0 ;i<list.size();i++ )
 	 	    	{
@@ -133,7 +133,7 @@ public class clsPOSCashManagmentTranscationDao{
 		            
 		            
 		            
-		            Query rsSalesAmt= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            Query rsSalesAmt= webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            List listrsSalesAmt = rsSalesAmt.list();
 		            for(int i1=0 ;i1<listrsSalesAmt.size();i1++ )
 		 	    	{
@@ -164,7 +164,7 @@ public class clsPOSCashManagmentTranscationDao{
 		                + " and a.strPOSCode='"+POSCode+"' "
 		                + " group by a.strUserEdited");
 		           
-		            rsSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            rsSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            List listrsSalesAmt1 = rsSalesAmt.list();
 		            for(int i1=0 ;i1<listrsSalesAmt1.size();i1++ )
 		 	    	{
@@ -194,7 +194,7 @@ public class clsPOSCashManagmentTranscationDao{
 		                + " and a.strPOSCode='"+POSCode+"' "
 		                + " group by a.strUserEdited");
 		           
-		            rsSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            rsSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            List listrsSalesAmt2 = rsSalesAmt.list();
 		            for(int i1=0 ;i1<listrsSalesAmt2.size();i1++ )
 		 	    	{
@@ -235,7 +235,7 @@ public class clsPOSCashManagmentTranscationDao{
 		                + " and a.strPOSCode='"+POSCode+"' "
 		                + " group by a.strUserEdited");
 		            
-		            rsSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            rsSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            List listrsSalesAmt3 = rsSalesAmt.list();
 		            for(int i1=0 ;i1<listrsSalesAmt3.size();i1++ )
 		 	    	{
@@ -276,7 +276,7 @@ public class clsPOSCashManagmentTranscationDao{
 		            + " and a.strPOSCode='"+POSCode+"' "
 		            + " group by a.strUserEdited");
 		       
-		        Query rsSalesAmt1=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		        Query rsSalesAmt1=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		        List listrsSalesAmt3 = rsSalesAmt1.list();
 	            for(int i1=0 ;i1<listrsSalesAmt3.size();i1++ )
 	 	    	{
@@ -310,7 +310,7 @@ public class clsPOSCashManagmentTranscationDao{
 		            + " and a.strPOSCode='"+POSCode+"' "
 		            + " group by a.strUserEdited");
 		        
-		        rsSalesAmt1=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		        rsSalesAmt1=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		        List listrsSalesAmt4 = rsSalesAmt1.list();
 	            for(int i1=0 ;i1<listrsSalesAmt4.size();i1++ )
 	 	    	{
@@ -340,7 +340,7 @@ public class clsPOSCashManagmentTranscationDao{
 		        sbSqlSale.append("select strUserEdited,sum(dblAdvDeposite) from tbladvancereceipthd "
 		            + " where dtReceiptDate between '"+fromDate+"' and '"+toDate+"' and strPOSCode='"+POSCode+"' "
 		            + " group by strUserEdited ");
-		        Query rsAdvAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		        Query rsAdvAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		        List listrsAdvAmt = rsSalesAmt1.list();
 	            for(int i1=0 ;i1<listrsAdvAmt.size();i1++ )
 	 	    	{
@@ -365,7 +365,7 @@ public class clsPOSCashManagmentTranscationDao{
 		        sbSqlSale.append("select strUserEdited,sum(dblAdvDeposite) from tblqadvancereceipthd "
 		            + " where dtReceiptDate between '"+fromDate+"' and '"+toDate+"' and strPOSCode='"+POSCode+"' "
 		            + " group by strUserEdited ");
-		        rsAdvAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		        rsAdvAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		        List listrsAdvAmt1 = rsSalesAmt1.list();
 	            for(int i1=0 ;i1<listrsAdvAmt1.size();i1++ )
 	 	    	{
@@ -393,7 +393,7 @@ public class clsPOSCashManagmentTranscationDao{
 		            + " group by strUserEdited,strTransType "
 		            + " order by strTransType");
 		        
-		        Query rsCashMgmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSql.toString());
+		        Query rsCashMgmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSql.toString());
 		        List listrsCashMgmt = rsCashMgmt.list();
 	            for(int i1=0 ;i1<listrsCashMgmt.size();i1++ )
 	 	    	{

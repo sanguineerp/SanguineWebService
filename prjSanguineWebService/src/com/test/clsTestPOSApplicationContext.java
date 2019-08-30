@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class clsTestPOSApplicationContext
 {    
     @Autowired    
-    private SessionFactory sessionFactory;
+    private SessionFactory webPOSSessionFactory;
     
     public clsTestPOSApplicationContext()
     {
@@ -61,7 +61,7 @@ public class clsTestPOSApplicationContext
     @Transactional
     public String printSession()
     {		
-	Query query=this.sessionFactory.getCurrentSession().createSQLQuery("select strPOSName from tblposmaster");
+	Query query=this.webPOSSessionFactory.getCurrentSession().createSQLQuery("select strPOSName from tblposmaster");
 	List<String>listOfPOS=query.list();
 	for(int i=0;i<listOfPOS.size();i++)
 	{

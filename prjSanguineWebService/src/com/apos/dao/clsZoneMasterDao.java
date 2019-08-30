@@ -15,18 +15,18 @@ import com.apos.model.clsZoneMasterModel;
 public class clsZoneMasterDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 		public String funSaveZoneMaster(clsZoneMasterModel objModel) throws Exception
 		{
-			WebPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
+			webPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
 			return objModel.getStrZoneCode();
 		}
 		public String funGenerateZoneCode() throws Exception
 	    {
 			String zoneCode = "";
 			String sql = "select ifnull(max(strZoneCode),0) from tblzonemaster";
-			Query query = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+			Query query = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 			List list = query.list();
 			
 			if (!list.get(0).toString().equals("0"))

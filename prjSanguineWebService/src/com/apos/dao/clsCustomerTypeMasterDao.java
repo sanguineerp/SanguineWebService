@@ -20,11 +20,11 @@ import com.apos.model.clsCustomerTypeMasterModel;
 public class clsCustomerTypeMasterDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 		public String funSaveCustomerTypeMaster(clsCustomerTypeMasterModel objModel) throws Exception
 		{
-			WebPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
+			webPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
 			return objModel.getStrCustTypeCode();
 			
 		}  
@@ -34,7 +34,7 @@ public class clsCustomerTypeMasterDao{
 		    {
 				String customerTypeCode = "";
 				String sql = "select ifnull(max(strCustTypeCode),0) from tblcustomertypemaster";
-				Query query = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+				Query query = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 				List list = query.list();
 				
 				if (!list.get(0).toString().equals("0"))
@@ -84,7 +84,7 @@ public class clsCustomerTypeMasterDao{
 				try
 				{
 
-					Query query = WebPOSSessionFactory.getCurrentSession().createQuery("from clsCustomerTypeMasterModel where strClientCode= :clientCode");
+					Query query = webPOSSessionFactory.getCurrentSession().createQuery("from clsCustomerTypeMasterModel where strClientCode= :clientCode");
 					query.setParameter("clientCode", clientCode);
 					list = query.list();
 					clsCustomerTypeMasterModel objAreaModel = null;

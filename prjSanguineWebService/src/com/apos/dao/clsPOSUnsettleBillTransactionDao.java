@@ -22,7 +22,7 @@ import com.webservice.util.clsUtilityFunctions;
 public class clsPOSUnsettleBillTransactionDao {
 	
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 		
 		  public int funDebitCardTransaction(String billNo, String debitCardNo, double debitCardSettleAmt, String transType, String posCode, String posDate)
@@ -31,7 +31,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		        {
 		            String delete = "delete from tbldebitcardbilldetails "
 		                    + "where strBillNo='" + billNo + "' and strTransactionType='" + transType + "' ";
-		          Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(delete.toString());
+		          Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(delete.toString());
 		          querySql.executeUpdate(); 
 		        
 
@@ -40,7 +40,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		                    + "values ('" + billNo + "','" + debitCardNo + "','" + debitCardSettleAmt + "'"
 		                    + ",'" +posCode + "','" + posDate + "'"
 		                    + ",'" + transType + "')";
-		             querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDebitCardDetials.toString());
+		             querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDebitCardDetials.toString());
 			          querySql.executeUpdate(); 
 			        
 		        }
@@ -59,7 +59,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		        {
 		            String sql = "select dblRedeemAmt from tbldebitcardmaster "
 		                    + "where strCardNo='" + debitCardNo + "'";
-		          Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+		          Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 		          List listSqlModLive = querySql.list();
 		 		   if(listSqlModLive.size()>0)
 		 		    {		 			  
@@ -78,7 +78,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		                sql = "update tbldebitcardmaster set dblRedeemAmt='" + updatedBal + "' "
 		                        + "where strCardNo='" + debitCardNo + "'";
 		                
-		                querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+		                querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 		                querySql.executeUpdate(); 
 		            }
 		 		    }
@@ -95,12 +95,12 @@ public class clsPOSUnsettleBillTransactionDao {
 		    public int funMoveComplimentaryBillToBillDtl(String billNo,String POSCode,String billAreaCode, String operationTypeForTax, String clientCode) throws Exception
 		    	    {
 		    	        String sqlDelete = "delete from tblbilldtl where strBillNo='" + billNo + "'";
-		    	       Query querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDelete.toString());
+		    	       Query querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDelete.toString());
 		                querySql.executeUpdate(); 
 		    	        
 		    	        String sqlInsertBillComDtl = "insert into tblbilldtl "
 		    	                + " select * from tblbillcomplementrydtl where strBillNo='"+billNo+"' ";
-		    	        querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlInsertBillComDtl.toString());
+		    	        querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlInsertBillComDtl.toString());
 		                querySql.executeUpdate(); 
 		    	        
 		    	        String sql=" select strItemCode,strItemName,dblAmount,dblDiscountAmt "
@@ -109,7 +109,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		    	        double disTotal=0.0;
 		    	    
 		    	        List<clsPOSItemDetailFrTaxBean> arrListItemDtls=new ArrayList<clsPOSItemDetailFrTaxBean>();
-		    	        querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+		    	        querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 				          List listSqlModLive = querySql.list();
 				          	if(listSqlModLive.size()>0)
 				 		    {		 			  
@@ -142,7 +142,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		    	        
 		    	        sqlDelete = "delete from tblbilltaxdtl where strBillNo='" +billNo + "'";
 		    	        double taxAmt=0.0;
-		    	        querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDelete.toString());
+		    	        querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDelete.toString());
 		    	        querySql.executeUpdate(); 
 		    	       
 		    	        for(clsTaxCalculationBean objTaxCalDtl : arrListTaxCal)
@@ -153,7 +153,7 @@ public class clsPOSUnsettleBillTransactionDao {
 		    	                + "," + objTaxCalDtl.getTaxableAmount() + "," + objTaxCalDtl.getTaxAmount() + ""
 		    	                + ",'" + clientCode + "')";
 		    	            taxAmt+=objTaxCalDtl.getTaxAmount();
-		    	            querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlInsertTaxDtl.toString());
+		    	            querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlInsertTaxDtl.toString());
 			    	        querySql.executeUpdate(); 
 		    	        }
 		    	        double grandTotal=((subTotal+taxAmt)-disTotal);
@@ -161,11 +161,11 @@ public class clsPOSUnsettleBillTransactionDao {
 		    	        sql="update tblbillhd set dblDiscountAmt='"+disTotal+"',dblDiscountPer='"+disper+"',"
 		    	            + "dblTaxAmt='"+taxAmt+"',dblSubTotal='"+subTotal+"',dblGrandTotal='"+grandTotal+"' "
 		    	            + "where strBillNo='"+billNo+"'";
-		    	        querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+		    	        querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 		    	        querySql.executeUpdate(); 
 		    	        
 		    	        sqlDelete = "delete from tblbillcomplementrydtl where strBillNo='" + billNo + "'";
-		    	        querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDelete.toString());
+		    	        querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDelete.toString());
 		    	        querySql.executeUpdate(); 
 		    	        
 		    	        return 0;

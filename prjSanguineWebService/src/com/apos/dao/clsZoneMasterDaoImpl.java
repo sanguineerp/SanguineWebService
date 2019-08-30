@@ -20,11 +20,11 @@ import com.apos.model.clsZoneMasterModel;
 public class clsZoneMasterDaoImpl implements inftZoneMasterDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 	public clsZoneMasterModel funLoaddZoneMasterData(String sql,Map<String,String> hmParameters) throws Exception
 	{
-	Query query=WebPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
+	Query query=webPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
 	for(Map.Entry<String, String> entrySet:hmParameters.entrySet())
 	{
 		query.setParameter(entrySet.getKey(), entrySet.getValue());
@@ -49,7 +49,7 @@ public class clsZoneMasterDaoImpl implements inftZoneMasterDao{
 
 		try
 		{
-			Criteria cr = WebPOSSessionFactory.getCurrentSession().createCriteria(clsZoneMasterModel.class);
+			Criteria cr = webPOSSessionFactory.getCurrentSession().createCriteria(clsZoneMasterModel.class);
 			// cr.add(Restrictions.eq("strClientCode", clientCode));
 			List list = cr.list();
 

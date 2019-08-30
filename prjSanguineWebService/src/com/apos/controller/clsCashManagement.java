@@ -22,7 +22,7 @@ import com.apos.dao.clsSetupDao;
 public class clsCashManagement {
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 	@Autowired
 	clsSetupDao objSetupDao;
     public Map<String,clsCashManagementBean> funGetCashManagement(String fromDate,String toDate, String POSCode) throws Exception
@@ -40,7 +40,7 @@ public class clsCashManagement {
             + " and a.strPOSCode='"+POSCode+"' "
             + " order by a.strUserEdited ");
         
-        Query qRollingEntry=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+        Query qRollingEntry=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
         List listRollingEntry=qRollingEntry.list();
         if(listRollingEntry.size()>0)
         {
@@ -58,7 +58,7 @@ public class clsCashManagement {
 		                + " and a.strPOSCode='"+POSCode+"' "
 		                + " group by a.strUserEdited");
 
-		            Query qSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            Query qSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            List listSalesAmt=qSalesAmt.list();
 		            if(listSalesAmt.size()>0)
 		            {
@@ -91,7 +91,7 @@ public class clsCashManagement {
 		                + " and a.strPOSCode='"+POSCode+"' "
 		                + " group by a.strUserEdited");
 		            
-		            qSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            qSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            listSalesAmt=qSalesAmt.list();
 		            if(listSalesAmt.size()>0)
 		            {
@@ -123,7 +123,7 @@ public class clsCashManagement {
 		                + " and a.strPOSCode='"+POSCode+"' "
 		                + " group by a.strUserEdited");
 		            
-		            qSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            qSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            listSalesAmt=qSalesAmt.list();
 		            if(listSalesAmt.size()>0)
 		            {
@@ -168,7 +168,7 @@ public class clsCashManagement {
 		                + " group by a.strUserEdited");
 		   
 		            
-		            qSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+		            qSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
 		            listSalesAmt=qSalesAmt.list();
 		            if(listSalesAmt.size()>0)
 		            {
@@ -213,7 +213,7 @@ public class clsCashManagement {
             + " and a.strPOSCode='"+POSCode+"' "
             + " group by a.strUserEdited");
         
-        Query qSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+        Query qSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
         List listSalesAmt=qSalesAmt.list();
         if(listSalesAmt.size()>0)
         {
@@ -249,7 +249,7 @@ public class clsCashManagement {
             + " and a.strPOSCode='"+POSCode+"' "
             + " group by a.strUserEdited");
         
-         qSalesAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+         qSalesAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
          listSalesAmt=qSalesAmt.list();
         if(listSalesAmt.size()>0)
         {
@@ -332,7 +332,7 @@ public class clsCashManagement {
             + " where dtReceiptDate between '"+fromDate+"' and '"+toDate+"' and strPOSCode='"+POSCode+"' "
             + " group by strUserEdited ");
         
-        Query qAdvAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+        Query qAdvAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
         List listAdvAmt=qAdvAmt.list();
         if(listAdvAmt.size()>0)
         {
@@ -360,7 +360,7 @@ public class clsCashManagement {
             + " where dtReceiptDate between '"+fromDate+"' and '"+toDate+"' and strPOSCode='"+POSCode+"' "
             + " group by strUserEdited ");
         
-         qAdvAmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
+         qAdvAmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSqlSale.toString());
          listAdvAmt=qAdvAmt.list();
         if(listAdvAmt.size()>0)
         {
@@ -390,7 +390,7 @@ public class clsCashManagement {
             + " group by strUserEdited,strTransType "
             + " order by strTransType");
         
-        Query qCashMgmt=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSql.toString());
+        Query qCashMgmt=webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSql.toString());
         List listCashMgmt=qCashMgmt.list();
         if(listCashMgmt.size()>0)
         {

@@ -50,12 +50,9 @@ public class clsPOSWiseItemIncentiveDaoImpl implements inftPOSWiseItemIncentiveD
 	}
     
 		
-		@Autowired
-		private SessionFactory WebPOSSessionFactory;
-
 		public void funUpdateTable(String sql,Map<String,String> hmParameters) throws Exception
 		{
-		Query query=WebPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
+		Query query=webPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
 		for(Map.Entry<String, String> entrySet:hmParameters.entrySet())
 		{
 			query.setParameter(entrySet.getKey(), entrySet.getValue());

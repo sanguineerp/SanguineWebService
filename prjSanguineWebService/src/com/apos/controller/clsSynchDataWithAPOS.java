@@ -3110,7 +3110,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ ",'Make Bill','Sales Report','Reprint','SettleBill','TableStatusReport'"
 				+ ",'NCKOT','Take Away','Table Reservation','POS Wise Sales','Customer Order'"
 				//+ ",'Non Available Items','Mini Make KOT','Day End','KDSForKOTBookAndProcess','Kitchen Process System') "
-				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement','Customer Master','Move KOT','Move Table','Move Items To Table') "
+				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement','Customer Master','Move KOT','Move Table'"
+				+ ",'Move Items To Table') "
 				+ " order by b.intSequence";
 	    	}
 	    }
@@ -3166,6 +3167,13 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        	obj.put("FormName", "Item Voice Capture");
 	        	obj.put("RequestMapping", "ItemVoiceCapture");
 	        	arrObj.put(obj);
+	        	
+	        	JSONObject obj1=new JSONObject();            	
+	        	obj1.put("ModuleName","Printer Setup");
+	        	obj1.put("ImageName", "imgprintersetup");
+	        	obj1.put("FormName", "Printer Setup");
+	        	obj1.put("RequestMapping", "PrinterSetup");
+	        	arrObj.put(obj1);
 	        	/*if(superUser)
 	        	{
 	        		JSONObject obj1=new JSONObject();
@@ -4092,6 +4100,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			case "Area":
 				jArrSearchDetails=funGetAreaList(formName, POSCode, clientCode);
 				break;	
+				
+			case "CostCenterPrinter":
+				jArrSearchDetails=funGetCostCenterPrinterData(formName, POSCode, clientCode);
+				break;	
 		}
 		
 		return jArrSearchDetails;
@@ -4305,6 +4317,58 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         return arrObj;//jObj.toString();
 	}
 	
+	private JSONArray funGetCostCenterPrinterData(String formName,String POSCode,String clientCode)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+        JSONObject jObj=new JSONObject();
+        JSONArray arrObj=new JSONArray();
+        try
+        {
+	        cmsCon=objDb.funOpenAPOSCon("mysql","master");
+	        st = cmsCon.createStatement();
+	      
+	        String sql="SELECT a.strPosCode,a.strPosName,a.strBillPrinterPort FROM tblposmaster a WHERE a.strPosCode='"+POSCode+"' "
+	        		+ "AND a.strClientCode='"+clientCode+"' UNION SELECT strCostCenterCode AS CostCenter_Code,strCostCenterName AS CostCenter_Name, "
+	        		+ "strPrinterPort AS CostCenter_Printer FROM tblcostcentermaster WHERE strClientCode='"+clientCode+"' ";
+			System.out.println(sql);
+			ResultSet rsCustInfo=st.executeQuery(sql);
+			while(rsCustInfo.next())
+			{
+				JSONObject obj=new JSONObject();
+				if(rsCustInfo.getString(1).startsWith("P"))
+				{
+					obj.put("POSCode",rsCustInfo.getString(1));
+			        obj.put("POSName",rsCustInfo.getString(2));
+			        obj.put("BillPrinter",rsCustInfo.getString(3));
+				}
+				else
+				{
+					obj.put("CostCenterCode",rsCustInfo.getString(1));
+			        obj.put("CostCenterName",rsCustInfo.getString(2));
+			        obj.put("CostCenterPrinter",rsCustInfo.getString(3));
+				}
+		        arrObj.put(obj);		        
+			}
+			if(arrObj.length()==0)
+			{
+				JSONObject obj=new JSONObject();
+				obj.put("CostCenterCode","No CostCenter Found");
+				arrObj.put(obj);
+			}
+			rsCustInfo.close();
+			cmsCon.close();
+			st.close();
+		
+		}catch(Exception e)
+	    {
+	        e.printStackTrace();
+	    }
+        
+        return arrObj;
+	}
+	
 	
 	private JSONArray funGetAreaList(String formName,String POSCode,String clientCode)
 	{
@@ -4498,14 +4562,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			        st = cmsCon.createStatement();
 				
 					String sql="insert into tblcustomermaster "
-						+ "(strCustomerCode,strCustomerName,strBuldingCode,strBuildingName,strStreetName,strLandmark,strArea,strCity "
+						+ "(strCustomerCode,strCustomerName,strBuldingCode,strBuildingName,strCustAddress,strLandmark,strArea,strCity "
 						+ ",strState,intPinCode,longMobileNo,longAlternateMobileNo,strOfficeBuildingCode,strOfficeBuildingName "
 						+ ",strOfficeStreetName,strOfficeLandmark,strOfficeArea,strOfficeCity,strOfficePinCode,strOfficeState "
 						+ ",strOfficeNo,strUserCreated,strUserEdited,dteDateCreated,dteDateEdited,strDataPostFlag,strClientCode "
 						+ ",strOfficeAddress,strExternalCode,strCustomerType,dteDOB,strGender,dteAnniversary,strEmailId,strCRMId) "
 			            + "values('" + customerCode + "','" + cutomerName + "','','','"+address+"','','','' "
 		           		+ ",'','','" + mobileNo + "','','','','','','','','','','','"+ userCode + "','"+ userCode + "','"+dateTime+"' "
-		           		+ ",'"+dateTime+"','N','" + clientCode + "','N','','"+custType+"','','Male','','"+strEmail+"','' )";
+		           		+ ",'"+dateTime+"','N','" + clientCode + "','N','','"+custType+"','','','','"+strEmail+"','' )";
 					System.out.println(sql);
 					
 					retRows=st.executeUpdate(sql);
@@ -4516,10 +4580,10 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 						jObj.put("Reason", "Success");
 					}
 					else
-						{
-							jObj.put("CustomerStatus", "false");
-							jObj.put("Reason", "Error");
-						}
+					{
+						jObj.put("CustomerStatus", "false");
+						jObj.put("Reason", "Error");
+					}
 					
 			}	
 			cmsCon.close();
@@ -10443,6 +10507,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	       }
 	       return result;
 	   }
+	   
+	   
 	   
 	
 	   
@@ -18093,6 +18159,29 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         }
         return Response.status(201).entity(ret).build();
 	}
+	
+    @GET
+    @Path("/funGenerateTestPrint")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JSONObject funGenerateTestPrint(@QueryParam("CostCenterName") String costCenterName,@QueryParam("CostCenterPrinter") String costCenterPrinter)
+    {
+	   JSONObject returnObject = new JSONObject();
+	   String result="";
+	    try
+	    {
+		   result=objAPOSKOTPrint.funWriteTestFile(costCenterName,costCenterPrinter,objUtilityController.getCurrentDateTime());
+		   returnObject.put("Result", result);
+	    }
+	    catch(Exception e)
+	    {
+		   e.printStackTrace();
+	    }
+		   
+		return returnObject;
+	}
+	
+    //*********** POS BI ******************************//
+    
 
 	@GET 
 	@Path("/funGetDashboardList")

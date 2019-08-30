@@ -70,7 +70,7 @@ public class clsTextFileGenerationForPrinting2
 	clsDayEndConsolidateDao obDayEndConsolidateDao;
 	
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 	
 	@Autowired
 	clsSetupDao objSetupDao;
@@ -137,7 +137,7 @@ public class clsTextFileGenerationForPrinting2
                         + " where date(a.dtePOSDate) = :param1 and intShiftCode = :param2";
                 
              //   PreparedStatement pst = clsGlobalVarClass.conPrepareStatement.prepareStatement(sqlDayEnd);
-                qDayEnd=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDayEnd);
+                qDayEnd=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDayEnd);
                 qDayEnd.setParameter("param1", billDate);
                 qDayEnd.setParameter("param2", String.valueOf(shiftNo));
                 listdayEnd=qDayEnd.list();
@@ -156,7 +156,7 @@ public class clsTextFileGenerationForPrinting2
                         + " where b.strPosCode=a.strPosCode "
                         + " and a.strPOSCode = :param1 and date(a.dtePOSDate) = :param2 and intShiftCode = :param3 ;";
               //  PreparedStatement pst = clsGlobalVarClass.conPrepareStatement.prepareStatement(sqlDayEnd);
-                qDayEnd=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDayEnd);
+                qDayEnd=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlDayEnd);
                 qDayEnd.setParameter("param1", posCode);
                 qDayEnd.setParameter("param2", billDate);
                 qDayEnd.setParameter("param3", String.valueOf(shiftNo));
@@ -343,7 +343,7 @@ public class clsTextFileGenerationForPrinting2
 	                                + " GROUP BY c.strSettelmentDesc;";
 	                    }
 	                    //PreparedStatement pst_SettelementBrkUP = clsGlobalVarClass.conPrepareStatement.prepareStatement(sql_SettelementBrkUP);
-	                    qSettelementBrkUP=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementBrkUP);
+	                    qSettelementBrkUP=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementBrkUP);
 	                    qSettelementBrkUP.setParameter("param1", billDate);
 	                    qSettelementBrkUP.setParameter("param2", String.valueOf(shiftNo));
 	                    listSettelementBrkUP = qSettelementBrkUP.list();
@@ -369,7 +369,7 @@ public class clsTextFileGenerationForPrinting2
 	                                + " GROUP BY c.strSettelmentDesc;";
 	                    }
 	                    //System.out.println(sql_SettelementBrkUP);
-	                    qSettelementBrkUP=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementBrkUP);
+	                    qSettelementBrkUP=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementBrkUP);
 	                    qSettelementBrkUP.setParameter("param1", posCode);
 	                    qSettelementBrkUP.setParameter("param2", billDate);
 	                    qSettelementBrkUP.setParameter("param3", String.valueOf(shiftNo));
@@ -401,7 +401,7 @@ public class clsTextFileGenerationForPrinting2
 	                            + "Group By b.strTaxDesc";
 	
 	                    //System.out.println(sql_SettelementTax);
-	                    qSettelementTax=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementTax);
+	                    qSettelementTax=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementTax);
 	                    qSettelementTax.setParameter("param1", billDate);
 	                    qSettelementTax.setParameter("param2", String.valueOf(shiftNo));
 	                    listSettelementTax=qSettelementTax.list();
@@ -416,7 +416,7 @@ public class clsTextFileGenerationForPrinting2
 	                            + "Group By b.strTaxDesc";
 	
 	                    //System.out.println(sql_SettelementTax);
-	                    qSettelementTax=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementTax);
+	                    qSettelementTax=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettelementTax);
 	                    qSettelementTax.setParameter("param1", posCode);
 	                    qSettelementTax.setParameter("param2", billDate);
 	                    qSettelementTax.setParameter("param3", String.valueOf(shiftNo));
@@ -477,7 +477,7 @@ public class clsTextFileGenerationForPrinting2
                     +"AND DATE(a.dteBillDate)='"+billDate+"'"
                     +"AND a.intShiftCode='"+shiftNo+"' "
                     +"GROUP BY c.strGroupCode, c.strGroupName, a.strPoscode;");
-            Query qGroupData=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
+            Query qGroupData=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
             List listGroupData=qGroupData.list();
             if(listGroupData.size()>0)
             {
@@ -522,7 +522,7 @@ public class clsTextFileGenerationForPrinting2
                     +"AND DATE(a.dteBillDate) = '"+billDate+"' "
                     +"GROUP BY c.strGroupCode, c.strGroupName, a.strPoscode;");
 
-            qGroupData=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
+            qGroupData=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
             listGroupData=qGroupData.list();
             if(listGroupData.size()>0)
             {
@@ -568,7 +568,7 @@ public class clsTextFileGenerationForPrinting2
                     +"AND a.intShiftCode='"+shiftNo+"' "
                     +"GROUP BY c.strGroupCode, c.strGroupName, a.strPoscode;");
             
-	            qGroupData=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
+	            qGroupData=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
 	            listGroupData=qGroupData.list();
 	            if(listGroupData.size()>0)
 	            {
@@ -613,7 +613,7 @@ public class clsTextFileGenerationForPrinting2
                     +"AND DATE(a.dteBillDate) = '"+billDate+"' "
                     +"GROUP BY c.strGroupCode, c.strGroupName, a.strPoscode;");
             
-            qGroupData=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
+            qGroupData=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
             listGroupData=qGroupData.list();
            	if(listGroupData.size()>0)
            	{
@@ -668,7 +668,7 @@ public class clsTextFileGenerationForPrinting2
             bufferedWriter.newLine();
         	
 	    	String sql="select strOS, strPrinterType,strDefaultPrinter,strAdvReceiptPrinter from tblconfig where strClientCode='"+clientCode+"'";
-	    	Query query=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+	    	Query query=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 	    	List list=query.list();
 	    	if(list.size()>0){
 	    		Object ob[]=(Object[])list.get(0);

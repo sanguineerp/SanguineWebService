@@ -16,5 +16,7 @@ public interface intfBaseService {
 	public List funGetSerachList(String query,String clientCode) throws Exception;
 	
 	public List funGetList(StringBuilder query,String queryType) throws Exception;
+	
+	public List funGetList(String query,String queryType) throws Exception;
 
 }

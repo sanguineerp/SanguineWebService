@@ -24,7 +24,7 @@ public class clsPOSUnsettleBillTransactionService {
 	private clsPOSUnsettleBillTransactionDao objUnsettleBillTransactionDao;
 	
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 	
 	public String funSaveUnStettleBill(JSONObject jObjUnsettleBill){	
 	String BillNo = "";
@@ -51,7 +51,7 @@ public class clsPOSUnsettleBillTransactionService {
                 sql.append("select dteBillDate,dblGrandTotal,strClientCode,strTableNo,strWaiterNo,strAreaCode"
                     + ",strPosCode,strOperationType,strSettelmentMode,intShiftCode "
                     + " from tblbillhd where strBillNo='"+BillNo+"'");
-               Query querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+               Query querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
               // querySql.executeUpdate();  
                List listSqlModLive = querySql.list();
 	 		   if(listSqlModLive.size()>0)
@@ -73,7 +73,7 @@ public class clsPOSUnsettleBillTransactionService {
                         +"','USBill','"+dateTime+"','"+objM[3]+"','"+objM[4]
                         +"','"+objM[9]+"','"+user+"','"+user
                         +"','"+clientCode+"')");
-	 		    	  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+	 		    	  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 	 		    	 querySql.executeUpdate();
                         
 	 		    	
@@ -83,7 +83,7 @@ public class clsPOSUnsettleBillTransactionService {
                         +" where a.strSettlementCode=b.strSettelmentCode and a.strBillNo='"+BillNo+"' "
                         +" and b.strSettelmentType='Debit Card' ");
                    
-	 		    	 querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+	 		    	 querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 	 		        List listSql = querySql.list();
 	 	 		   if(listSql.size()>0)
 	 	 		    {
@@ -97,7 +97,7 @@ public class clsPOSUnsettleBillTransactionService {
                         
                         
 		                       
-		                   	 querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+		                   	 querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 		 	 		        List list = querySql.list();
 		 	 	 		   if(list.size()>0)
 		 	 	 		    {
@@ -119,7 +119,7 @@ public class clsPOSUnsettleBillTransactionService {
                     sql.append("select b.strSettelmentType from tblbillsettlementdtl a,tblsettelmenthd b "
                         +" where a.strSettlementCode=b.strSettelmentCode and a.strBillNo='"+BillNo+"' ");
                     
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     List list1 = querySql.list();
   	 	 		   if(list1.size()>0)
   	 	 		    {
@@ -136,37 +136,37 @@ public class clsPOSUnsettleBillTransactionService {
                     
   	 	 	   sql.setLength(0);
                     sql.append("delete from tblbillsettlementdtl where strBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     int unsettleExc=querySql.executeUpdate();
                     
                     sql.setLength(0);          
                     sql.append("update tblbillhd set strDataPostFlag='N' where strBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     querySql.executeUpdate();
                     
                     sql.setLength(0);
                     sql.append("update tblbilldtl set strDataPostFlag='N' where strBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     querySql.executeUpdate();
                          
                     sql.setLength(0); 
                     sql.append("update tblbillmodifierdtl set strDataPostFlag='N' where strBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     querySql.executeUpdate();
                             
                     sql.setLength(0);
                     sql.append("update tblbilltaxdtl set strDataPostFlag='N' where strBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     querySql.executeUpdate();
                     
                     sql.setLength(0);
                     sql.append("update tblbillseriesbilldtl set strDataPostFlag='N' where strHdBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     querySql.executeUpdate();
                     
                     sql.setLength(0);
                     sql.append("update tblbilldiscdtl set strDataPostFlag='N' where strBillNo='"+BillNo+"'");
-                    querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                    querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                     querySql.executeUpdate();
                     
                     if(unsettleExc>0)

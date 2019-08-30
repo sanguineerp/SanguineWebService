@@ -22,11 +22,11 @@ import com.apos.model.clsZoneMasterModel;
 public class clsRegisterDebitCardMasterDaoImpl implements intfRegisterDebitCardMasterDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 	public clsDebitCardMasterHdModel funRegisterCard(String sql,Map<String,String> hmParameters) throws Exception
 	{
-	Query query=WebPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
+	Query query=webPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
 	for(Map.Entry<String, String> entrySet:hmParameters.entrySet())
 	{
 		query.setParameter(entrySet.getKey(), entrySet.getValue());
@@ -45,7 +45,7 @@ public class clsRegisterDebitCardMasterDaoImpl implements intfRegisterDebitCardM
 	@Override
 	public clsPOSRegisterDebitCardHdModel funDelistCardForUpdate(String sql,Map<String,String> hmParameters) throws Exception
 	{
-	Query query=WebPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
+	Query query=webPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
 	for(Map.Entry<String, String> entrySet:hmParameters.entrySet())
 	{
 		query.setParameter(entrySet.getKey(), entrySet.getValue());
@@ -65,7 +65,7 @@ public class clsRegisterDebitCardMasterDaoImpl implements intfRegisterDebitCardM
 	
 	public long funDelistCardCount(String sql,Map<String,String> hmParameters) throws Exception
 	{
-	Query query=WebPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
+	Query query=webPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
 	for(Map.Entry<String, String> entrySet:hmParameters.entrySet())
 	{
 		query.setParameter(entrySet.getKey(), entrySet.getValue());
@@ -85,7 +85,7 @@ public class clsRegisterDebitCardMasterDaoImpl implements intfRegisterDebitCardM
 	
 	public List funCheckCardString(String sql,Map<String,String> hmParameters) throws Exception
 	{
-	Query query=WebPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
+	Query query=webPOSSessionFactory.getCurrentSession().getNamedQuery(sql);
 	for(Map.Entry<String, String> entrySet:hmParameters.entrySet())
 	{ 
 		

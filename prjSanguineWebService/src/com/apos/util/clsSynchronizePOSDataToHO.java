@@ -37,7 +37,7 @@ Apr 14, 2017  11:20:04 AM
 public class clsSynchronizePOSDataToHO {
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 	@Autowired
 	clsSetupDao objSetupDao;
 	@Autowired
@@ -135,7 +135,7 @@ public class clsSynchronizePOSDataToHO {
 
         int count = 0;
         
-        Query qPostBillCount=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
+        Query qPostBillCount=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
         List listCount=qPostBillCount.list();
         
         if(listCount.size()>0)
@@ -159,7 +159,7 @@ public class clsSynchronizePOSDataToHO {
         List listPostBill;
         for (int cnt = 0; cnt < count; cnt++)
         {
-        	qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        	qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         	listPostBill=qPostBill.list();
         	
             JSONObject objJson = new JSONObject();
@@ -252,9 +252,9 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillhd set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillhd set strDataPostFlag='Y'"
                     		+ " where strBillNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillhd set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillhd set strDataPostFlag='Y'"
                     		+ " where strBillNo in (" + updateBills + ")").executeUpdate();
                 }
                 flgDataPosting = true;
@@ -317,7 +317,7 @@ public class clsSynchronizePOSDataToHO {
         //System.out.println(query);
 
         int count = 0;
-        Query qPostBillCount=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
+        Query qPostBillCount=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
         List listCount=qPostBillCount.list();
       
         if(listCount.size()>0)
@@ -343,7 +343,7 @@ public class clsSynchronizePOSDataToHO {
        
         for (int cnt = 0; cnt < count; cnt++)
         {
-            qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         	listPostBill=qPostBill.list();
         	
             JSONObject objJson = new JSONObject();
@@ -433,10 +433,10 @@ public class clsSynchronizePOSDataToHO {
                     String q = "update tblqbilldtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strItemCode in (" + updateItemCodes + ") "
                             + " and strKOTNo in (" + updateKOTNos + ") ";
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strItemCode in (" + updateItemCodes + ") "
                             + " and strKOTNo in (" + updateKOTNos + ") limit 2000").toString();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbilldtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbilldtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strItemCode in (" + updateItemCodes + ") "
                             + " and strKOTNo in (" + updateKOTNos + ") limit 2000").toString();
                 }
@@ -487,7 +487,7 @@ public class clsSynchronizePOSDataToHO {
                     + " where a.strBillNo=b.strBillNo and date(a.dteBillDate) between '" + fromDate + "' and '" + toDate + "' "
                     + " and b.strDataPostFlag='N'";
         }
-        Query qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listPostBill=qPostBill.list();
      
         JSONObject objJson = new JSONObject();
@@ -555,9 +555,9 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillmodifierdtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillmodifierdtl set strDataPostFlag='Y' "
                     		+ "where strBillNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillmodifierdtl set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillmodifierdtl set strDataPostFlag='Y'"
                     		+ " where strBillNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
@@ -609,7 +609,7 @@ public class clsSynchronizePOSDataToHO {
         }
 
         int count = 0;
-        Query qPostBillCount=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
+        Query qPostBillCount=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
         List listCount=qPostBillCount.list();
       
         if(listCount.size()>0)
@@ -633,7 +633,7 @@ public class clsSynchronizePOSDataToHO {
         List listPostBill;
         for (int cnt = 0; cnt < count; cnt++)
         {
-        	qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        	qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         	listPostBill=qPostBill.list();
          
             JSONObject objJson = new JSONObject();
@@ -706,9 +706,9 @@ public class clsSynchronizePOSDataToHO {
                     updateSettlementCodes = sbUpdateSettlements.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
 
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillsettlementdtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillsettlementdtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strSettlementCode in (" + updateSettlementCodes + ") ").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillsettlementdtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillsettlementdtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strSettlementCode in (" + updateSettlementCodes + ") ").executeUpdate();
                 }
                 flgDataPosting = true;
@@ -756,7 +756,7 @@ public class clsSynchronizePOSDataToHO {
                     + " where a.strBillNo=b.strBillNo and date(a.dteBillDate) between '" + fromDate + "' and '" + toDate + "' "
                     + " and b.strDataPostFlag='N'";
         }
-        Query qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listPostBill=qPostBill.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -817,9 +817,9 @@ public class clsSynchronizePOSDataToHO {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     updateTaxCodes = sbUpdateTax.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilltaxdtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilltaxdtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strTaxCode in (" + updateTaxCodes + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbilltaxdtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbilltaxdtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strTaxCode in (" + updateTaxCodes + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
@@ -871,7 +871,7 @@ public class clsSynchronizePOSDataToHO {
         }
 
         int count = 0;
-        Query qPostBillCount=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
+        Query qPostBillCount=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
         List listCount=qPostBillCount.list();
       
         if(listCount.size()>0)
@@ -893,7 +893,7 @@ public class clsSynchronizePOSDataToHO {
         List listPostBill;
         for (int cnt = 0; cnt < count; cnt++)
         {
-        	qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        	qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         	listPostBill=qPostBill.list();
             JSONObject objJson = new JSONObject();
             JSONArray arrObj = new JSONArray();
@@ -956,9 +956,9 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldiscdtl set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldiscdtl set strDataPostFlag='Y'"
                     		+ " where strBillNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbilldiscdtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbilldiscdtl set strDataPostFlag='Y' "
                     		+ "where strBillNo in (" + updateBills + ")").executeUpdate();
                 }
                 flgDataPosting = true;
@@ -1010,7 +1010,7 @@ public class clsSynchronizePOSDataToHO {
                     + " and b.strDataPostFlag='N'";
         }
 
-        Query qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listPostBill=qPostBill.list();
   
         JSONObject objJson = new JSONObject();
@@ -1074,7 +1074,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblcrmpoints set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblcrmpoints set strDataPostFlag='Y' "
                     		+ "where strBillNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
@@ -1117,7 +1117,7 @@ public class clsSynchronizePOSDataToHO {
                     + " and b.strDataPostFlag='N'";
         }
         System.out.println(query);
-        Query qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listPostBill=qPostBill.list();
           
         JSONObject objJson = new JSONObject();
@@ -1190,10 +1190,10 @@ public class clsSynchronizePOSDataToHO {
                     updateItemCodes = sbUpdateItems.delete(0, 1).toString();
                     updatePromoCodes = sbUpdatePromoCodes.delete(0, 1).toString();
 
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillpromotiondtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillpromotiondtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strItemCode in (" + updateItemCodes + ") "
                             + " and strPromotionCode in (" + updatePromoCodes + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillpromotiondtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillpromotiondtl set strDataPostFlag='Y' "
                             + " where strBillNo in (" + updateBills + ") and strItemCode in (" + updateItemCodes + ") "
                             + " and strPromotionCode in (" + updatePromoCodes + ")").executeUpdate();
                     //dbMysql.execute("update tblbillpromotiondtl set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")");
@@ -1237,7 +1237,7 @@ public class clsSynchronizePOSDataToHO {
                     + " where a.strBillNo=b.strBillNo and date(a.dteBillDate) between '" + fromDate + "' and '" + toDate + "' "
                     + " and b.strDataPostFlag='N'";
         }
-        Query qPostBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qPostBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listPostBill=qPostBill.list();
           
         JSONObject objJson = new JSONObject();
@@ -1312,9 +1312,9 @@ public class clsSynchronizePOSDataToHO {
                 if (updateBills.length() > 0)
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillcomplementrydtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillcomplementrydtl set strDataPostFlag='Y' "
                     		+ "where strBillNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillcomplementrydtl set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqbillcomplementrydtl set strDataPostFlag='Y'"
                     		+ " where strBillNo in (" + updateBills + ")").executeUpdate();
                     //dbMysql.execute("update tblbillpromotiondtl set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")");
                 }
@@ -1341,7 +1341,7 @@ public class clsSynchronizePOSDataToHO {
             JSONArray dataObjectArray = new JSONArray();
 
             sql.append("select * from tblcustomermaster where strDataPostFlag='N'");
-            Query qCustInfo=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            Query qCustInfo=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             List listCustInfo=qCustInfo.list();
             if(listCustInfo.size()>0)
             {
@@ -1437,7 +1437,7 @@ public class clsSynchronizePOSDataToHO {
 
             sql.setLength(0);
             sql.append("select * from tblbuildingmaster where strDataPostFlag='N'");
-            Query qCustAreaMaster = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            Query qCustAreaMaster = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             List listCustAreaMaster=qCustAreaMaster.list();
             if(listCustAreaMaster.size()>0)
             {
@@ -1508,7 +1508,7 @@ public class clsSynchronizePOSDataToHO {
         {
             sql.setLength(0);
             sql.append("select * from tblareawisedc where strDataPostFlag='N'");
-            Query qCustAreaDelCharges = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            Query qCustAreaDelCharges = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             List listCustAreaDelCharges=qCustAreaDelCharges.list();
             JSONObject rootObject = new JSONObject();
             JSONArray dataObjectArray = new JSONArray();
@@ -1586,7 +1586,7 @@ public class clsSynchronizePOSDataToHO {
 	            sql.setLength(0);
 	            sql.append("select * from tbldayendprocess where strDayEnd='Y' and strDataPostFlag='N' "
 	                    + " and strPOSCode='" + POSCode + "' ");
-	            Query qDayEnd =  WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+	            Query qDayEnd =  webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 	            List listDayEnd=qDayEnd.list();
 
 	            JSONObject rootObject = new JSONObject();
@@ -1680,7 +1680,7 @@ public class clsSynchronizePOSDataToHO {
 	                    sbSql.setLength(0);
 	                    sbSql.append("update tbldayendprocess set strDataPostFlag='Y' "
 	                            + " where strPOSCode='" + entry.getValue() + "' and dtePOSDate='" + entry.getKey() + "' ");
-	                    WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString()).executeUpdate();
+	                    webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString()).executeUpdate();
 	                    
 	                }
 	                sbSql = null;
@@ -1706,7 +1706,7 @@ public class clsSynchronizePOSDataToHO {
         String query = "";
 
         query = "select * from tblcashmanagement where strDataPostFlag='N' limit 2000";
-        Query qcash=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qcash=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listCash=qcash.list();
         
         JSONObject objJson = new JSONObject();
@@ -1777,7 +1777,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 transId = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblcashmanagement set"
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblcashmanagement set"
                 		+ " strDataPostFlag='Y' where strTransId in (" + transId + ")").executeUpdate();
             }
             flgDataPosting = true;
@@ -1810,7 +1810,7 @@ public class clsSynchronizePOSDataToHO {
             String posName = "";
 
             String sqlLocation = " Select strWSLocationCode from tblPOSMaster where strPOSCode='" + posCode + "' ; ";
-            Query qLoc=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLocation);
+            Query qLoc=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLocation);
             List listLoc=qLoc.list();
             if(listLoc.size()>0)
             {
@@ -1852,7 +1852,7 @@ public class clsSynchronizePOSDataToHO {
 
             //System.out.println(sqlLiveLinkupFile);
             //System.out.println(sqlQLinkupFile);
-            Query qLiveLinkupDtl=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLiveLinkupFile);
+            Query qLiveLinkupDtl=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLiveLinkupFile);
             List listLiveLinkupDtl=qLiveLinkupDtl.list();
             if(listLiveLinkupDtl.size()>0)
             {
@@ -1867,7 +1867,7 @@ public class clsSynchronizePOSDataToHO {
 	             }
 	           
             }
-            Query qQLinkupDtl=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlQLinkupFile);
+            Query qQLinkupDtl=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlQLinkupFile);
             List listQLinkupDtl=qQLinkupDtl.list();
             if(listQLinkupDtl.size()>0)
             {
@@ -1898,7 +1898,7 @@ public class clsSynchronizePOSDataToHO {
                         + "and a.strShiftEnd='Y' "
                         + "and a.strPOSCode='" + posCode + "' ";
 
-                Query qDayEndData=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryDayEnd);
+                Query qDayEndData=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryDayEnd);
                 List listDayEndData=qDayEndData.list();
                 if(listDayEndData.size()>0)
                 {
@@ -1986,7 +1986,7 @@ public class clsSynchronizePOSDataToHO {
 		                     //System.out.println(sql);
 		                     //System.out.println(qFileSql);
 		
-		                     Query qItemSales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+		                     Query qItemSales=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 		                     List listItemSales=qItemSales.list();
 		                     if(listItemSales.size()>0)
 		                     {
@@ -2008,7 +2008,7 @@ public class clsSynchronizePOSDataToHO {
 			                     }
 		                     }
 		
-		                      qItemSales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(qFileSql);
+		                      qItemSales=webPOSSessionFactory.getCurrentSession().createSQLQuery(qFileSql);
 		                      listItemSales=qItemSales.list();
 		                     if(listItemSales.size()>0)
 		                     {
@@ -2075,7 +2075,7 @@ public class clsSynchronizePOSDataToHO {
 		                                 + "where strPOSCode='" + posCode + "' "
 		                                 + "and dtePOSDate='" + posDayEndDate + "' "
 		                                 + "and intShiftCode='" + posShiftEndCode + "' ";
-		                         Query query=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryUpdateDayEndWSAdjNo);
+		                         Query query=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryUpdateDayEndWSAdjNo);
 		                         
 		                         int k = query.executeUpdate();
 		                         WSStockAdjustmentCode = "";
@@ -2180,7 +2180,7 @@ public class clsSynchronizePOSDataToHO {
 	        String posName = "";
 
 	        String sqlLocation = " Select strExciseLicenceCode from tblPOSMaster where strPOSCode='" + posCode + "' ; ";
-	        Query qLoc=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLocation);
+	        Query qLoc=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLocation);
 	        List listLoc=qLoc.list();
 	        if(listLoc.size()>0)
 	        {
@@ -2223,7 +2223,7 @@ public class clsSynchronizePOSDataToHO {
 
 	        //System.out.println(sqlLiveLinkupFile);
 	        //System.out.println(sqlQLinkupFile);
-	        Query qLiveLinkupDtl=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLiveLinkupFile);
+	        Query qLiveLinkupDtl=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlLiveLinkupFile);
 	        List listLiveLinkupDtl=qLiveLinkupDtl.list();
 	        if(listLiveLinkupDtl.size()>0)
 	        {
@@ -2238,7 +2238,7 @@ public class clsSynchronizePOSDataToHO {
 	            }
 	          
 	        }
-	        Query qQLinkupDtl=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlQLinkupFile);
+	        Query qQLinkupDtl=webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlQLinkupFile);
 	        List listQLinkupDtl=qQLinkupDtl.list();
 	        if(listQLinkupDtl.size()>0)
 	        {
@@ -2267,7 +2267,7 @@ public class clsSynchronizePOSDataToHO {
 	                    + "and a.strDayEnd='Y' "
 	                    + "and a.strShiftEnd='Y' "
 	                    + "and a.strPOSCode='" + posCode + "' ";
-	            Query qDayEndData=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryDayEnd);
+	            Query qDayEndData=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryDayEnd);
 	            List listDayEndData=qDayEndData.list();
 	            if(listDayEndData.size()>0)
 	            {
@@ -2355,7 +2355,7 @@ public class clsSynchronizePOSDataToHO {
 		//                //System.out.println(sql);
 		                //System.out.println(qFileSql);
 		
-		                Query qItemSales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+		                Query qItemSales=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
 		                List listItemSales=qItemSales.list();
 		                if(listItemSales.size()>0)
 		                {
@@ -2378,7 +2378,7 @@ public class clsSynchronizePOSDataToHO {
 			                }
 
 		                }
-		                 qItemSales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(qFileSql);
+		                 qItemSales=webPOSSessionFactory.getCurrentSession().createSQLQuery(qFileSql);
 		                 listItemSales=qItemSales.list();
 		                if(listItemSales.size()>0)
 		                {
@@ -2446,7 +2446,7 @@ public class clsSynchronizePOSDataToHO {
 		                            + "where strPOSCode='" + posCode + "' "
 		                            + "and dtePOSDate='" + posDayEndDate + "' "
 		                            + "and intShiftCode='" + posShiftEndCode + "' ";
-		                    Query qu=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryUpdateDayEndWSAdjNo);
+		                    Query qu=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryUpdateDayEndWSAdjNo);
 		                    int k = qu.executeUpdate();
 		
 		                    /*
@@ -2578,7 +2578,7 @@ public class clsSynchronizePOSDataToHO {
 		    String query = "select * from tblbillhd where strDataPostFlag='N' "
 		            + "and strBillNo IN(select strBillNo from tblbillsettlementdtl) limit 2000";
 		
-		    Query qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		    Query qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		    List list=qsales.list();
 		    JSONObject objJson = new JSONObject();
 		    JSONArray arrObjBillHd = new JSONArray();
@@ -2644,7 +2644,7 @@ public class clsSynchronizePOSDataToHO {
 		    query = "select * from tblbilldtl where strDataPostFlag='N' "
 		            + "and strBillNo IN(select strBillNo from tblbillsettlementdtl) limit 2000";
 		    
-		    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		     list=qsales.list();
 		     JSONArray arrObjBillDtl = new JSONArray();
 		    String updateBillDtl = "";
@@ -2692,7 +2692,7 @@ public class clsSynchronizePOSDataToHO {
 		    query = "select * from tblbillmodifierdtl where strDataPostFlag='N' "
 		            + "and strBillNo IN(select strBillNo from tblbillsettlementdtl)";
 		    	
-		    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		     list=qsales.list();
 		     JSONArray arrObjBillModifierDtl = new JSONArray();
 		     if(list.size()>0)
@@ -2726,7 +2726,7 @@ public class clsSynchronizePOSDataToHO {
 		
 		    query = "select * from tblbilldiscdtl where strDataPostFlag='N' "
 		            + "and strBillNo IN(select strBillNo from tblbillsettlementdtl)";
-		     qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		     qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		     list=qsales.list();
 		    JSONArray arrObjBillDiscDtl = new JSONArray();
 		
@@ -2763,7 +2763,7 @@ public class clsSynchronizePOSDataToHO {
 		    String updateBillTaxDtl = "";
 		    query = "select * from tblbilltaxdtl where strDataPostFlag='N' "
 		            + "and strBillNo IN(select strBillNo from tblbillsettlementdtl)";
-		     qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		     qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		     list=qsales.list();
 		    
 		    JSONArray arrObjBillTaxDtl = new JSONArray();
@@ -2793,7 +2793,7 @@ public class clsSynchronizePOSDataToHO {
 		    query = "select * from tblbillcomplementrydtl "
 		            + "where strDataPostFlag='N' and strBillNo IN(select strBillNo from tblbillsettlementdtl)";
 		
-		    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		     list=qsales.list();
 		    
 		    JSONArray arrObjBillComplDtl = new JSONArray();
@@ -2835,7 +2835,7 @@ public class clsSynchronizePOSDataToHO {
 		    objJson.put("BillComplimentryDtl", arrObjBillComplDtl);
 		
 		    query = "select * from tblbillsettlementdtl where strDataPostFlag='N' limit 2000 ";
-		    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+		    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 		     list=qsales.list();
 		    JSONArray arrObjBillSettleDtl = new JSONArray();
 		    String updateBillSettlementDtl = "";
@@ -2918,7 +2918,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBills = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                  qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillhd set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")");
+		                  qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillhd set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")");
 		                  qsales.executeUpdate();
 		                 //   dbMysql.execute("update tblbillhd set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")");
 		                }
@@ -2930,7 +2930,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBillDtl = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldtl set strDataPostFlag='Y' where strBillNo in (" + updateBillDtl + ")");
+		                    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldtl set strDataPostFlag='Y' where strBillNo in (" + updateBillDtl + ")");
 		                    qsales.executeUpdate();
 		                }
 		            }
@@ -2941,7 +2941,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBillModDtl = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillmodifierdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillModDtl + ")");
+		                    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillmodifierdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillModDtl + ")");
 		                    qsales.executeUpdate();
 		                }
 		            }
@@ -2952,7 +2952,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBillDiscDtl = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldiscdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillDiscDtl + ")");
+		                    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilldiscdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillDiscDtl + ")");
 		                    qsales.executeUpdate();
 		                }
 		            }
@@ -2963,7 +2963,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBillTaxDtl = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilltaxdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillTaxDtl + ")");
+		                    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbilltaxdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillTaxDtl + ")");
 		                    qsales.executeUpdate();
 		                }
 		            }
@@ -2974,7 +2974,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBillComplDtl = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillcomplementrydtl set strDataPostFlag='Y' where strBillNo in (" + updateBillComplDtl + ")");
+		                    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillcomplementrydtl set strDataPostFlag='Y' where strBillNo in (" + updateBillComplDtl + ")");
 		                    qsales.executeUpdate();
 		                }
 		            }
@@ -2985,7 +2985,7 @@ public class clsSynchronizePOSDataToHO {
 		                {
 		                    updateBillSettlementDtl = sbUpdate.delete(0, 1).toString();
 		                    //System.out.println("Billsss="+updateBills);
-		                    qsales=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillsettlementdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillSettlementDtl + ")");
+		                    qsales=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillsettlementdtl set strDataPostFlag='Y' where strBillNo in (" + updateBillSettlementDtl + ")");
 		                    qsales.executeUpdate();
 		                }
 		            }
@@ -3037,7 +3037,7 @@ public class clsSynchronizePOSDataToHO {
 	        //System.out.println(query);
 
 	        int count = 0;
-	        Query qCount=WebPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
+	        Query qCount=webPOSSessionFactory.getCurrentSession().createSQLQuery(queryForCount);
 	        List listCount=qCount.list();
 	        
 	        
@@ -3062,7 +3062,7 @@ public class clsSynchronizePOSDataToHO {
 	        for (int cnt = 0; cnt < count; cnt++)
 	        {
 	        	
-	        	  Query qrs=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+	        	  Query qrs=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
 	  	        List list=qrs.list();
 	            JSONObject objJson = new JSONObject();
 	            JSONArray arrObj = new JSONArray();
@@ -3129,7 +3129,7 @@ public class clsSynchronizePOSDataToHO {
 	                {
 	                    updateBills = sbUpdate.delete(0, 1).toString();
 
-	                    Query qry=WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillseriesbilldtl set strDataPostFlag='Y' where strHdBillNo in (" + updateBills + ") ");
+	                    Query qry=webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblbillseriesbilldtl set strDataPostFlag='Y' where strHdBillNo in (" + updateBills + ") ");
 	                    qry.executeUpdate();
 	                    //dbMysql.execute(qry);
 
@@ -3161,7 +3161,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblqadvbookbillhd where strDataPostFlag='N'";
-        Query qRS=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qRS=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List list=qRS.list();
         
         JSONObject objJson = new JSONObject();
@@ -3217,7 +3217,7 @@ public class clsSynchronizePOSDataToHO {
     	}
 
         query = "select * from tbladvbookbillhd where strDataPostFlag='N'";
-        Query query1=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query query1=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List qlist =query1.list();
         if(qlist.size()>0)
         {
@@ -3303,12 +3303,12 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvbookbillhd set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvbookbillhd set strDataPostFlag='Y'"
                     		+ " where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
                     
 //                    dbMysql.execute("update tbladvbookbillhd set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")");
                     
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvbookbillhd set strDataPostFlag='Y'"
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvbookbillhd set strDataPostFlag='Y'"
                     		+ " where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
                     
                     
@@ -3327,7 +3327,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblqadvbookbilldtl where strDataPostFlag='N'";
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
         
         JSONObject objJson = new JSONObject();
@@ -3362,7 +3362,7 @@ public class clsSynchronizePOSDataToHO {
     		}
 
         query = "select * from tbladvbookbilldtl where strDataPostFlag='N'";
-        qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         listAdv=qadv.list();
         if(listAdv.size()>0)
         {
@@ -3428,8 +3428,8 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvbookbilldtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvbookbilldtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvbookbilldtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvbookbilldtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
                     
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
@@ -3446,7 +3446,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tbladvbookbillchardtl where strDataPostFlag='N'";
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
        
         JSONObject objJson = new JSONObject();
@@ -3475,7 +3475,7 @@ public class clsSynchronizePOSDataToHO {
     		}
 
         query = "select * from tblqadvbookbillchardtl where strDataPostFlag='N'";
-        qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
          listAdv=qadv.list();
          if(listAdv.size()>0)
          {
@@ -3532,8 +3532,8 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvbookbillchardtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvbookbillchardtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvbookbillchardtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvbookbillchardtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
                 {
@@ -3549,7 +3549,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblqadvordermodifierdtl where strDataPostFlag='N'";
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
   
         JSONObject objJson = new JSONObject();
@@ -3585,7 +3585,7 @@ public class clsSynchronizePOSDataToHO {
     		}
 
         query = "select * from tbladvordermodifierdtl where strDataPostFlag='N'";
-        qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
          listAdv=qadv.list();
          if(listAdv.size()>0)
          {
@@ -3650,8 +3650,8 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvordermodifierdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvordermodifierdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvordermodifierdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvordermodifierdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
                 {
@@ -3667,7 +3667,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblqadvancereceipthd where strDataPostFlag='N'";
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
        
         JSONObject objJson = new JSONObject();
@@ -3702,7 +3702,7 @@ public class clsSynchronizePOSDataToHO {
         	}
 
         query = "select * from tbladvancereceipthd where strDataPostFlag='N'";
-        qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         listAdv=qadv.list();
         
         if(listAdv.size()>0)
@@ -3766,8 +3766,8 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvancereceipthd set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvancereceipthd set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvancereceipthd set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvancereceipthd set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
                 {
@@ -3784,7 +3784,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblqadvancereceiptdtl where strDataPostFlag='N'";
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -3819,7 +3819,7 @@ public class clsSynchronizePOSDataToHO {
        
 
         query = "select * from tbladvancereceiptdtl where strDataPostFlag='N'";
-        qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         listAdv=qadv.list();
         if(listAdv.size()>0)
         {
@@ -3881,8 +3881,8 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvancereceiptdtl set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvancereceiptdtl set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tbladvancereceiptdtl set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblqadvancereceiptdtl set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
                 {
@@ -3910,7 +3910,7 @@ public class clsSynchronizePOSDataToHO {
                     + " where a.strBillNo=b.strBillNo and date(a.dteBillDate) between '" + fromDate + "' and '" + toDate + "' "
                     + " and b.strDataPostFlag='N'";
         }
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -3979,7 +3979,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblhomedelivery set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblhomedelivery set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
                 {
@@ -4007,7 +4007,7 @@ public class clsSynchronizePOSDataToHO {
                     + " where a.strBillNo=b.strBillNo and date(a.dteBillDate) between '" + fromDate + "' and '" + toDate + "' "
                     + " and b.strDataPostFlag='N'";
         }
-        Query qadv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qadv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listAdv=qadv.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -4065,7 +4065,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblhomedeldtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblhomedeldtl set strDataPostFlag='Y' "
                             + "where strBillNo in (" + updateBills + ")").executeUpdate();
                 }
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
@@ -4107,7 +4107,7 @@ public class clsSynchronizePOSDataToHO {
         JSONObject objJson = new JSONObject();
         JSONArray arrObjPlaceOrderHd = new JSONArray();
         String query = "select * from tblplaceorderhd where strDataPostFlag='N'";
-        Query qPlaceOrd=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qPlaceOrd=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listPlaceOrd=qPlaceOrd.list();
         
         
@@ -4140,7 +4140,7 @@ public class clsSynchronizePOSDataToHO {
 
         String updateOrderDtl = "";
         query = " select * from tblplaceorderdtl where strDataPostFlag='N' ";
-        qPlaceOrd=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qPlaceOrd=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
          listPlaceOrd=qPlaceOrd.list();
         JSONArray arrObjPlaceOrderDtl = new JSONArray();
 
@@ -4169,7 +4169,7 @@ public class clsSynchronizePOSDataToHO {
 
         String updateAdvOrderDtl = "";
         query = " select * from tblplaceorderadvorderdtl where strDataPostFlag='N' ";
-        qPlaceOrd=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        qPlaceOrd=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         listPlaceOrd=qPlaceOrd.list();
         JSONArray arrObjPlaceOrderAdvOrderDtl = new JSONArray();
 
@@ -4231,21 +4231,21 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateOrders = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblplaceorderhd set strDataPostFlag='Y' where strOrderCode in (" + updateOrders + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblplaceorderhd set strDataPostFlag='Y' where strOrderCode in (" + updateOrders + ")").executeUpdate();
                 }
                 sbUpdate = new StringBuilder(updateOrderDtl);
                 if (updateOrderDtl.length() > 0)
                 {
                     updateOrderDtl = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblplaceorderdtl set strDataPostFlag='Y' where strOrderCode in (" + updateOrderDtl + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblplaceorderdtl set strDataPostFlag='Y' where strOrderCode in (" + updateOrderDtl + ")").executeUpdate();
                 }
                 sbUpdate = new StringBuilder(updateAdvOrderDtl);
                 if (updateAdvOrderDtl.length() > 0)
                 {
                     updateAdvOrderDtl = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblplaceorderadvorderdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateAdvOrderDtl + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblplaceorderadvorderdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateAdvOrderDtl + ")").executeUpdate();
                 }
 
                 if (formName.equals("ManuallyLive") || formName.equals("ManuallyQFile"))
@@ -4286,7 +4286,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblvoidbillhd where strDataPostFlag='N' ";
-        Query qVoidBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qVoidBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listVoidBill=qVoidBill.list();
         
         JSONObject objJson = new JSONObject();
@@ -4356,7 +4356,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateBills = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidbillhd set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")").executeUpdate();
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidbillhd set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")").executeUpdate();
             }
         }
         return 1;
@@ -4366,7 +4366,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblvoidbilldtl where strDataPostFlag='N' ";
-        Query qVoidBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qVoidBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listVoidBill=qVoidBill.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -4437,7 +4437,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateBills = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidbilldtl set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")").executeUpdate();
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidbilldtl set strDataPostFlag='Y' where strBillNo in (" + updateBills + ")").executeUpdate();
             }
         }
         return 1;
@@ -4448,7 +4448,7 @@ public class clsSynchronizePOSDataToHO {
         String updateBills = "";
         String query = "select * from tblvoidmodifierdtl where strDataPostFlag='N' limit 1000 ";
 
-        Query qVoidBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qVoidBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listVoidBill=qVoidBill.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -4506,7 +4506,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateBills = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidmodifierdtl set strDataPostFlag='Y' "
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidmodifierdtl set strDataPostFlag='Y' "
                         + " where strBillNo in (" + updateBills + ")").executeUpdate();
             }
         }
@@ -4517,7 +4517,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateKOT = "";
         String query = "select * from tblvoidkot where strDataPostFlag='N' ";
-        Query qVoidBill=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qVoidBill=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listVoidBill=qVoidBill.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -4583,7 +4583,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateKOT = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidkot set strDataPostFlag='Y' where strKOTNo in (" + updateKOT + ")").executeUpdate();
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidkot set strDataPostFlag='Y' where strKOTNo in (" + updateKOT + ")").executeUpdate();
             }
         }
         return 1;
@@ -4595,7 +4595,7 @@ public class clsSynchronizePOSDataToHO {
         {
             String updateBills = "";
             String query = "select * from tblvoidadvbookbillhd where strDataPostFlag='N'";
-            Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
             List listqVoidAdv=qVoidAdv.list();
             JSONObject objJson = new JSONObject();
 
@@ -4681,7 +4681,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvbookbillhd set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvbookbillhd set strDataPostFlag='Y' "
                             + "where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
                 }
             }
@@ -4703,7 +4703,7 @@ public class clsSynchronizePOSDataToHO {
         {
             String updateBills = "";
             String query = "select * from tblvoidadvbookbilldtl where strDataPostFlag='N'";
-            Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
             List listqVoidAdv=qVoidAdv.list();
             JSONObject objJson = new JSONObject();
 
@@ -4766,7 +4766,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvbookbilldtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvbookbilldtl set strDataPostFlag='Y' where strAdvBookingNo in (" + updateBills + ")").executeUpdate();
                 }
             }
 
@@ -4788,7 +4788,7 @@ public class clsSynchronizePOSDataToHO {
         {
             String updateBills = "";
             String query = "select * from tblvoidadvordermodifierdtl where strDataPostFlag='N'";
-            Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
             List listqVoidAdv=qVoidAdv.list();
             JSONObject objJson = new JSONObject();
             JSONArray arrObj = new JSONArray();
@@ -4851,7 +4851,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvordermodifierdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvordermodifierdtl set strDataPostFlag='Y' where strAdvOrderNo in (" + updateBills + ")").executeUpdate();
                 }
             }
         }
@@ -4871,7 +4871,7 @@ public class clsSynchronizePOSDataToHO {
         {
             String updateItems = "", updateAdvOrderNo = "";
             String query = "select * from tblvoidadvbookbillchardtl where strDataPostFlag='N'";
-            Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
             List listqVoidAdv=qVoidAdv.list();
             JSONObject objJson = new JSONObject();
             JSONArray arrObj = new JSONArray();
@@ -4930,7 +4930,7 @@ public class clsSynchronizePOSDataToHO {
                     updateItems = sbUpdate.delete(0, 1).toString();
                     updateAdvOrderNo = sbUpdateAdvOrderNo.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvbookbillchardtl set strDataPostFlag='Y' "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvbookbillchardtl set strDataPostFlag='Y' "
                             + " where strItemCode in (" + updateItems + ") and strAdvBookingNo in(" + updateAdvOrderNo + ") ").executeUpdate();
                     System.out.println("update tblvoidadvbookbillchardtl set strDataPostFlag='Y' "
                             + " where strItemCode in (" + updateItems + ") and strAdvBookingNo in(" + updateAdvOrderNo + ") ");
@@ -4954,7 +4954,7 @@ public class clsSynchronizePOSDataToHO {
             String updateBills = "";
             String query = "select * from tblvoidadvancereceipthd where strDataPostFlag='N'";
 
-            Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
             List listqVoidAdv=qVoidAdv.list();
             JSONObject objJson = new JSONObject();
 
@@ -5018,7 +5018,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvancereceipthd set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvancereceipthd set strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
                 }
             }
         }
@@ -5038,7 +5038,7 @@ public class clsSynchronizePOSDataToHO {
         {
             String updateBills = "";
             String query = "select * from tblvoidadvancereceiptdtl where strDataPostFlag='N'";
-            Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+            Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
             List listqVoidAdv=qVoidAdv.list();
            
             JSONObject objJson = new JSONObject();
@@ -5102,7 +5102,7 @@ public class clsSynchronizePOSDataToHO {
                 {
                     updateBills = sbUpdate.delete(0, 1).toString();
                     //System.out.println("Billsss="+updateBills);
-                    WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvancereceiptdtl set "
+                    webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblvoidadvancereceiptdtl set "
                     		+ "strDataPostFlag='Y' where strReceiptNo in (" + updateBills + ")").executeUpdate();
                 }
             }
@@ -5141,7 +5141,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateStockNo = "";
         String query = "select * from c where strDataPostFlag='N'";
-        Query qStock=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qStock=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listStock=qStock.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -5206,7 +5206,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateStockNo = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkinhd set strDataPostFlag='Y' "
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkinhd set strDataPostFlag='Y' "
                 		+ "where strStkInCode in (" + updateStockNo + ")").executeUpdate();
             }
         }
@@ -5218,7 +5218,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateBills = "";
         String query = "select * from tblstkindtl where strDataPostFlag='N'";
-        Query qStock=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qStock=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listStock=qStock.list();
         JSONObject objJson = new JSONObject();
 
@@ -5276,7 +5276,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateBills = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkindtl set strDataPostFlag='Y'"
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkindtl set strDataPostFlag='Y'"
                 		+ " where strStkInCode in (" + updateBills + ")").executeUpdate();
             }
         }
@@ -5288,7 +5288,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateStockNo = "";
         String query = "select * from tblstkouthd where strDataPostFlag='N'";
-        Query qStock=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qStock=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listStock=qStock.list();
         JSONObject objJson = new JSONObject();
 
@@ -5353,7 +5353,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateStockNo = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkouthd set strDataPostFlag='Y' "
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkouthd set strDataPostFlag='Y' "
                 		+ "where strStkOutCode in (" + updateStockNo + ")").executeUpdate();
             }
         }
@@ -5365,7 +5365,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updateStockNo = "";
         String query = "select * from tblstkoutdtl where strDataPostFlag='N'";
-        Query qStock=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qStock=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listStock=qStock.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -5422,7 +5422,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updateStockNo = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkoutdtl set strDataPostFlag='Y' "
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblstkoutdtl set strDataPostFlag='Y' "
                 		+ "where strStkOutCode in (" + updateStockNo + ")").executeUpdate();
             }
         }
@@ -5434,7 +5434,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updatePhyStkNo = "";
          String query = "select * from tblpsphd where strDataPostFlag='N'";
-         Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+         Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
          List listqVoidAdv=qVoidAdv.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -5500,7 +5500,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updatePhyStkNo = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblpsphd set strDataPostFlag='Y' "
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblpsphd set strDataPostFlag='Y' "
                 		+ "where strPSPCode in (" + updatePhyStkNo + ")").executeUpdate();
             }
         }
@@ -5512,7 +5512,7 @@ public class clsSynchronizePOSDataToHO {
     {
         String updatePhyStkNo = "";
         String query = "select * from tblpspdtl where strDataPostFlag='N'";
-        Query qVoidAdv=WebPOSSessionFactory.getCurrentSession().createSQLQuery(query);
+        Query qVoidAdv=webPOSSessionFactory.getCurrentSession().createSQLQuery(query);
         List listqVoidAdv=qVoidAdv.list();
         JSONObject objJson = new JSONObject();
         JSONArray arrObj = new JSONArray();
@@ -5570,7 +5570,7 @@ public class clsSynchronizePOSDataToHO {
             {
                 updatePhyStkNo = sbUpdate.delete(0, 1).toString();
                 //System.out.println("Billsss="+updateBills);
-                WebPOSSessionFactory.getCurrentSession().createSQLQuery("update tblpspdtl set strDataPostFlag='Y' "
+                webPOSSessionFactory.getCurrentSession().createSQLQuery("update tblpspdtl set strDataPostFlag='Y' "
                 		+ "where strPSPCode in (" + updatePhyStkNo + ")").executeUpdate();
             }
         }

@@ -42,7 +42,7 @@ import com.webservice.util.clsTaxCalculation;
 public class clsUtilityController {
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 	
 	@Autowired 
 	clsSendMail obSendMail;
@@ -64,7 +64,7 @@ public class clsUtilityController {
         String taxCode = "", taxName = "", taxOnGD = "", taxCal = "", taxIndicator = "";
         String opType = "", taxAreaCodes = "", taxOnTax = "No", taxOnTaxCode = "";
         double taxPercent = 0.00, taxableAmount = 0.00, taxCalAmt = 0.00;
-      Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery("truncate table tbltaxtemp;");// Empty Tax Temp Table
+      Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery("truncate table tbltaxtemp;");// Empty Tax Temp Table
       querySql.executeUpdate(); 
 
         StringBuilder sbSql = new StringBuilder();
@@ -84,7 +84,7 @@ public class clsUtilityController {
         }
         sbSql.append(" and a.strTaxOnSP='Sales' "
                 + "order by a.strTaxOnTax,a.strTaxDesc");
-        querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sbSql.toString());
+        querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sbSql.toString());
 
         List listSqlModLive = querySql.list();
 		   if(listSqlModLive.size()>0)
@@ -110,7 +110,7 @@ public class clsUtilityController {
 
             String sqlTaxOn = "select strAreaCode,strOperationType,strItemType "
                     + "from tbltaxhd where strTaxCode='" + taxCode + "'";
-            querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sqlTaxOn.toString());
+            querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlTaxOn.toString());
       
             List listSql = querySql.list();
  		   if(listSql.size()>0)
@@ -316,7 +316,7 @@ public class clsUtilityController {
         String sql_SettlementTax = "select strSettlementCode,strSettlementName "
                 + "from tblsettlementtax where strTaxCode='" + taxCode + "' "
                 + "and strApplicable='true' and strSettlementCode='" + settlementCode + "'";
-      Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettlementTax.toString());
+      Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_SettlementTax.toString());
         
         List listSql = querySql.list();
 		   if(listSql.size()>0)
@@ -339,7 +339,7 @@ public class clsUtilityController {
             sql_Query = "select strTaxIndicator from tblitemmaster "
                     + "where strItemCode='" + objItemDtl.getItemCode().substring(0, 7) + "' "
                     + "and strTaxIndicator='" + indicator + "'";
-            Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_Query.toString());
+            Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_Query.toString());
             
             List listSql = querySql.list();
     		   if(listSql.size()>0)
@@ -366,7 +366,7 @@ public class clsUtilityController {
             sql_Query = "select strTaxIndicator from tblitemmaster "
                     + "where strItemCode='" + objItemDtl.getItemCode().substring(0, 7) + "' "
                     + "and strTaxIndicator='" + indicator + "'";
-           Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql_Query.toString());
+           Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql_Query.toString());
             
             List listSql = querySql.list();
     		   if(listSql.size()>0)
@@ -408,7 +408,7 @@ public class clsUtilityController {
                 + " ,a.dblAmount,a.strTaxOnGD,a.strTaxCalculation "
                 + " from tbltaxhd a "
                 + " where a.strTaxOnSP='Sales' and a.strTaxCode='" + taxCode + "'";
-        Query  querySql = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+        Query  querySql = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
         
         List listSql = querySql.list();
 		   if(listSql.size()>0)
@@ -474,7 +474,7 @@ public class clsUtilityController {
         String sql = "update " + billDtl + " set dblTaxAmount=0.00  "
         		+ " where strBillNo='" + billNo + "' "
         		+ " and date(dteBillDate)='" + filterBillDate + "' ";
-        WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql).executeUpdate();
+        webPOSSessionFactory.getCurrentSession().createSQLQuery(sql).executeUpdate();
         
         sql = "select a.strTaxCode,b.dblPercent,ifnull(b.strTaxIndicator,'NA'),b.strTaxCalculation,b.strTaxOnGD,b.strTaxOnTax "
                 + " ,b.strTaxOnTaxCode,a.dblTaxAmount,a.dblTaxableAmount "
@@ -484,7 +484,7 @@ public class clsUtilityController {
                 + " and a.dblTaxAmount>0 "
                 + " and a.dblTaxableAmount>0 "
                 + " order by b.strTaxOnTax,b.strTaxCode; ";
-        sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+        sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
         List listtax = sqlQuery.list();
         for(int k=0 ;k<listtax.size();k++ )
 	    	{
@@ -504,7 +504,7 @@ public class clsUtilityController {
                     + " from " + billDtl + " a,tblitemmaster b "
                     + " where a.strItemCode=b.strItemCode and a.strBillNo='" + billNo + "'"
                     + " and date(a.dteBillDate)='" + filterBillDate + "' ";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             List listDtl = sqlQuery.list();
             for(int i=0 ;i<listDtl.size();i++ )
     	    	{
@@ -526,7 +526,7 @@ public class clsUtilityController {
                         + " and date(dteBillDate)='" + filterBillDate + "' "
                         + " group by left(strItemCode,7)";
                 
-                sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                 List list1 = sqlQuery.list();
                 if (list1.size()>0)
                 {
@@ -622,7 +622,7 @@ public class clsUtilityController {
                     + " where strBillNo='" + billNo + "' and strItemCode='" + entry.getValue().getStrItemCode() + "' "
                     + " and strKOTNo='" + entry.getValue().getStrKOTNo() + "'"
                     + " and date(dteBillDate)='" + filterBillDate + "' ";
-             WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql).executeUpdate();
+             webPOSSessionFactory.getCurrentSession().createSQLQuery(sql).executeUpdate();
             //sqlQuery.executeUpdate();
             //System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue().getStrItemCode() + " " + entry.getValue().getDblTaxAmt());
         }
@@ -647,7 +647,7 @@ public class clsUtilityController {
                     + " and a.intShiftCode=" + shiftCode
                     + " GROUP BY c.strSettelmentDesc,a.strPosCode";
             //System.out.println(sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             for(int k=0 ;k<list.size();k++ )
  	    	{
@@ -671,7 +671,7 @@ public class clsUtilityController {
                     + "Where date(dteBillDate ) ='" + posDate + "' and strPOSCode='" + POSCode + "' "
                     + "and dblDiscountAmt > 0.00 and intShiftCode=" + shiftCode
                     + " GROUP BY strPosCode";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             if (list.size()>0)
             {
@@ -686,7 +686,7 @@ public class clsUtilityController {
             sql = "select count(strBillNo) from tblqbillhd where date(dteBillDate ) ='" + posDate + "' and "
                     + "strPOSCode='" + POSCode + " and intShiftCode=" + shiftCode + "' "
                     + "GROUP BY strPosCode";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             if (list.size()>0)
             {
@@ -702,7 +702,7 @@ public class clsUtilityController {
             
             sql = "select count(dblAdvDeposite) from tbladvancereceipthd "
                     + "where dtReceiptDate='" + posDate + "' and intShiftCode=" + shiftCode;
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
           list= sqlQuery.list();
          
             int cntAdvDeposite = Integer.valueOf(list.get(0).toString());
@@ -714,7 +714,7 @@ public class clsUtilityController {
                         + "where date(a.dtReceiptDate)='" + posDate + "' and a.strPOSCode='" + POSCode + "' "
                         + "and c.strSettelmentCode=b.strSettlementCode and a.strReceiptNo=b.strReceiptNo "
                         + "and c.strSettelmentType='Cash' and a.intShiftCode=" + shiftCode;
-                sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+                sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
                 list = sqlQuery.list();
                 Object[]  objTotalAdvance1 = (Object[]) list.get(0);
                 advCash = Double.parseDouble(objTotalAdvance1[0].toString());
@@ -728,7 +728,7 @@ public class clsUtilityController {
             sql = "select strTransType,sum(dblAmount),strCurrencyType from tblcashmanagement "
                     + "where dteTransDate='" + posDate + "' and strPOSCode='" + POSCode + "' "
                     + "and intShiftCode=" + shiftCode + " group by strTransType,strCurrencyType";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             for(int f=0 ;f<list.size();f++ )
  	    	{
@@ -780,19 +780,19 @@ public class clsUtilityController {
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode = '" + POSCode + "'"
                     + " and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_1=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
             sql = "update tbldayendprocess set dteDayEndDateTime='" + currentDate + "'"
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" + POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_2=="+sql);
 
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
             sql = "update tbldayendprocess set strUserEdited='" + user + "'"
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" + POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_3=="+sql);
 
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblNoOfBill = IFNULL((select count(*) NoOfBills "
@@ -800,7 +800,7 @@ public class clsUtilityController {
                     + "strPOSCode = '" +POSCode + "' and intShiftCode=" + shiftNo + "),0)"
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" + POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_4=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblNoOfVoidedBill = IFNULL((select count(DISTINCT strBillNo) "
@@ -809,7 +809,7 @@ public class clsUtilityController {
                     + " and intShiftCode=" + shiftNo + "),0)"
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" + POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_5=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblNoOfModifyBill = IFNULL((select count(DISTINCT b.strBillNo) "
@@ -818,7 +818,7 @@ public class clsUtilityController {
                     + " and b.strTransType = 'MB' and a.intShiftCode=" + shiftNo + "),0)"
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" + POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_6=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblHDAmt=IFNULL((select sum(a.dblGrandTotal) HD from tblqbillhd a,"
@@ -826,14 +826,14 @@ public class clsUtilityController {
                     + "a.strPOSCode = '" + POSCode + "' and a.intShiftCode=" + shiftNo + "), 0) "
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" + POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_7=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblDiningAmt=IFNULL(( select sum(dblGrandTotal) Dining"
                     + " from tblqbillhd where strTakeAway='No' and date(dteBillDate) = '" + posDate + "' and strPOSCode = '" +POSCode + "'"
                     + "  and strBillNo NOT IN (select strBillNo from tblhomedelivery where strBillNo is not NULL) and intShiftCode=" + shiftNo + "),0)"
                     + "  where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
             //System.out.println("UpdateDayEndQuery_8=="+sql);
 
@@ -843,7 +843,7 @@ public class clsUtilityController {
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
 
             //System.out.println("UpdateDayEndQuery_9=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblFloat=IFNULL((select sum(dblAmount) TotalFloats from tblcashmanagement "
@@ -852,7 +852,7 @@ public class clsUtilityController {
                     + " group by strTransType),0) "
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_10=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblTransferIn=IFNULL((select sum(dblAmount) TotalTransferIn from tblcashmanagement "
@@ -861,7 +861,7 @@ public class clsUtilityController {
                     + " group by strTransType),0) "
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_11=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblTransferOut=IFNULL((select sum(dblAmount) TotalTransferOut from tblcashmanagement "
@@ -870,7 +870,7 @@ public class clsUtilityController {
                     + " group by strTransType),0) "
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_12=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblWithdrawal=IFNULL(( select sum(dblAmount) TotalWithdrawals from tblcashmanagement "
@@ -879,7 +879,7 @@ public class clsUtilityController {
                     + " group by strTransType),0) "
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_13=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblRefund=IFNULL(( select sum(dblAmount) TotalRefunds from tblcashmanagement "
@@ -887,7 +887,7 @@ public class clsUtilityController {
                     + " and intShiftCode=" + shiftNo + " group by strTransType),0)"
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_14=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblPayments=IFNULL(( select sum(dblAmount) TotalPayments from tblcashmanagement "
@@ -896,7 +896,7 @@ public class clsUtilityController {
                     + " group by strTransType),0) "
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_15=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblAdvance=IFNULL((select sum(b.dblAdvDepositesettleAmt) "
@@ -906,7 +906,7 @@ public class clsUtilityController {
                     + "and c.strSettelmentType='Cash' and intShiftCode=" + shiftNo + "),0)"
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_16=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
            // gTotalReceipt  gTotalPayments  gTotalCashInHand  gTotalCashSales  gTotalDiscounts gNoOfDiscountedBills  
@@ -914,37 +914,37 @@ public class clsUtilityController {
             sql = "update tbldayendprocess set dblTotalReceipt=" + jobj.getDouble("gTotalReceipt") 
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_17=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblTotalPay=" + jobj.getDouble("gTotalPayments") 
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_18=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblCashInHand=" + jobj.getDouble("gTotalCashInHand") 
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_19=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblCash=" + jobj.getDouble("gTotalCashSales") 
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println(sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblTotalDiscount=" +jobj.getDouble("gTotalDiscounts")  
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_21=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set dblNoOfDiscountedBill=" + jobj.getDouble("gNoOfDiscountedBills") 
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_22=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set intTotalPax=IFNULL((select sum(intPaxNo)"
@@ -953,7 +953,7 @@ public class clsUtilityController {
                     + " where date(dtePOSDate)='" + posDate + "' "
                     + "and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("UpdateDayEndQuery_23=="+sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set intNoOfTakeAway=(select count(strTakeAway)"
@@ -961,12 +961,12 @@ public class clsUtilityController {
                     + " and strPOSCode='" +POSCode + "' and strTakeAway='Yes')"
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("update int takeawy==" + sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
             sql = "update tbldayendprocess set intNoOfHomeDelivery=(select COUNT(strBillNo)from tblhomedelivery where date(dteDate)='" + posDate + "' and strPOSCode='" +POSCode + "' )"
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
             //System.out.println("update int homedelivry:==" + sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             // Update Day End Table with Used Card Balance    
@@ -977,7 +977,7 @@ public class clsUtilityController {
                     + " and date(dteBillDate)='" + posDate + "' and a.strPOSCode='" +POSCode + "' "
                     + " and c.strSettelmentType='Debit Card' "
                     + " group by a.strPOSCode,date(a.dteBillDate),c.strSettelmentType;";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             if (list.size()>0)
             {
@@ -988,7 +988,7 @@ public class clsUtilityController {
             sql = "update tbldayendprocess set dblUsedDebitCardBalance=" + debitCardAmtUsed + " "
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' "
                     + " and intShiftCode=" + shiftNo;
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             // Update Day End Table with UnUsed Card Balance    
@@ -996,7 +996,7 @@ public class clsUtilityController {
             sql = "select sum(dblCardAmt) from tbldebitcardrevenue "
                     + " where strPOSCode='" +POSCode + "' and date(dtePOSDate)='" + posDate + "' "
                     + " group by strPOSCode,date(dtePOSDate);";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             if (list.size()>0)
             {
@@ -1007,7 +1007,7 @@ public class clsUtilityController {
             sql = "update tbldayendprocess set dblUnusedDebitCardBalance=" + debitCardAmtUnUsed + " "
                     + " where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' "
                     + " and intShiftCode=" + shiftNo;
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "UPDATE tbldayendprocess SET dblTipAmt= IFNULL(( "
@@ -1015,7 +1015,7 @@ public class clsUtilityController {
                     + "FROM tblbillhd "
                     + "WHERE DATE(dteBillDate) ='" + posDate + "' AND intShiftCode='" + shiftNo + "' AND strPOSCode='" +POSCode + "'),0) "
                     + "WHERE DATE(dtePOSDate)='" + posDate + "' AND strPOSCode='" +POSCode + "' AND intShiftCode='" + shiftNo + "' ";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
 
             sql = "update tbldayendprocess set intNoOfComplimentaryKOT=(select COUNT(a.strBillNo)"
@@ -1024,7 +1024,7 @@ public class clsUtilityController {
                     + "and date(b.dteBillDate)='" + posDate + "' and a.strPOSCode='" +POSCode + "') "
                     + "where date(dtePOSDate)='" + posDate + "' and strPOSCode='" +POSCode + "' and intShiftCode=" + shiftNo;
 //            System.out.println("intNoOfComplimentaryKOT:==" + sql);
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             sqlQuery.executeUpdate();
         }
         catch (Exception e)
@@ -1046,7 +1046,7 @@ public class clsUtilityController {
                 + " from tblitemrtemp "
                 + " where strCardNo='" + cardNo + "' and strNCKotYN='N' "
                 + " group by strTableNo;";
-        sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+        sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
            list = sqlQuery.list();
         if (list.size()>0)
         {
@@ -1061,7 +1061,7 @@ public class clsUtilityController {
                     + " from tblkottaxdtl "
                     + " where strTableNo='" + tableNo + "' "
                     + " group by strTableNo;";
-            sqlQuery= WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+            sqlQuery= webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
             list = sqlQuery.list();
             if (list.size()>0)
             {
@@ -1353,7 +1353,7 @@ public class clsUtilityController {
     	    
     	    	String gHOCommunication="";
     	    	String sql="select strHOCommunication from tblconfig where strClientCode='"+clientCode+"'";
-    	    	Query query=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+    	    	Query query=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
     	    	List list=query.list();
     	    	if(list.size()>0){
     	    		gHOCommunication=(String) list.get(0);	 
@@ -1401,7 +1401,7 @@ public class clsUtilityController {
     	{
     		Boolean user=false;
     		String sql="select strSuperType from tbluserhd where strUserCode='"+userCode+"';";
-    		Query query=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+    		Query query=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
     		List list=query.list();
 			  if (list.size()>0)
 	          {
@@ -1433,7 +1433,7 @@ public class clsUtilityController {
   	                    + "and d.strTaxCode='" + taxCode + "' "
   	                    + "and d.strApplicable='true' ";
   	            
-  	        Query query=WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
+  	        Query query=webPOSSessionFactory.getCurrentSession().createSQLQuery(sql);
       		List list=query.list();
   			  if (list!=null && list.size()>0 )
   	          {

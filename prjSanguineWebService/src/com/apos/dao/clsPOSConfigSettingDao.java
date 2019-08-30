@@ -19,7 +19,7 @@ import com.apos.model.clsPOSConfigSettingModel_ID;
 public class clsPOSConfigSettingDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 	@SuppressWarnings("finally")
 	public String funSavePOSConfigSetting(clsPOSConfigSettingHdModel objModel) throws Exception
@@ -27,7 +27,7 @@ public class clsPOSConfigSettingDao{
 		String save="";
 		try
 		{
-		WebPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
+		webPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
 		save="saved";
 		}catch(Exception ex)
 		{
@@ -45,7 +45,7 @@ public class clsPOSConfigSettingDao{
 	{
 		JSONObject jObjData = new JSONObject();
 		JSONArray jArrConfigData = new JSONArray();
-		Query query = WebPOSSessionFactory.getCurrentSession().createQuery("from clsPOSConfigSettingHdModel where strClientCode= :clientCode");
+		Query query = webPOSSessionFactory.getCurrentSession().createQuery("from clsPOSConfigSettingHdModel where strClientCode= :clientCode");
 		query.setParameter("clientCode", clientCode);
 		List list = query.list();
 		clsPOSConfigSettingHdModel objModel = null;

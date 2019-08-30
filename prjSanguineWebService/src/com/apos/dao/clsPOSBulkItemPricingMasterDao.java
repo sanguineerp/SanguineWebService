@@ -25,7 +25,7 @@ import com.webservice.util.clsUtilityFunctions;
 public class clsPOSBulkItemPricingMasterDao {
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 	@Autowired
 	clsUtilityFunctions objUtilityFunctions;
@@ -73,7 +73,7 @@ public class clsPOSBulkItemPricingMasterDao {
 			sql.append(strAreaCode).append("' ");
 		}
 
-		Query query = WebPOSSessionFactory.getCurrentSession().createSQLQuery(
+		Query query = webPOSSessionFactory.getCurrentSession().createSQLQuery(
 				sql.toString());
 		query.executeUpdate();
 
@@ -158,7 +158,7 @@ public class clsPOSBulkItemPricingMasterDao {
 			sql.append("'").append(strHourlyPricing).append("'),");
 
 		}
-		Query query1 = WebPOSSessionFactory.getCurrentSession().createSQLQuery(
+		Query query1 = webPOSSessionFactory.getCurrentSession().createSQLQuery(
 				sql.toString());
 		query1.executeUpdate();
 		for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
@@ -173,7 +173,7 @@ public class clsPOSBulkItemPricingMasterDao {
 				sql.append("delete from tblmenuitempricinghd where strPosCode='"
 						+ PosCode + "' and strMenuCode='" + menuCode + "' ");
 
-				Query query2 = WebPOSSessionFactory.getCurrentSession()
+				Query query2 = webPOSSessionFactory.getCurrentSession()
 						.createSQLQuery(sql.toString());
 				query2.executeUpdate();
 
@@ -190,7 +190,7 @@ public class clsPOSBulkItemPricingMasterDao {
 				sql.append(dteDateCreated).append("','");
 				sql.append(dteDateEdited).append("')");
 
-				Query insert = WebPOSSessionFactory.getCurrentSession()
+				Query insert = webPOSSessionFactory.getCurrentSession()
 						.createSQLQuery(sql.toString());
 				insert.executeUpdate();
 
@@ -201,7 +201,7 @@ public class clsPOSBulkItemPricingMasterDao {
 		
 		String sql1 = "update tblmasteroperationstatus set dteDateEdited='" + dteDateCreated + "' "
                 + " where strTableName='MenuItemPricing' and strClientCode='" + ClientCode + "'";
-		Query query2 = WebPOSSessionFactory.getCurrentSession().createSQLQuery(
+		Query query2 = webPOSSessionFactory.getCurrentSession().createSQLQuery(
 				sql1.toString());
 		query2.executeUpdate();
 	}
@@ -278,7 +278,7 @@ public class clsPOSBulkItemPricingMasterDao {
 
 		sql.append(sqlFilter);
 
-		Query query = WebPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
+		Query query = webPOSSessionFactory.getCurrentSession().createSQLQuery(sql.toString());
 		List list = query.list();
 
 		if (list.size() > 0) {

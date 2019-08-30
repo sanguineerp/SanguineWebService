@@ -211,15 +211,15 @@ public class clsTextFileGenerator
 	    
 	    if (type.equalsIgnoreCase("dayend"))
 	    {
-		reportName = "dayend";
+	    	reportName = "dayend";
 	    }
 	    else if (type.equalsIgnoreCase("Adv Receipt"))
 	    {
-		reportName = "Adv Receipt";
+	    	reportName = "Adv Receipt";
 	    }
 	    else
 	    {
-		reportName = "bill";
+	    	reportName = "bill";
 	    }
 	    
 	    funPrintBillWindows(reportName, primaryPrinterName);
@@ -259,6 +259,10 @@ public class clsTextFileGenerator
 					result="Kot Printing Not Available!!!";
 				}
 		    }
+		    else if(type.equalsIgnoreCase("Test"))
+		    {
+		    	result=funPrintKOTWindows(primaryPrinterName, secPrinterName,KOTType,printOnBothPrinter, noOfCopiesPrimaryPrinter, noOfCopiesSecPrinter,reprint);
+		    }
 		}
 		catch (Exception e)
 		{
@@ -293,6 +297,10 @@ public class clsTextFileGenerator
     	else if(KOTType.equals("KOT"))
     	{
     		filename = (filePath + "/Temp/Temp_KOT.txt");
+    	}
+    	else if(KOTType.equals("Test"))
+    	{
+    		filename = (filePath + "/Temp/Test_Print.txt");
     	}
 	
 		try

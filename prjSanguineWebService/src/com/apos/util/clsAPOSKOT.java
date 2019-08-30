@@ -10,6 +10,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import javax.ws.rs.QueryParam;
+
+import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
@@ -1426,283 +1429,331 @@ public class clsAPOSKOT {
    
    
    public String funConsolidateKOTDetailsToTextFile(String tableNo,String POSCode,String POSName,String Reprint,String printYN,String kotType,String KOTNo,String deviceName) 
-		   {       
-	           String result="";
-			   clsDatabaseConnection objDb=new clsDatabaseConnection();
-		       Connection aposCon=null;
-		       Statement st=null;
-		       clsFileIOUtil objFileIOUtil=new clsFileIOUtil();
-		       String line = "  --------------------------------------",tableName="",waiterName="",userName="",CostCenterName="",createdDate="";
-			   int pax=0;
-			   ArrayList<String>listKOT=new ArrayList<String>();
-		       try 
+   {       
+       String result="";
+	   clsDatabaseConnection objDb=new clsDatabaseConnection();
+       Connection aposCon=null;
+       Statement st=null;
+       clsFileIOUtil objFileIOUtil=new clsFileIOUtil();
+       String line = "  --------------------------------------",tableName="",waiterName="",userName="",CostCenterName="",createdDate="";
+	   int pax=0;
+	   ArrayList<String>listKOT=new ArrayList<String>();
+       try 
+       {
+    	   aposCon=objDb.funOpenAPOSCon("mysql","master");
+	       st = aposCon.createStatement();
+           
+	       // Get Setup Values for Printing.
+	       
+	       String areaWisePricing="N";
+	       String printModQtyOnKOT="N";
+	       String noOfLinesInKOTPrint="1";
+	       String printShortNameOnKOT="N";
+	       String printKOTYN="Y";
+	       String multipleKOTPrint="N";
+	       String multipleBillPrint="N";
+	       String clientCode="";
+	       String printKOTPrinter="N";
+	       int columnSize=40;
+	       
+	       String AreaCodeForAll = "";
+            String sql = "select strAreaCode from tblareamaster where strAreaName='All';";                   
+            ResultSet rsAreaCode = st.executeQuery(sql);
+            if (rsAreaCode.next()) {
+                AreaCodeForAll = rsAreaCode.getString(1);
+            }
+            rsAreaCode.close();
+		   
+	       
+	       sql="select strAreaWisePricing,strPrintShortNameOnKOT,strPrintModifierQtyOnKOT,strNoOfLinesInKOTPrint"
+		       		+ ",strMultipleKOTPrintYN,strPrintKOTYN,strMultipleBillPrinting,intColumnSize,strClientCode,strKOTToLocalPrinter,strConsolidatedKOTPrinterPort "
+		       		+ "from tblsetup where (strPOSCode='"+POSCode+"' or strPOSCode='All' ) ";
+		   System.out.println(sql);
+		       ResultSet rsSetupValues=st.executeQuery(sql);
+		       if(rsSetupValues.next())
 		       {
-		    	   aposCon=objDb.funOpenAPOSCon("mysql","master");
-			       st = aposCon.createStatement();
-		           
-			       // Get Setup Values for Printing.
-			       
-			       String areaWisePricing="N";
-			       String printModQtyOnKOT="N";
-			       String noOfLinesInKOTPrint="1";
-			       String printShortNameOnKOT="N";
-			       String printKOTYN="Y";
-			       String multipleKOTPrint="N";
-			       String multipleBillPrint="N";
-			       String clientCode="";
-			       String printKOTPrinter="N";
-			       int columnSize=40;
-			       
-			       String AreaCodeForAll = "";
-		            String sql = "select strAreaCode from tblareamaster where strAreaName='All';";                   
-		            ResultSet rsAreaCode = st.executeQuery(sql);
-		            if (rsAreaCode.next()) {
-		                AreaCodeForAll = rsAreaCode.getString(1);
-		            }
-		            rsAreaCode.close();
-				   
-			       
-			       sql="select strAreaWisePricing,strPrintShortNameOnKOT,strPrintModifierQtyOnKOT,strNoOfLinesInKOTPrint"
-				       		+ ",strMultipleKOTPrintYN,strPrintKOTYN,strMultipleBillPrinting,intColumnSize,strClientCode,strKOTToLocalPrinter,strConsolidatedKOTPrinterPort "
-				       		+ "from tblsetup where (strPOSCode='"+POSCode+"' or strPOSCode='All' ) ";
-				   System.out.println(sql);
-				       ResultSet rsSetupValues=st.executeQuery(sql);
-				       if(rsSetupValues.next())
-				       {
-				    	   areaWisePricing=rsSetupValues.getString(1);
-				    	   printShortNameOnKOT=rsSetupValues.getString(2);
-					       printModQtyOnKOT=rsSetupValues.getString(3);
-					       noOfLinesInKOTPrint=rsSetupValues.getString(4);
-					       multipleKOTPrint=rsSetupValues.getString(5);
-					       printKOTYN=rsSetupValues.getString(6);
-					       multipleBillPrint=rsSetupValues.getString(7);
-					       columnSize=rsSetupValues.getInt(8);
-					       clientCode=rsSetupValues.getString(9);
-					       printKOTPrinter=rsSetupValues.getString(11);
-				       }
-			       
-			   
-			       
-			       if(!printKOTPrinter.isEmpty())
-			       {
-			    	   obTextFileGenerator.funCreateTempFolder();
-			           String filePath = System.getProperty("user.dir");
-			           File textKOTFilePath;
-			           textKOTFilePath = new File(filePath + "/Temp/Temp_Consolidated_KOT.txt");
-			           
-			           System.out.println(textKOTFilePath.getAbsolutePath());
-			           FileWriter fstream = new FileWriter(textKOTFilePath);
-			           //BufferedWriter KotOut = new BufferedWriter(fstream);
-			           BufferedWriter KotOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(textKOTFilePath),"UTF8"));
-			           if ("Reprint".equalsIgnoreCase(Reprint)) 
-			           {
-			        	   objFileIOUtil.funPrintBlankSpace("DUPLICATE", KotOut, columnSize);
-			               KotOut.write("DUPLICATE");
-			               KotOut.newLine();
-			           }
-			           
-			           
-			           sql = " select a.dteDateCreated,a.strKOTNo,c.strTableName,c.intPaxNo,a.strWaiterNo,ifnull(b.strWShortName,''),a.strUserCreated "
-		    	           	   + " from tblitemrtemp a left outer join tblwaitermaster b on a.strWaiterNo=b.strWaiterNo,tbltablemaster c "
-		    	           	   + " where a.strTableNo=c.strTableNo "
-		    	           	   + " and a.strTableNo='"+tableNo+"' and a.strKOTNo='"+KOTNo+"' "
-		    	           	   + " and (c.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' ) OR c.strAreaCode ='"+AreaCodeForAll+"')"
-		    	           	   + " and a.strPOSCode='"+POSCode+"' and c.strOperational='Y' "
-		    	           	   + " group by a.strKOTNo "
-		    	           	   + " order by a.strKOTNo,a.strSerialNo";
-			           
-				           st.close();
-				           st=aposCon.createStatement();
-				           ResultSet rs = st.executeQuery(sql);
-				           while (rs.next()) 
-				           {
-				               tableName = rs.getString(3);
-				               pax = rs.getInt(4);
-				               waiterName=rs.getString(6);
-				               userName=rs.getString(7);
-				               createdDate=rs.getString(1);
-				               listKOT.add(rs.getString(2));
-				           }
-			               rs.close();
-			           
-			           objFileIOUtil.funPrintBlankSpace("Consolidated KOT", KotOut, columnSize);
-				       KotOut.write("Consolidated KOT");
-				       
-			           KotOut.newLine();
-			           objFileIOUtil.funPrintBlankSpace(POSName, KotOut, columnSize);
-			           KotOut.write(POSName);
-			           KotOut.newLine();
-
-			           System.out.println(pax);	           
-			           KotOut.write(line);
-			           KotOut.newLine();
-			           KotOut.write("  TABLE NO :");
-			           KotOut.write(tableName + "  ");
-			           KotOut.write(" PAX   :");
-			           System.out.println(pax);
-			           KotOut.write(String.valueOf(pax));
-			           System.out.println(pax);
-			           KotOut.newLine();
-			           KotOut.write("  WAITER NAME:" + "   " + waiterName);
-		               KotOut.newLine();
-		               KotOut.write("  DATE & TIME:" + createdDate);
-		               KotOut.newLine();
-			           KotOut.write("  KOT From Device:" + deviceName);
-			           KotOut.newLine();
-			           KotOut.write("  KOT By User      :" + userName);
-			            
-			           KotOut.newLine();
-			           KotOut.write(line);
-			           KotOut.newLine();
-			           
-			           
-			           String itemName="c.strItemName";
-			           if(printShortNameOnKOT.equals("Y"))
-			           {
-			               itemName="b.strShortName";
-			           }
-			           
-			          // if(listKOT.size()>0)
-			          // {
-			        	 //  for(int cnt=0;cnt<listKOT.size();cnt++)
-			        	 //  {
-			        		   if(areaWisePricing.equals("Y"))
-			    	           {
-			    	               sql = " select LEFT(a.strItemCode,7),"+itemName+",a.dblItemQuantity,d.strCostCenterCode,d.strPrinterPort,d.strSecondaryPrinterPort,d.strCostCenterName,a.strNCKotYN  "
-			    	               	   + " from tblitemrtemp a left outer join tblmenuitempricingdtl c on a.strItemCode = c.strItemCode  "
-			    	               	   + " left outer join tblcostcentermaster d on c.strCostCenterCode=d.strCostCenterCode,tblitemmaster b  "
-			    	               	  // + " where a.strKOTNo='"+listKOT.get(cnt)+"' and a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"'  "
-			    	               	 + " where  a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"' and a.strKOTNo='"+KOTNo+"' " 
-			    	               	  + " and a.strItemCode=b.strItemCode and (c.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' ))  "
-			    	               	   + " group by d.strCostCenterCode,a.strItemCode";
-			    	           }
-			    	           else
-			    	           {
-			    	        	   sql = " select LEFT(a.strItemCode,7),"+itemName+",a.dblItemQuantity,d.strCostCenterCode,d.strPrinterPort,d.strSecondaryPrinterPort,d.strCostCenterName,a.strNCKotYN  "
-				    	               	   + " from tblitemrtemp a left outer join tblmenuitempricingdtl c on a.strItemCode = c.strItemCode  "
-				    	               	   + " left outer join tblcostcentermaster d on c.strCostCenterCode=d.strCostCenterCode,tblitemmaster b  "
-				    	               	  // + " where a.strKOTNo='"+listKOT.get(cnt)+"' and a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"'  "
-				    	               	   + " where a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"' and a.strKOTNo='"+KOTNo+"' "
-				    	               	   + " and a.strItemCode=b.strItemCode and (c.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' )  OR c.strAreaCode ='"+AreaCodeForAll+"')  "
-				    	               	   + " group by d.strCostCenterCode,a.strItemCode";;
-			    	           }
-			    	           System.out.println(sql);
-			    	           st.close();
-			    	           st=aposCon.createStatement();
-			    	           ResultSet rsKOTDetails = st.executeQuery(sql);
-			    	           int count=0;
-			    	           while (rsKOTDetails.next()) 
-			    	           {
-			    	        	   if(count==0)
-			    	        	   {
-			    	        		   KotOut.newLine();
-			        		           KotOut.write("  QTY         ITEM NAME  ");
-			        		           KotOut.newLine();
-			        		           KotOut.write(line);
-			        		           KotOut.newLine();
-			    	        	   }
-			    	        	   
-			    	        	   String itemqty = rsKOTDetails.getString(3);
-			    	               if (itemqty.length() == 5) 
-			    	               {
-			    	                   KotOut.write(" " + rsKOTDetails.getString(3) + "       " + rsKOTDetails.getString(2));
-			    	               }
-			    	               else if (itemqty.length() == 4) 
-			    	               {
-			    	                   KotOut.write("  " + rsKOTDetails.getString(3) + "       " + rsKOTDetails.getString(2));
-			    	               }
-			    	               else if (itemqty.length() == 6) 
-			    	               {
-			    	                   KotOut.write("" + rsKOTDetails.getString(3) + "       " + rsKOTDetails.getString(2));
-			    	               }
-			    	               String itemCode=rsKOTDetails.getString(1);
-			    	               String serialNo=rsKOTDetails.getString(5);
-			    	               System.out.println("itemCode="+itemCode);
-			    	               
-			    	               String sqlModifier="select a.strItemName,sum(a.dblItemQuantity) from tblitemrtemp a "
-			    		                    + " where a.strItemCode like'"+rsKOTDetails.getString(1)+"M%' and a.strKOTNo='"+KOTNo+"' "
-			    		                   //+ " and strSerialNo like'"+rsKOTDetails.getString(5)+".%' "
-			    		                   + " group by a.strItemCode,a.strItemName ";
-			    	               System.out.println("sqlModifier="+sqlModifier);
-			    	               
-			    		           Statement st2=aposCon.createStatement();
-			    	               ResultSet rsModifierItems=st2.executeQuery(sqlModifier);
-			    	               while(rsModifierItems.next())
-			    	               {
-			    	            	   KotOut.newLine();
-			    	                   String modQty=rsModifierItems.getString(2);
-			    	                   String modifierName=rsModifierItems.getString(1);
-			    	                       if(printModQtyOnKOT.equals("Y"))
-			    	                       {
-			    	                           if (modQty.length() == 5) 
-			    	                           {
-			    	                               KotOut.write(" " + rsModifierItems.getString(2) + "       " + rsModifierItems.getString(1));
-			    	                           }
-			    	                           else if (modQty.length() == 4) 
-			    	                           {
-			    	                               KotOut.write("  " + rsModifierItems.getString(2) + "       " + rsModifierItems.getString(1));
-			    	                           }
-			    	                           else if (modQty.length() == 6) 
-			    	                           {
-			    	                               KotOut.write("" + rsModifierItems.getString(2) + "       " + rsModifierItems.getString(1));
-			    	                           }
-			    	                       }
-			    	                       else
-			    	                       {
-			    	                           if (modQty.length() == 5) 
-			    	                           {
-			    	                               KotOut.write("            " + rsModifierItems.getString(1));
-			    	                           }
-			    	                           else if (modQty.length() == 4) 
-			    	                           {
-			    	                               KotOut.write("             " + rsModifierItems.getString(1));
-			    	                           }
-			    	                           else if (modQty.length() == 6) 
-			    	                           {
-			    	                               KotOut.write("           " + rsModifierItems.getString(1));
-			    	                           }
-			    	                       }
-			    	               }
-			    	               st2.close();
-			    	               rsModifierItems.close();
-			    	               KotOut.newLine();
-			    	               count++;
-			    	               
-			    	           }
-			    	           rsKOTDetails.close();
-			    	           KotOut.newLine();
-			    	           KotOut.write(line);
-			        	//   }
-			          // }
-			           
-			           
-			           for(int cntLines=0;cntLines<Integer.parseInt(noOfLinesInKOTPrint);cntLines++)
-			           {
-			               KotOut.newLine();
-			           }
-			           
-			           KotOut.write("m");//windows
-			           KotOut.close();
-			           fstream.flush();
-			           fstream.close();
-			           
-			           if(printYN.equals("Y"))
-			           {
-			        	  result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "",printKOTYN, "N","ConsolidateKOT",0,0,"N",Reprint);
-			        	   
-			           }
-			    	   
-			       }
-		           
-		           
-		       } 
-		       catch (Exception e) 
-		       {
-		           
-		           e.printStackTrace();
+		    	   areaWisePricing=rsSetupValues.getString(1);
+		    	   printShortNameOnKOT=rsSetupValues.getString(2);
+			       printModQtyOnKOT=rsSetupValues.getString(3);
+			       noOfLinesInKOTPrint=rsSetupValues.getString(4);
+			       multipleKOTPrint=rsSetupValues.getString(5);
+			       printKOTYN=rsSetupValues.getString(6);
+			       multipleBillPrint=rsSetupValues.getString(7);
+			       columnSize=rsSetupValues.getInt(8);
+			       clientCode=rsSetupValues.getString(9);
+			       printKOTPrinter=rsSetupValues.getString(11);
 		       }
-		       return result;
-		   }    
+	       
+	   
+	       
+	       if(!printKOTPrinter.isEmpty())
+	       {
+	    	   obTextFileGenerator.funCreateTempFolder();
+	           String filePath = System.getProperty("user.dir");
+	           File textKOTFilePath;
+	           textKOTFilePath = new File(filePath + "/Temp/Temp_Consolidated_KOT.txt");
+	           
+	           System.out.println(textKOTFilePath.getAbsolutePath());
+	           FileWriter fstream = new FileWriter(textKOTFilePath);
+	           //BufferedWriter KotOut = new BufferedWriter(fstream);
+	           BufferedWriter KotOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(textKOTFilePath),"UTF8"));
+	           if ("Reprint".equalsIgnoreCase(Reprint)) 
+	           {
+	        	   objFileIOUtil.funPrintBlankSpace("DUPLICATE", KotOut, columnSize);
+	               KotOut.write("DUPLICATE");
+	               KotOut.newLine();
+	           }
+	           
+	           
+	           sql = " select a.dteDateCreated,a.strKOTNo,c.strTableName,c.intPaxNo,a.strWaiterNo,ifnull(b.strWShortName,''),a.strUserCreated "
+    	           	   + " from tblitemrtemp a left outer join tblwaitermaster b on a.strWaiterNo=b.strWaiterNo,tbltablemaster c "
+    	           	   + " where a.strTableNo=c.strTableNo "
+    	           	   + " and a.strTableNo='"+tableNo+"' and a.strKOTNo='"+KOTNo+"' "
+    	           	   + " and (c.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' ) OR c.strAreaCode ='"+AreaCodeForAll+"')"
+    	           	   + " and a.strPOSCode='"+POSCode+"' and c.strOperational='Y' "
+    	           	   + " group by a.strKOTNo "
+    	           	   + " order by a.strKOTNo,a.strSerialNo";
+	           
+		           st.close();
+		           st=aposCon.createStatement();
+		           ResultSet rs = st.executeQuery(sql);
+		           while (rs.next()) 
+		           {
+		               tableName = rs.getString(3);
+		               pax = rs.getInt(4);
+		               waiterName=rs.getString(6);
+		               userName=rs.getString(7);
+		               createdDate=rs.getString(1);
+		               listKOT.add(rs.getString(2));
+		           }
+	               rs.close();
+	           
+	           objFileIOUtil.funPrintBlankSpace("Consolidated KOT", KotOut, columnSize);
+		       KotOut.write("Consolidated KOT");
+		       
+	           KotOut.newLine();
+	           objFileIOUtil.funPrintBlankSpace(POSName, KotOut, columnSize);
+	           KotOut.write(POSName);
+	           KotOut.newLine();
+
+	           System.out.println(pax);	           
+	           KotOut.write(line);
+	           KotOut.newLine();
+	           KotOut.write("  TABLE NO :");
+	           KotOut.write(tableName + "  ");
+	           KotOut.write(" PAX   :");
+	           System.out.println(pax);
+	           KotOut.write(String.valueOf(pax));
+	           System.out.println(pax);
+	           KotOut.newLine();
+	           KotOut.write("  WAITER NAME:" + "   " + waiterName);
+               KotOut.newLine();
+               KotOut.write("  DATE & TIME:" + createdDate);
+               KotOut.newLine();
+	           KotOut.write("  KOT From Device:" + deviceName);
+	           KotOut.newLine();
+	           KotOut.write("  KOT By User      :" + userName);
+	            
+	           KotOut.newLine();
+	           KotOut.write(line);
+	           KotOut.newLine();
+	           
+	           
+	           String itemName="c.strItemName";
+	           if(printShortNameOnKOT.equals("Y"))
+	           {
+	               itemName="b.strShortName";
+	           }
+	           
+	          // if(listKOT.size()>0)
+	          // {
+	        	 //  for(int cnt=0;cnt<listKOT.size();cnt++)
+	        	 //  {
+	        		   if(areaWisePricing.equals("Y"))
+	    	           {
+	    	               sql = " select LEFT(a.strItemCode,7),"+itemName+",a.dblItemQuantity,d.strCostCenterCode,d.strPrinterPort,d.strSecondaryPrinterPort,d.strCostCenterName,a.strNCKotYN  "
+	    	               	   + " from tblitemrtemp a left outer join tblmenuitempricingdtl c on a.strItemCode = c.strItemCode  "
+	    	               	   + " left outer join tblcostcentermaster d on c.strCostCenterCode=d.strCostCenterCode,tblitemmaster b  "
+	    	               	  // + " where a.strKOTNo='"+listKOT.get(cnt)+"' and a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"'  "
+	    	               	 + " where  a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"' and a.strKOTNo='"+KOTNo+"' " 
+	    	               	  + " and a.strItemCode=b.strItemCode and (c.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' ))  "
+	    	               	   + " group by d.strCostCenterCode,a.strItemCode";
+	    	           }
+	    	           else
+	    	           {
+	    	        	   sql = " select LEFT(a.strItemCode,7),"+itemName+",a.dblItemQuantity,d.strCostCenterCode,d.strPrinterPort,d.strSecondaryPrinterPort,d.strCostCenterName,a.strNCKotYN  "
+		    	               	   + " from tblitemrtemp a left outer join tblmenuitempricingdtl c on a.strItemCode = c.strItemCode  "
+		    	               	   + " left outer join tblcostcentermaster d on c.strCostCenterCode=d.strCostCenterCode,tblitemmaster b  "
+		    	               	  // + " where a.strKOTNo='"+listKOT.get(cnt)+"' and a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"'  "
+		    	               	   + " where a.strTableNo='"+tableNo+"' and c.strPosCode='"+POSCode+"' and a.strKOTNo='"+KOTNo+"' "
+		    	               	   + " and a.strItemCode=b.strItemCode and (c.strAreaCode IN (SELECT strAreaCode FROM tbltablemaster where strTableNo='"+tableNo+"' )  OR c.strAreaCode ='"+AreaCodeForAll+"')  "
+		    	               	   + " group by d.strCostCenterCode,a.strItemCode";;
+	    	           }
+	    	           System.out.println(sql);
+	    	           st.close();
+	    	           st=aposCon.createStatement();
+	    	           ResultSet rsKOTDetails = st.executeQuery(sql);
+	    	           int count=0;
+	    	           while (rsKOTDetails.next()) 
+	    	           {
+	    	        	   if(count==0)
+	    	        	   {
+	    	        		   KotOut.newLine();
+	        		           KotOut.write("  QTY         ITEM NAME  ");
+	        		           KotOut.newLine();
+	        		           KotOut.write(line);
+	        		           KotOut.newLine();
+	    	        	   }
+	    	        	   
+	    	        	   String itemqty = rsKOTDetails.getString(3);
+	    	               if (itemqty.length() == 5) 
+	    	               {
+	    	                   KotOut.write(" " + rsKOTDetails.getString(3) + "       " + rsKOTDetails.getString(2));
+	    	               }
+	    	               else if (itemqty.length() == 4) 
+	    	               {
+	    	                   KotOut.write("  " + rsKOTDetails.getString(3) + "       " + rsKOTDetails.getString(2));
+	    	               }
+	    	               else if (itemqty.length() == 6) 
+	    	               {
+	    	                   KotOut.write("" + rsKOTDetails.getString(3) + "       " + rsKOTDetails.getString(2));
+	    	               }
+	    	               String itemCode=rsKOTDetails.getString(1);
+	    	               String serialNo=rsKOTDetails.getString(5);
+	    	               System.out.println("itemCode="+itemCode);
+	    	               
+	    	               String sqlModifier="select a.strItemName,sum(a.dblItemQuantity) from tblitemrtemp a "
+	    		                    + " where a.strItemCode like'"+rsKOTDetails.getString(1)+"M%' and a.strKOTNo='"+KOTNo+"' "
+	    		                   //+ " and strSerialNo like'"+rsKOTDetails.getString(5)+".%' "
+	    		                   + " group by a.strItemCode,a.strItemName ";
+	    	               System.out.println("sqlModifier="+sqlModifier);
+	    	               
+	    		           Statement st2=aposCon.createStatement();
+	    	               ResultSet rsModifierItems=st2.executeQuery(sqlModifier);
+	    	               while(rsModifierItems.next())
+	    	               {
+	    	            	   KotOut.newLine();
+	    	                   String modQty=rsModifierItems.getString(2);
+	    	                   String modifierName=rsModifierItems.getString(1);
+	    	                       if(printModQtyOnKOT.equals("Y"))
+	    	                       {
+	    	                           if (modQty.length() == 5) 
+	    	                           {
+	    	                               KotOut.write(" " + rsModifierItems.getString(2) + "       " + rsModifierItems.getString(1));
+	    	                           }
+	    	                           else if (modQty.length() == 4) 
+	    	                           {
+	    	                               KotOut.write("  " + rsModifierItems.getString(2) + "       " + rsModifierItems.getString(1));
+	    	                           }
+	    	                           else if (modQty.length() == 6) 
+	    	                           {
+	    	                               KotOut.write("" + rsModifierItems.getString(2) + "       " + rsModifierItems.getString(1));
+	    	                           }
+	    	                       }
+	    	                       else
+	    	                       {
+	    	                           if (modQty.length() == 5) 
+	    	                           {
+	    	                               KotOut.write("            " + rsModifierItems.getString(1));
+	    	                           }
+	    	                           else if (modQty.length() == 4) 
+	    	                           {
+	    	                               KotOut.write("             " + rsModifierItems.getString(1));
+	    	                           }
+	    	                           else if (modQty.length() == 6) 
+	    	                           {
+	    	                               KotOut.write("           " + rsModifierItems.getString(1));
+	    	                           }
+	    	                       }
+	    	               }
+	    	               st2.close();
+	    	               rsModifierItems.close();
+	    	               KotOut.newLine();
+	    	               count++;
+	    	               
+	    	           }
+	    	           rsKOTDetails.close();
+	    	           KotOut.newLine();
+	    	           KotOut.write(line);
+	        	//   }
+	          // }
+	           
+	           
+	           for(int cntLines=0;cntLines<Integer.parseInt(noOfLinesInKOTPrint);cntLines++)
+	           {
+	               KotOut.newLine();
+	           }
+	           
+	           KotOut.write("m");//windows
+	           KotOut.close();
+	           fstream.flush();
+	           fstream.close();
+	           
+	           if(printYN.equals("Y"))
+	           {
+	        	  result=obTextFileGenerator.funPrintKOTTextFile(printKOTPrinter, "", "kot", "",printKOTYN, "N","ConsolidateKOT",0,0,"N",Reprint);
+	        	   
+	           }
+	    	   
+	       }
+           
+           
+       } 
+       catch (Exception e) 
+       {
+           
+           e.printStackTrace();
+       }
+       return result;
+   }  
+   
+   public String funWriteTestFile(String costCenterName,String costCenterPrinter,String dateTime)
+   {
+	   clsFileIOUtil objFileIOUtil=new clsFileIOUtil();
+	   String line = "  --------------------------------------";
+	   String result="";
+	   
+	   try
+	   {
+		   obTextFileGenerator.funCreateTempFolder();
+	       String filePath = System.getProperty("user.dir");
+	       File textKOTFilePath = new File(filePath + "/Temp/Test_Print.txt");
+	       System.out.println(textKOTFilePath.getAbsolutePath());
+	       FileWriter fstream = new FileWriter(textKOTFilePath);
+	       
+	       BufferedWriter KotOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(textKOTFilePath),"UTF8"));
+           KotOut.write("               Test Print");
+           KotOut.newLine();
+           KotOut.write(line);
+           KotOut.newLine();
+           KotOut.write("  Printed by : "+costCenterName);
+           KotOut.newLine();
+           KotOut.write("  Printed on : "+costCenterPrinter);
+           KotOut.newLine();
+           KotOut.write("  Date and Time : "+dateTime);
+           KotOut.newLine();
+           KotOut.write(line);
+           
+           KotOut.newLine();
+           KotOut.newLine();
+           KotOut.newLine();
+           KotOut.newLine();
+           KotOut.newLine();
+           KotOut.write("m");//windows
+           KotOut.close();
+           fstream.flush();
+           fstream.close();
+           
+           result=obTextFileGenerator.funPrintKOTTextFile(costCenterPrinter, costCenterPrinter, "Test", "", "", "", "Test", 1, 1, "N", "");
+           
+	   }
+	   catch(Exception e)
+	   {
+		   e.printStackTrace();
+	   }
+	   
+	   return result;
+   }
 	    
 
 

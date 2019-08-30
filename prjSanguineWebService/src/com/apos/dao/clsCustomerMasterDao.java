@@ -28,11 +28,11 @@ import com.webservice.controller.clsDatabaseConnection;
 public class clsCustomerMasterDao{
 
 	@Autowired
-	private SessionFactory WebPOSSessionFactory;
+	private SessionFactory webPOSSessionFactory;
 
 		public String funSaveCustomerMaster(clsCustomerMasterModel objModel) throws Exception
 		{
-			WebPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
+			webPOSSessionFactory.getCurrentSession().saveOrUpdate(objModel);
 			return objModel.getStrCustomerCode();
 		}
 	    public String funGenerateCustomerMasterCode(String clientCode) throws Exception

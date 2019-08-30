@@ -20,6 +20,9 @@ public class clsBaseDaoImpl implements intfBaseDao{
 	@Autowired
 	private SessionFactory webPOSSessionFactory;
 	
+	@Autowired
+	private SessionFactory WebPMSSessionFactory;
+	
 	
 // Function to save dataobject into db 	
 	@Override
@@ -71,6 +74,18 @@ public class clsBaseDaoImpl implements intfBaseDao{
 		
 	}
 	
-	
-	
+	public List funGetList(String strQuery,String queryType) throws Exception
+	{
+		Query query=null;
+		if(queryType.equals("sql"))
+		{
+			query=WebPMSSessionFactory.getCurrentSession().createSQLQuery(strQuery.toString());
+			return query.list();
+		}
+		else{
+			query=WebPMSSessionFactory.getCurrentSession().createQuery(strQuery.toString());
+			return query.list();
+		}
+	}
 }
+

@@ -204,7 +204,7 @@ public class clsClientDetails {
 			hmClientDtl.put("316.001", clsClientDetails.createClientDetails("316.001", "MRP HOSPITALITY", dFormat.parse("2019-05-25"), dFormat.parse("2019-06-25"))); // renewed on 25-05-2019 for 1 month till 25-06-2019
 			hmClientDtl.put("318.001", clsClientDetails.createClientDetails("318.001", "EURISKA", dFormat.parse("2019-06-11"), dFormat.parse("2019-07-11"))); // renewed on 04-06-2019 for 1 month till 04-07-2019
 			hmClientDtl.put("319.001", clsClientDetails.createClientDetails("319.001", "LAXMI FOODS", dFormat.parse("2019-06-04"), dFormat.parse("2019-07-04"))); // Released on 04-06-2019 for 1 month till 04-07-2019
-			hmClientDtl.put("320.001", clsClientDetails.createClientDetails("320.001", "HOTEL SURYA", dFormat.parse("2019-06-13"), dFormat.parse("2019-08-23"))); //Released on 24-07-2019 for 1 month till 23-08-2019//Released on 16-06-2019 for 1 week till 23-07-2019// Released on 13-06-2019 for 1 month till 15-07-2019
+			hmClientDtl.put("320.001", clsClientDetails.createClientDetails("320.001", "HOTEL SURYA", dFormat.parse("2019-06-13"), dFormat.parse("2019-09-23"))); //Released on 24-07-2019 for 1 month till 23-08-2019//Released on 16-06-2019 for 1 week till 23-07-2019// Released on 13-06-2019 for 1 month till 15-07-2019
 
 			//
 			

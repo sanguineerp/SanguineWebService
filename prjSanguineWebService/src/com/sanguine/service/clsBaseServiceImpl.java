@@ -43,6 +43,11 @@ public class clsBaseServiceImpl implements intfBaseService{
 		return objBaseDao.funGetList(query, queryType);
 	}
 	
+	public List funGetList(String query,String queryType) throws Exception
+	{
+		return objBaseDao.funGetList(query, queryType);
+	}
+	
 	
 	
 	
