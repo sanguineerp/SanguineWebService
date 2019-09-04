@@ -18567,10 +18567,15 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         JSONObject objBestDay=new JSONObject();
         objBestDay.put("TableHeader","Best Day");
         objBestDay.put("TableSubHeader","This Week (Revenue)");
-        while (rsBestDay.next()) 
+        if (rsBestDay.next()) 
         {
         	objBestDay.put("BestDay",rsBestDay.getString(2));
         	objBestDay.put("SaleValue",rsBestDay.getDouble(1));
+        }
+        else
+        {
+        	objBestDay.put("BestDay"," ");
+        	objBestDay.put("SaleValue"," ");
         }
         rsBestDay.close();
         arrObj.put(objBestDay);
@@ -19668,7 +19673,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         try {
         	cmsCon=objDb.funOpenAPOSCon("mysql","master");
             st = cmsCon.createStatement();
-            String sql="", POSDate="",posCode="",strClientCode="";
+            String sql="", POSDate="",posCode="",strClientCode="",strNewPOSDate="";
             
             sql="select a.strPosCode,a.strPosName,LEFT(a.strPropertyPOSCode,7) from tblposmaster a where a.strClientCode='"+clientCode+"' ";
             ResultSet rsDay=st.executeQuery(sql);
@@ -19692,10 +19697,18 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
     	        rsDay=st.executeQuery(sql);
     	        if(rsDay.next())
     	        {
-    	            POSDate=rsDay.getString(1);
+    	        	if(rsDay.getString(1)!=null)
+    	        	{
+    	        		POSDate=rsDay.getString(1);
+    	        		strNewPOSDate=POSDate;
+    	        	}
+    	        	else
+    	        	{
+    	        		
+    	        	}
     	        }
     	        rsDay.close();
-                funFillMainSalesAchieved(posCode, POSDate, strClientCode, st,jObjSales,arrObj, formatter,dashboard);
+                funFillMainSalesAchieved(posCode, strNewPOSDate, strClientCode, st,jObjSales,arrObj, formatter,dashboard);
                 
             }
             st.close();
