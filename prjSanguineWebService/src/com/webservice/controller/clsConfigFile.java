@@ -234,8 +234,8 @@ public class clsConfigFile
 		   // Savari Hosting
 		    
 		    /*posDBServerName = "mysql";
-		    posDBName = "sanguine_sk";
-		    posDBUserId = "swapnil";
+		    posDBName = "sanguine_jpos";
+		    posDBUserId = "sanguine_root";
 		    posDBPassword = "sanguine";
 		    posDBIPAddress = "localhost";
 		    posDBPortNo = "3306";
@@ -265,8 +265,8 @@ public class clsConfigFile
 		    webbooksDBIPAddress = "localhost";
 		    webbooksDBPortNo = "3306";
 		    
-		    aposDatabaseName = "sanguine_sk";
-		    aposDBUserId = "swapnil";
+		    aposDatabaseName = "sanguine_jpos";
+		    aposDBUserId = "sanguine_root";
 		    aposDBPassword = "sanguine";
 		    aposDBIPAddress = "localhost";
 		    aposDBPortNo = "3306";

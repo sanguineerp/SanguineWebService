@@ -24,6 +24,7 @@
 	<context:property-placeholder location="classpath:resources/database.properties" />
 	<context:component-scan base-package="com" />
 	<tx:annotation-driven transaction-manager="webPOSTransactionManager"/>
+ 
     
     <bean id="posDataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 		<property name="driverClassName" value="${database.driver}" />
@@ -118,6 +119,42 @@
 	</bean>
 
 	
+	
+	   <bean id="WebPMSDataSource"
+			class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+			<property name="driverClassName" value="${database.driver}" />
+			<property name="url" value="${database.urlwebpms}" />
+			<property name="username" value="${database.user}" />
+			<property name="password" value="${database.password}" />
+		</bean>
+	
+		<bean id="WebPMSSessionFactory"
+			class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+			<property name="dataSource" ref="WebPMSDataSource" />
+			<!-- <property name="packagesToScan" value="com.sanguine.webclub.model" /> -->
+			<property name="annotatedClasses">
+			
+				<list>
+					<value>com.pms.model.clsRoomMasterModel</value>
+					
+					
+							
+				</list>
+			</property>
+			<property name="hibernateProperties">
+        	<props>
+	           <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+				<prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+        	</props>
+        </property>
+		</bean>
+
+	<tx:annotation-driven transaction-manager="WebPMSTransactionManager"/>
+	
+    <bean id="WebPMSTransactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory"><ref local="WebPMSSessionFactory"/></property>
+    </bean>
 	
 	<!--  <bean id="test" class="com.test.clsTestPOSApplicationContext">
         <property name="sessionFactory" ref="sessionFactory"></property>

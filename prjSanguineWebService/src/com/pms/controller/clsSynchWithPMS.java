@@ -1,5 +1,6 @@
 package com.pms.controller;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,8 +10,11 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -27,13 +31,16 @@ import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Controller;
 
 import com.webservice.util.clsClientDetails;
 import com.webservice.util.clsPasswordEncryptDecreat;
 import com.sanguine.service.intfBaseService;
+import com.pms.controller.*;
 import com.webservice.controller.clsDatabaseConnection;
 import com.webservice.util.clsUtilityFunctions;
 
+@Controller
 @Path("/PMSIntegration")
 public class clsSynchWithPMS {
 
@@ -129,7 +136,7 @@ public class clsSynchWithPMS {
 							{
 								objEncDec=new clsPasswordEncryptDecreat();
 								String encPassword = objEncDec.encrypt(encKey, password.trim().toUpperCase());
-								sqlMMS="SELECT a.strUserCode,a.strUserName,a.strPassword,a.strType FROM tbluserhd a "
+								sqlMMS="SELECT a.strUserCode,a.strUserName,a.strPassword,a.strSuperType FROM tbluserhd a "
 										+ "WHERE a.strUserCode='"+userCode+"' AND a.strPassword='"+encPassword+"' AND a.strClientCode='"+clientCode+"' ";
 								rsMMS = stmms.executeQuery(sqlMMS); 
 								if(rsMMS.next())
@@ -170,6 +177,12 @@ public class clsSynchWithPMS {
 							ex.printStackTrace();
 						}
 					}
+					jObj.put("LicenseStatus", true);
+				}
+				else
+				{
+					jObj.put("LicenseStatus", false);
+					System.out.println("License Expired !!!");
 				}
 			}
 			st.close();
@@ -636,240 +649,358 @@ public class clsSynchWithPMS {
 			return jObjStayViewData;
 		}
 	}
-
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@GET
 	@Path("/funGetRoomData")
+	@Consumes(MediaType.APPLICATION_JSON)
 	public JSONObject funGetRoomData(@QueryParam("clientCode") String clientCode,@QueryParam("PMSDate") String PMSDate)
 	{
-		JSONObject jObjStayViewData=new JSONObject();
 		clsDatabaseConnection objDb=new clsDatabaseConnection();
-		JSONArray mainArrObj=new JSONArray();
 		Connection pmsCon=null;
 		Statement st=null;
 		Statement st1=null;
 		Statement st2=null;
-		Statement sTime1=null;
-		Statement sTime2=null;
-		Statement stReservation=null;
-		String dd = PMSDate.split("-")[2]; 
-		String mm=	 PMSDate.split("-")[1];
-		String yy= PMSDate.split("-")[0];
-		String strCheckoutDate="";
-		ResultSet rsRoomInfo=null;
 		ResultSet rsRoomInfo1=null;
 		ResultSet rsRoomInfo2=null;
 		ResultSet rsRoomInfo3=null;
-		ResultSet rsTime1=null;
-		ResultSet rsTime2=null;
-		ResultSet rsTime3=null;
+		JSONObject returnObject = new JSONObject();
+		String sql="";
+		JSONObject objRoomStatusDtl;
+		JSONObject objGuestDtl;
+		JSONObject objRoomTypeWise=new JSONObject();
+		JSONArray objTemp = new JSONArray();
 		try
 		{
 			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
 			st = pmsCon.createStatement();
-			sTime1 = pmsCon.createStatement();
-			sTime2 = pmsCon.createStatement();
-			String sql="SELECT a.tmeCheckOutTime FROM tblpropertysetup a "; 
-			ResultSet rs = st.executeQuery(sql);
-			if(rs.next())
-			{
-				strCheckoutDate=rs.getString(1);
-			}
-			rs.close();
+			JSONArray listRoomStatusBeanDtl = new JSONArray();
 			
-			sql=" Select s.roomdesc,s.fname,s.lname,s.roomstatus,s.checkindate,s.deptdate,s.arrivaltme,"
-					+ " s.depttime,s.staySingleday,s.roomtype from"
-					+ " (select a.strRoomDesc as roomdesc,d.strFirstName as fname,d.strLastName as lname,"
-					+ " a.strStatus as roomstatus ,date(b.dteCheckInDate) as checkindate, date(b.dteDepartureDate) as deptdate"
-					+ " ,b.tmeArrivalTime as arrivaltme,b.tmeDepartureTime as depttime,"
-					+ " if((Right(date(b.dteDepartureDate),2))-(Right(date(b.dteCheckInDate),2))=0"
-					+ " ,1,0) as staySingleday,a.strRoomTypeDesc as roomtype"
-					+ " from tblroom a ,tblcheckinhd b,tblcheckindtl c,tblguestmaster d where a.strRoomCode=c.strRoomNo and b.strCheckInNo=c.strCheckInNo "
-					+ " and c.strGuestCode=d.strGuestCode  and date(b.dteCheckInDate) <= '"+PMSDate+"'   and date(b.dteDepartureDate)>='"+PMSDate+"' and a.strStatus='Occupied'"
-					+ " UNION"
-					+ " Select p.strRoomDesc as roomdesc,'' as fname,'' as lname,'Free' as roomstatus, '' as checkindate,'' as deptdate ,'' as arrivaltme,'' as depttime,'' as staySingleday,p.strRoomTypeDesc as roomtype  "
-					+ " from tblroom p  WHERE p.strStatus in('Free','Occupied')) s"
-					+ " Group by s.roomdesc"
-					+ " ORDER BY s.roomdesc";
-			rsRoomInfo = st.executeQuery(sql);
-			JSONArray arrObj=null;
-			JSONArray arrDouble=new JSONArray();
-			JSONObject objJson= new JSONObject();
-			while(rsRoomInfo.next())
+			sql = "select a.strRoomCode,a.strRoomDesc,b.strRoomTypeDesc,a.strStatus from tblroom a,tblroomtypemaster b where a.strRoomTypeCode=b.strRoomTypeCode"
+					+ " order by b.strRoomTypeCode,a.strRoomDesc; ";
+			List listRoom = objBaseService.funGetList(sql,"sql");
+			for (int cnt1 = 0; cnt1 < listRoom.size(); cnt1++) 
 			{
-				/*if(!rsRoomInfo.getString(1).equals("101 SB"))
-				{
-					continue;
-				}*/
-				if(objJson.has(rsRoomInfo.getString(10)))
-				{
-					arrDouble=(JSONArray)objJson.get(rsRoomInfo.getString(10));
-					arrObj=new JSONArray();
-					arrObj.put(rsRoomInfo.getString(1));
-					arrObj.put(rsRoomInfo.getString(2));
-					arrObj.put(rsRoomInfo.getString(3));
-					arrObj.put(rsRoomInfo.getString(4));
-					arrObj.put(rsRoomInfo.getString(5));
-					arrObj.put(rsRoomInfo.getString(6));
-					arrObj.put(rsRoomInfo.getString(7));
-					arrObj.put(rsRoomInfo.getString(8));
-					if(!rsRoomInfo.getString(9).isEmpty())
+				objRoomStatusDtl = new JSONObject();
+				Object[] arrObjRooms = (Object[]) listRoom.get(cnt1);
+				objRoomStatusDtl.put("RoomNo", arrObjRooms[1].toString());
+				objRoomStatusDtl.put("RoomType", arrObjRooms[2].toString());
+				objRoomStatusDtl.put("RoomStatus", arrObjRooms[3].toString());
+				
+				sql=" SELECT IF(a.strReservationNo='',a.strCheckInNo,''),d.strRoomCode,d.strRoomDesc, CONCAT(c.strFirstName,' ',c.strMiddleName,' ',c.strLastName),d.strStatus, "
+						+ "DATE_FORMAT(DATE(a.dteArrivalDate),'%d-%m-%Y'), DATE_FORMAT(DATE(a.dteDepartureDate),'%d-%m-%Y'), "
+						+ "DATEDIFF('"+PMSDate+"',DATE(a.dteDepartureDate)),LEFT(TIMEDIFF(a.tmeDepartureTime,(select a.tmeCheckOutTime from tblpropertysetup a )),6), "
+						+ "LEFT(TIMEDIFF(a.tmeArrivalTime,(select a.tmeCheckInTime from tblpropertysetup a )),6),a.tmeArrivalTime,a.tmeDepartureTime "
+						+ "FROM tblcheckinhd a,tblcheckindtl b,tblguestmaster c,tblroom d,tblfoliohd e "
+						+ "WHERE a.strCheckInNo=b.strCheckInNo AND b.strGuestCode=c.strGuestCode AND b.strRoomNo=d.strRoomCode "
+						+ "AND DATE(a.dteDepartureDate) BETWEEN '"+PMSDate+"' AND DATE_ADD('"+PMSDate+"',INTERVAL 7 DAY) AND b.strRoomNo='"+arrObjRooms[0].toString()+"' AND a.strCheckInNo=e.strCheckInNo "
+						+ "AND a.strCheckInNo NOT IN (SELECT strCheckInNo FROM tblbillhd) "
+						+ "UNION "
+						+ "SELECT a.strReservationNo,d.strRoomCode,d.strRoomDesc, CONCAT(c.strFirstName,' ',c.strMiddleName,' ',c.strLastName), "
+						+ "IFNULL(e.strBookingTypeDesc,''), DATE_FORMAT(DATE(a.dteArrivalDate),'%d-%m-%Y'), DATE_FORMAT(DATE(a.dteDepartureDate),'%d-%m-%Y'), "
+						+ "DATEDIFF(DATE(a.dteArrivalDate),DATE(a.dteDepartureDate)),LEFT(TIMEDIFF(a.tmeDepartureTime,(select a.tmeCheckOutTime from tblpropertysetup a )),6), "
+						+ "LEFT(TIMEDIFF(a.tmeArrivalTime,(select a.tmeCheckInTime from tblpropertysetup a )),6),a.tmeArrivalTime,a.tmeDepartureTime "
+						+ "FROM tblreservationhd a,tblreservationdtl b,tblguestmaster c,tblroom d,tblbookingtype e "
+						+ "WHERE a.strReservationNo=b.strReservationNo AND b.strGuestCode=c.strGuestCode AND b.strRoomNo=d.strRoomCode "
+						+ "AND a.strBookingTypeCode=e.strBookingTypeCode AND DATE(a.dteDepartureDate) BETWEEN '"+PMSDate+"' AND DATE_ADD('"+PMSDate+"',INTERVAL 7 DAY) AND b.strRoomNo='"+arrObjRooms[0].toString()+"' "
+						+ "AND a.strReservationNo NOT IN (SELECT strReservationNo FROM tblcheckinhd) AND a.strCancelReservation='N' "
+						+ "UNION "
+						+ "SELECT a.strWalkinNo,d.strRoomCode,d.strRoomDesc, CONCAT(c.strFirstName,' ',c.strMiddleName,' ',c.strLastName),'Waiting', "
+						+ "DATE_FORMAT(DATE(a.dteWalkinDate),'%d-%m-%Y'), DATE_FORMAT(DATE(a.dteCheckOutDate),'%d-%m-%Y'), "
+						+ "DATEDIFF('"+PMSDate+"',DATE(a.dteCheckOutDate)),LEFT(TIMEDIFF(a.tmeCheckOutTime,(select a.tmeCheckOutTime from tblpropertysetup a )),6), "
+						+ "LEFT(TIMEDIFF(a.tmeWalkInTime,(select a.tmeCheckInTime from tblpropertysetup a )),6),a.tmeWalkInTime,a.tmeCheckOutTime "
+						+ "FROM tblwalkinhd a,tblwalkindtl b,tblguestmaster c,tblroom d "
+						+ "WHERE a.strWalkinNo=b.strWalkinNo AND b.strGuestCode=c.strGuestCode AND b.strRoomNo=d.strRoomCode "
+						+ "AND DATE(a.dteCheckOutDate) BETWEEN '"+PMSDate+"' AND DATE_ADD('"+PMSDate+"',INTERVAL 7 DAY) AND b.strRoomNo='"+arrObjRooms[0].toString()+"' AND a.strWalkinNo NOT IN (SELECT strWalkinNo FROM tblcheckinhd) ";
+					List listRoomDtl = objBaseService.funGetList(sql,"sql");
+					if (listRoomDtl.size() > 0) 
 					{
-						String dateBeforeString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", PMSDate);
-						String dateAfterString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", rsRoomInfo.getString(6));
-						int daysBetween=new clsUtilityFunctions().funGetDiffrenceOfDates(dateBeforeString, dateAfterString);
-						if(daysBetween>0)
+						for(int i=0;i<listRoomDtl.size();i++)
 						{
-							/*daysBetween=daysBetween+1;*/
-							arrObj.put(daysBetween);
-						}
-						else
-						{
-							daysBetween=daysBetween;
-							arrObj.put(daysBetween);
-						}
-					}
-					arrObj.put(rsRoomInfo.getString(9));
-					arrObj.put(rsRoomInfo.getString(10));
-					if(!rsRoomInfo.getString(8).equals("")|| !rsRoomInfo.getString(7).equals(""))
-					{
-						String sqlTime="SELECT LEFT(TIMEDIFF('"+rsRoomInfo.getString(8).substring(0,5)+"',a.tmeCheckOutTime),6) FROM tblpropertysetup a";
-						rsTime2 = sTime2.executeQuery(sqlTime);
-						if(rsTime2.next())
-						{
-							String time=rsTime2.getString(1);
-							if(time.contains("-"))
+							objGuestDtl = new JSONObject();
+							Object[] arrObjRoomDtl = (Object[]) listRoomDtl.get(i);
+							objGuestDtl.put("GuestName", arrObjRoomDtl[3].toString());
+							objGuestDtl.put("ArrivalDate", arrObjRoomDtl[5].toString());
+							objGuestDtl.put("DepartureDate", arrObjRoomDtl[6].toString());
+							objGuestDtl.put("RoomNo", arrObjRoomDtl[2].toString());
+							objGuestDtl.put("NoOfNights", arrObjRoomDtl[7].toString());
+							objGuestDtl.put("ArrivalTime", arrObjRoomDtl[10].toString());
+							objGuestDtl.put("DepartureTime", arrObjRoomDtl[11].toString());
+							
+							if(objRoomTypeWise.has(arrObjRooms[2].toString()))
 							{
-								if(rsRoomInfo.getString(8).contains("PM") || rsRoomInfo.getString(8).contains("pm"))
+								objTemp=(JSONArray)objRoomTypeWise.get(arrObjRooms[2].toString());
+								objRoomStatusDtl=new JSONObject();
+								objRoomStatusDtl.put("RoomNo", arrObjRooms[1].toString());
+								objRoomStatusDtl.put("RoomType", arrObjRooms[2].toString());
+								objRoomStatusDtl.put("RoomStatus", arrObjRooms[3].toString());
+								objRoomStatusDtl.put("ReservationNo", arrObjRoomDtl[0].toString());
+								objRoomStatusDtl.put("GuestName", arrObjRoomDtl[3].toString());
+								objRoomStatusDtl.put("ArrivalDate", arrObjRoomDtl[5].toString());
+								objRoomStatusDtl.put("DepartureDate", arrObjRoomDtl[6].toString());
+								objRoomStatusDtl.put("NoOfDays", arrObjRoomDtl[7].toString());
+								objRoomStatusDtl.put("ArrivalTime", arrObjRoomDtl[10].toString());
+								objRoomStatusDtl.put("DepartureTime", arrObjRoomDtl[11].toString());
+								objRoomStatusDtl.put("RoomStatus",arrObjRoomDtl[4].toString());
+								if(arrObjRoomDtl[8].toString().contains("-"))
 								{
-									arrObj.put("PM");
+									if(arrObjRoomDtl[11].toString().contains("PM") || arrObjRoomDtl[11].toString().contains("pm"))
+									{
+										objRoomStatusDtl.put("CheckOutAMPM", "PM");
+									}
+									else
+									{
+										objRoomStatusDtl.put("CheckOutAMPM", "AM");
+									}
 								}
 								else
 								{
-									arrObj.put("AM");
-								}
-							}
-							else
-							{
-								arrObj.put("PM");
-							}
-						}
-						sqlTime="SELECT LEFT(TIMEDIFF('"+rsRoomInfo.getString(7).substring(0,5)+"',a.tmeCheckInTime),6) FROM tblpropertysetup a";
-						rsTime3 = sTime2.executeQuery(sqlTime);
-						if(rsTime3.next())
-						{
-							String time=rsTime3.getString(1);
-							if(time.contains("-"))
-							{
-								if(rsRoomInfo.getString(7).contains("PM") || rsRoomInfo.getString(7).contains("pm"))
-								{
-									arrObj.put("PM");
-								}
-								else
-								{
-									arrObj.put("AM");
+									if(arrObjRoomDtl[8].toString().equals("00:00:"))
+									{
+										if(arrObjRoomDtl[11].toString().contains("PM") || arrObjRoomDtl[11].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "AM");
+										}
+									}
+									else
+									{
+										if(arrObjRoomDtl[11].toString().contains("PM") || arrObjRoomDtl[11].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "AM");
+										}
+									}
 								}
 								
+								if(arrObjRoomDtl[9].toString().contains("-"))
+								{
+									if(arrObjRoomDtl[10].toString().contains("PM") || arrObjRoomDtl[10].toString().contains("pm"))
+									{
+										objRoomStatusDtl.put("CheckInAMPM", "PM");
+									}
+									else
+									{
+										objRoomStatusDtl.put("CheckInAMPM", "AM");
+									}
+								}
+								else
+								{
+									if(arrObjRoomDtl[8].toString().equals("00:00:"))
+									{
+										if(arrObjRoomDtl[10].toString().contains("PM") || arrObjRoomDtl[10].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "AM");
+										}
+									}
+									else
+									{
+										if(arrObjRoomDtl[10].toString().contains("PM") || arrObjRoomDtl[10].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "AM");
+										}
+									}
+								}
+								objTemp.put(objRoomStatusDtl);
+								objRoomTypeWise.put(arrObjRooms[2].toString(),objTemp);
 							}
 							else
 							{
-								arrObj.put("PM");
+								objTemp=new JSONArray();
+								objRoomStatusDtl=new JSONObject();
+								objRoomStatusDtl.put("RoomNo", arrObjRooms[1].toString());
+								objRoomStatusDtl.put("RoomType", arrObjRooms[2].toString());
+								objRoomStatusDtl.put("RoomStatus", arrObjRooms[3].toString());
+								objRoomStatusDtl.put("ReservationNo", arrObjRoomDtl[0].toString());
+								objRoomStatusDtl.put("GuestName", arrObjRoomDtl[3].toString());
+								objRoomStatusDtl.put("ArrivalDate", arrObjRoomDtl[5].toString());
+								objRoomStatusDtl.put("DepartureDate", arrObjRoomDtl[6].toString());
+								objRoomStatusDtl.put("NoOfDays", arrObjRoomDtl[7].toString());
+								objRoomStatusDtl.put("ArrivalTime", arrObjRoomDtl[10].toString());
+								objRoomStatusDtl.put("DepartureTime", arrObjRoomDtl[11].toString());
+								objRoomStatusDtl.put("RoomStatus",arrObjRoomDtl[4].toString());
+								if(arrObjRoomDtl[8].toString().contains("-"))
+								{
+									if(arrObjRoomDtl[11].toString().contains("PM") || arrObjRoomDtl[11].toString().contains("pm"))
+									{
+										objRoomStatusDtl.put("CheckOutAMPM", "PM");
+									}
+									else
+									{
+										objRoomStatusDtl.put("CheckOutAMPM", "AM");
+									}
+								}
+								else
+								{
+									if(arrObjRoomDtl[8].toString().equals("00:00:"))
+									{
+										if(arrObjRoomDtl[11].toString().contains("PM") || arrObjRoomDtl[11].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "AM");
+										}
+									}
+									else
+									{
+										if(arrObjRoomDtl[11].toString().contains("PM") || arrObjRoomDtl[11].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckOutAMPM", "AM");
+										}
+									}
+								}
+								
+								if(arrObjRoomDtl[9].toString().contains("-"))
+								{
+									if(arrObjRoomDtl[10].toString().contains("PM") || arrObjRoomDtl[10].toString().contains("pm"))
+									{
+										objRoomStatusDtl.put("CheckInAMPM", "PM");
+									}
+									else
+									{
+										objRoomStatusDtl.put("CheckInAMPM", "AM");
+									}
+								}
+								else
+								{
+									if(arrObjRoomDtl[8].toString().equals("00:00:"))
+									{
+										if(arrObjRoomDtl[10].toString().contains("PM") || arrObjRoomDtl[10].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "AM");
+										}
+									}
+									else
+									{
+										if(arrObjRoomDtl[10].toString().contains("PM") || arrObjRoomDtl[10].toString().contains("pm"))
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "PM");
+										}
+										else
+										{
+											objRoomStatusDtl.put("CheckInAMPM", "AM");
+										}
+									}
+								}
+								objTemp.put(objRoomStatusDtl);
+								objRoomTypeWise.put(arrObjRooms[2].toString(),objTemp);
 							}
 						}
 					}
-					arrDouble.put(arrObj);
-					objJson.put(rsRoomInfo.getString(10),arrDouble);
-				}
-				else
-				{
-					arrDouble=new JSONArray();
-					arrObj=new JSONArray();
-					arrObj.put(rsRoomInfo.getString(1));
-					arrObj.put(rsRoomInfo.getString(2));
-					arrObj.put(rsRoomInfo.getString(3));
-					arrObj.put(rsRoomInfo.getString(4));
-					arrObj.put(rsRoomInfo.getString(5));
-					arrObj.put(rsRoomInfo.getString(6));
-					arrObj.put(rsRoomInfo.getString(7));
-					arrObj.put(rsRoomInfo.getString(8));
-					//arrObj.put(rsRoomInfo.getString(9));
-					if(!rsRoomInfo.getString(9).isEmpty())
+					else
 					{
-						String dateBeforeString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", PMSDate);
-						String dateAfterString =new clsUtilityFunctions().funGetDate("dd-MM-yyyy", rsRoomInfo.getString(6));
-						int daysBetween=new clsUtilityFunctions().funGetDiffrenceOfDates(dateBeforeString, dateAfterString);
-						if(daysBetween>0)
+						if(objRoomTypeWise.has(arrObjRooms[2].toString()))
 						{
-							/*daysBetween=daysBetween+1;*/
-							arrObj.put(daysBetween);
+							objTemp=(JSONArray)objRoomTypeWise.get(arrObjRooms[2].toString());
+							objRoomStatusDtl=new JSONObject();
+							objRoomStatusDtl.put("RoomNo", arrObjRooms[1].toString());
+							objRoomStatusDtl.put("RoomType", arrObjRooms[2].toString());
+							objRoomStatusDtl.put("RoomStatus", arrObjRooms[3].toString());
+							
+							objTemp.put(objRoomStatusDtl);
+							objRoomTypeWise.put(arrObjRooms[2].toString(),objTemp);
 						}
 						else
 						{
-							daysBetween=daysBetween;
-							arrObj.put(daysBetween);
-						}
+							objTemp=new JSONArray();
+							objRoomStatusDtl=new JSONObject();
+							objRoomStatusDtl.put("RoomNo", arrObjRooms[1].toString());
+							objRoomStatusDtl.put("RoomType", arrObjRooms[2].toString());
+							objRoomStatusDtl.put("RoomStatus", arrObjRooms[3].toString());
+							
+							objTemp.put(objRoomStatusDtl);
+							objRoomTypeWise.put(arrObjRooms[2].toString(),objTemp);
+						}	
 					}
-					arrObj.put(rsRoomInfo.getString(9));
-					arrObj.put(rsRoomInfo.getString(10));
-					if(!rsRoomInfo.getString(8).equals("") || !rsRoomInfo.getString(7).equals("") )
+					
+					if(objRoomStatusDtl.get("RoomStatus").toString().equalsIgnoreCase("Blocked"))
 					{
-						String sqlTime="SELECT LEFT(TIMEDIFF('"+rsRoomInfo.getString(8).substring(0,5)+"',a.tmeCheckOutTime),6) FROM tblpropertysetup a";
-						rsTime2 = sTime2.executeQuery(sqlTime);
-						if(rsTime2.next())
+						String sqlBlock = "SELECT DATEDIFF('"+PMSDate+"',b.dteValidTo) FROM tblroom a,tblblockroom b "
+								+ "WHERE a.strRoomCode=b.strRoomCode AND a.strRoomDesc='"+objRoomStatusDtl.get("RoomNo").toString()+"' AND a.strClientCode='"+clientCode+"' ";
+						List listBlockRoom = objBaseService.funGetList(sqlBlock,"sql");
+						if (listBlockRoom.size() > 0) 
 						{
-							String time=rsTime2.getString(1);
-							if(time.contains("-"))
+							BigInteger diff = (BigInteger) listBlockRoom.get(0);
+							String strBlockRoomDiff=diff.toString();
+							if(strBlockRoomDiff.startsWith("-"))
 							{
-								if(rsRoomInfo.getString(8).contains("PM") || rsRoomInfo.getString(8).contains("pm"))
+								if(Integer.parseInt(strBlockRoomDiff.substring(1))==0)
 								{
-									arrObj.put("PM");
+									objRoomStatusDtl.put("Day1", "Blocked Room");
 								}
-								else
+								else if(Integer.parseInt(strBlockRoomDiff.substring(1))>0)
 								{
-									arrObj.put("AM");
+									for(int i=0;i<=Integer.parseInt(strBlockRoomDiff.substring(1));i++)
+									{
+										if(i==0)
+										{
+											i=i+1;
+										}
+										objRoomStatusDtl.put("Day"+i,"Blocked Room");
+									}
 								}
 							}
 							else
 							{
-								arrObj.put("PM");
-							}
-						}
-						
-						sqlTime="SELECT LEFT(TIMEDIFF('"+rsRoomInfo.getString(7).substring(0,5)+"',a.tmeCheckInTime),6) FROM tblpropertysetup a";
-						rsTime3 = sTime2.executeQuery(sqlTime);
-						if(rsTime3.next())
-						{
-							String time=rsTime3.getString(1);
-							if(time.contains("-"))
-							{
-								if(rsRoomInfo.getString(7).contains("PM") || rsRoomInfo.getString(7).contains("pm"))
+								if(Integer.parseInt(strBlockRoomDiff)==0)
 								{
-									arrObj.put("PM");
+									objRoomStatusDtl.put("Day1", "Blocked Room");
 								}
-								else
+								else if(Integer.parseInt(strBlockRoomDiff)>0)
 								{
-									arrObj.put("AM");
+									for(int i=0;i<=Integer.parseInt(strBlockRoomDiff);i++)
+									{
+										if(i==0)
+										{
+											i=i+1;
+										}
+										objRoomStatusDtl.put("Day"+i,"Blocked Room");
+									}
 								}
-							}
-							else
-							{
-								arrObj.put("PM");
 							}
 						}
 					}
-					arrDouble.put(arrObj);
-					objJson.put(rsRoomInfo.getString(10),arrDouble);
-				}
+					//objRoomTypeWise.put(objRoomStatusDtl);
+					
 			}
-			jObjStayViewData.put("RoomStatusData", objJson);
-			
+			listRoomStatusBeanDtl.put(objRoomTypeWise);	
+			returnObject.put("RoomData", listRoomStatusBeanDtl);
 			
 			try
 			{
+				String dd = PMSDate.split("-")[2]; 
+				String mm=	 PMSDate.split("-")[1];
+				String yy= PMSDate.split("-")[0];
 				pmsCon=objDb.funOpenWebPMSCon("mysql","master");
 				st = pmsCon.createStatement();
 				st1=pmsCon.createStatement();
 				st2=pmsCon.createStatement();
-				JSONObject objRoomStatusData=new JSONObject() ;
+				JSONObject objRoomStatusDtlBean = new JSONObject();
+				JSONArray listRoomStatus= new JSONArray();
 
 				sql="select a.strRoomTypeDesc from tblroom a group by strBedType";
 				rsRoomInfo1 = st.executeQuery(sql);
@@ -885,7 +1016,6 @@ public class clsSynchWithPMS {
 						int intRoomAccupied=0;
 						for(int i=1;i<=7;i++)
 						{
-							//and date(c.dteDepartureDate)>='"+tempPMSDate+"'
 							sql=" select count(*) "
 									+ " from  tblcheckindtl a,tblroom b,tblcheckinhd c where a.strCheckInNo=c.strCheckInNo and"
 									+ " a.strRoomNo=b.strRoomCode and date(c.dteCheckInDate) <= '"+tempPMSDate+"'  "
@@ -907,79 +1037,24 @@ public class clsSynchWithPMS {
 							}
 							tempPMSDate=yy+"-"+mm+"-"+dd1;
 						}
-						objRoomStatusData.put(rsRoomInfo1.getString(1), strRoomData);
+						objRoomStatusDtlBean.put(rsRoomInfo1.getString(1),strRoomData);
+						/*listRoomStatus.put(objRoomStatusDtlBean);*/
+						/*objRoomStatusData.put(rsRoomInfo1.getString(1), strRoomData);*/
 					}
 				}
-				jObjStayViewData.put("RoomTypeCount", objRoomStatusData);
-				
+				returnObject.put("RoomTypeCount", objRoomStatusDtlBean);
 			}
 			catch (Exception e) 
 			{
 				e.printStackTrace();
 			}
 			
-			try
-			{
-				int i=1;
-				pmsCon=objDb.funOpenWebPMSCon("mysql","master");
-				stReservation=pmsCon.createStatement();
-				JSONArray arrReservation = new JSONArray();
-				JSONObject objReservationList=new JSONObject() ;
-				sql=" SELECT IFNULL(a.strReservationNo,' '), IFNULL(c.strRoomDesc,''), IFNULL(d.strGuestPrefix,' '), IFNULL(CONCAT(d.strFirstName,' ',d.strMiddleName,' ',d.strLastName),' '), "
-					+ "LEFT(a.dteArrivalDate,10),LEFT(a.dteDepartureDate,10),a.tmeArrivalTime,a.tmeDepartureTime FROM tblreservationhd a "
-					+ "LEFT OUTER JOIN tblreservationdtl b ON b.strReservationNo=a.strReservationNo LEFT OUTER JOIN tblroom c ON c.strRoomTypeCode=b.strRoomType "
-					+ "LEFT OUTER JOIN tblguestmaster d ON d.strGuestCode=b.strGuestcode LEFT OUTER JOIN tblreservationroomratedtl e ON e.strReservationNo=a.strReservationNo "
-					+ "WHERE DATE(a.dteArrivalDate)>'"+PMSDate+"' AND a.strClientCode='"+clientCode+"' GROUP BY a.strReservationNo ";
-				ResultSet rsReservation = st.executeQuery(sql);
-				while(rsReservation.next())
-				{
-					/*if(!rsReservation.getString(2).equals("101 SB"))
-					{
-						continue;
-					}*/
-					arrReservation = new JSONArray();
-					arrReservation.put(rsReservation.getString(1));
-					arrReservation.put(rsReservation.getString(2));
-					arrReservation.put(rsReservation.getString(3));
-					arrReservation.put(rsReservation.getString(4));
-					arrReservation.put(rsReservation.getString(5));
-					arrReservation.put(rsReservation.getString(6));
-					arrReservation.put(rsReservation.getString(7));
-					arrReservation.put(rsReservation.getString(8));
-					if(!rsReservation.getString(1).equals(""))
-					{
-						arrReservation.put("Confirmed");
-					}
-					objReservationList.put(String.valueOf(i), arrReservation);
-					i++;
-				}
-				jObjStayViewData.put("ReservationData", objReservationList);
-				rsRoomInfo1.close();
-				rsRoomInfo2.close();
-				rsRoomInfo3.close();
-				rsRoomInfo.close();
-				rsTime2.close();
-				rsTime3.close();
-				rsReservation.close();
-				sTime2.close();
-				st.close();
-				st1.close();
-				st2.close();
-				stReservation.close();
-			}
-			catch(Exception e)
-			{
-				e.printStackTrace();
-			}
 		}
-		catch (Exception e) 
+		catch(Exception e)
 		{
-			e.printStackTrace(); 
+			e.printStackTrace();
 		}
-		finally
-		{
-			return jObjStayViewData;
-		}	
+		return returnObject;
 	}
 	
 
@@ -1243,7 +1318,7 @@ public class clsSynchWithPMS {
 					+ "FROM tblreservationhd a LEFT OUTER JOIN tblreservationdtl b on b.strReservationNo=a.strReservationNo "
 					+ "LEFT OUTER JOIN tblroom c on c.strRoomCode=b.strRoomType LEFT OUTER JOIN tblguestmaster d on d.strGuestCode=b.strGuestcode "
 					+ "LEFT OUTER JOIN tblreservationroomratedtl e ON e.strReservationNo=a.strReservationNo "
-					+ "WHERE DATE(a.dteArrivalDate)='"+PMSDate+"' and a.strClientCode='"+clientCode+"' GROUP BY a.strReservationNo ";
+					+ "WHERE DATE(a.dteReservationDate)='"+PMSDate+"' and a.strClientCode='"+clientCode+"' GROUP BY a.strReservationNo ";
 			ResultSet resBookingList=st.executeQuery(sql);
 			JSONArray arrBookingList=null;
 			while(resBookingList.next())
@@ -1497,5 +1572,6 @@ public class clsSynchWithPMS {
 		String[] alphabets= {"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"};
 		return alphabets[no];
 	}
+	
 
 }

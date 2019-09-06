@@ -74,6 +74,8 @@ public class clsBaseDaoImpl implements intfBaseDao{
 		
 	}
 	
+	@Override
+	@Transactional(value = "WebPMSTransactionManager")
 	public List funGetList(String strQuery,String queryType) throws Exception
 	{
 		Query query=null;
