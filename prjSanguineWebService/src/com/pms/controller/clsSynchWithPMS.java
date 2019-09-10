@@ -136,7 +136,7 @@ public class clsSynchWithPMS {
 							{
 								objEncDec=new clsPasswordEncryptDecreat();
 								String encPassword = objEncDec.encrypt(encKey, password.trim().toUpperCase());
-								sqlMMS="SELECT a.strUserCode,a.strUserName,a.strPassword,a.strSuperType FROM tbluserhd a "
+								sqlMMS="SELECT a.strUserCode,a.strUserName,a.strPassword,a.strType FROM tbluserhd a "
 										+ "WHERE a.strUserCode='"+userCode+"' AND a.strPassword='"+encPassword+"' AND a.strClientCode='"+clientCode+"' ";
 								rsMMS = stmms.executeQuery(sqlMMS); 
 								if(rsMMS.next())
@@ -1145,7 +1145,7 @@ public class clsSynchWithPMS {
 		try{
 			pmsCon=objDb.funOpenWebPMSCon("mysql","master");
 			st = pmsCon.createStatement();
-			JSONObject objArrList=new JSONObject() ;
+			JSONObject objArrList=new JSONObject();
 			String sql=" SELECT IFNULL(b.strReservationNo,' '), IFNULL(a.strWalkinNo,''), IFNULL(f.strFolioNo,' '), IFNULL(e.strGuestPrefix,' '), "
 					+ "IFNULL(CONCAT(e.strFirstName,' ',e.strMiddleName,' ',e.strLastName),' '), LEFT(IFNULL(DATE_FORMAT(b.dteCheckInDate,'%d-%M-%Y'),' '),6), "
 					+ "LEFT(IFNULL(DATE_FORMAT(b.dteDepartureDate,'%d-%M-%Y'),' '),6), ROUND(IFNULL(f.dblDebitAmt,0)+IFNULL(SUM(h.dblTaxAmt),0)) "
