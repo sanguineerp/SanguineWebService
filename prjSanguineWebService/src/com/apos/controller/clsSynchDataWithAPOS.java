@@ -13643,7 +13643,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	              
 		        	jObj.put("MaxTerminal",0);
             	   sql = " select count(strMACAddress) from tblregisterterminal  "
-                        + " where strClientCode='" + clientCode + "' and strTerminalName='SPOS'";
+                        + " where strClientCode='" + clientCode + "' and strTerminalName='POSBI'";
             	   rs = st.executeQuery(sql);
 		            if (rs.next()) 
 		            {
@@ -15886,6 +15886,116 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		        return jObj;
 		    }
 		}
+	   
+	    @GET 
+		@Path("/funCheckPOSBILicence")
+		@Produces(MediaType.APPLICATION_JSON)
+		public JSONObject funCheckPOSBILicence(@QueryParam("clientCode") String clientCode,@QueryParam("physicalAddress") String physicalAddress,@QueryParam("hostName") String hostName,@QueryParam("userCode") String userCode)
+		{
+			clsDatabaseConnection objDb=new clsDatabaseConnection();
+	        Connection cmsCon=null;
+	        Statement st=null;
+	        JSONObject jObj=new JSONObject();
+	        String response="";
+
+	        JSONArray arrObj=new JSONArray();
+	        Date objDate = new Date();
+	        int day = objDate.getDate();
+	        int month = objDate.getMonth() + 1;
+	        int year = objDate.getYear() + 1900;
+	        String currentDate = year + "-" + month + "-" + day;
+	        
+	        try {
+	        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+	            st = cmsCon.createStatement();
+	            String sql="";
+	            
+	            sql = "select strClientCode,strClientName from tblsetup";
+	            ResultSet rs = st.executeQuery(sql);
+	            if (rs.next())
+	            {
+	                String tempClientCode = rs.getString(1);
+	                String clientName = rs.getString(2);
+	                
+	                clsClientDetails.funAddClientCodeAndName();
+	                Date POSExpiryDate = clsClientDetails.funCheckPOSLicense(tempClientCode, clientName);
+	                if(null==POSExpiryDate)
+	                {
+	                	//JSONObject obj=new JSONObject();
+	                	jObj.put("Status", "Invalid");
+	                	jObj.put("Msg", "Invalid POS. Please Contact Technical Support.");
+	                   // arrObj.put(obj);
+	                }
+	                else
+	                {
+		                long ExpiryDateTime = POSExpiryDate.getTime();
+		                long TimeDifference = 0;
+		                String billDate = "";
+		                String sqlMaxBillDate = "select ifnull(max(date(dteBillDate)),0) from tblqbillhd";
+		                ResultSet rsMaxBillDate = st.executeQuery(sqlMaxBillDate);
+		                if (rsMaxBillDate.next())
+		                {
+		                	SimpleDateFormat dFormat = new SimpleDateFormat("yyyy-MM-dd");
+		                    Date systemDate = dFormat.parse(dFormat.format(new Date()));
+		                	billDate = rsMaxBillDate.getString(1);
+		                    if (!billDate.equals("0"))
+		                    {
+		                    	Date gMaxBillDate = dFormat.parse(billDate);
+		                        TimeDifference = ExpiryDateTime - gMaxBillDate.getTime();
+		                        long diffDays = TimeDifference / (24 * 60 * 60 * 1000);
+		                        if (diffDays <= 15)
+		                        {
+		                        	jObj.put("Status", "MinDays");
+		                        	jObj.put("Msg", diffDays + " Days Remaining For Licence to Expire");
+		                        }
+		                    }
+		                    else
+		                    {
+		                    	TimeDifference = ExpiryDateTime - systemDate.getTime();
+		                    }
+		                    
+		                    if (TimeDifference >= 0)
+		                    {
+		                    	jObj=funValidatePOSBITerminalRegistrationDetails(physicalAddress,hostName,clientCode,userCode);
+		                    }
+		                    else
+		                    {
+		                    	jObj.put("Status", "Expired");
+		                    	jObj.put("Msg", "License Expired. Please Contact Technical Support.");
+		                    }
+		                }
+		                rsMaxBillDate.close();
+	                }
+	            }
+	            else
+	            {
+	            	jObj.put("Status", "Invalid");
+	            	jObj.put("Msg", "Invalid POS. Please Contact Technical Support.");
+	               
+	            }
+	          
+		       // jObj.put("CheckLicence", arrObj);
+		        st.close();
+		        cmsCon.close();
+		            
+	        } catch (Exception e) {
+		        e.printStackTrace();
+		    }
+		    finally
+		    {
+		       if(!jObj.has("Status")){
+		    	   try {
+						jObj.put("Status", "Invalid");
+						jObj.put("Msg", "Licence not found.");
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}   
+		       }
+		    	
+           	
+		        return jObj;
+		    }
+		}
        
 	   
 	   
@@ -15970,6 +16080,88 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		}
            return objResult;
    	}
+    
+    public JSONObject funValidatePOSBITerminalRegistrationDetails(String macAddress,String hostName,String clientCode,String userCode) 
+   	{
+   		JSONObject objResult=new JSONObject();
+   		boolean hasTerminalLicence=false;
+   		JSONObject jObj=funGetTerminalRegistrationDetails(macAddress,"POSBI",clientCode);
+   			
+   			if (null != jObj) 
+   			{
+
+				try {
+					
+					String[] arrTerminalData = jObj.get("MaxTerminal").toString().split("\\.");
+					int intMAXTerminalFromDB = Integer.parseInt(arrTerminalData[0]);
+					String isRegistered = "No";
+					int intMAXTerminalFromLicence = funGetMAXPOSBITerminalFromLicence(clientCode);
+					if (intMAXTerminalFromDB == intMAXTerminalFromLicence) {
+						if (jObj.get("RegisterTerminal").toString().equalsIgnoreCase("True")) 
+						{
+							hasTerminalLicence = true;
+						} 
+						else 
+						{
+							hasTerminalLicence = false;
+						}
+
+					} else if (intMAXTerminalFromDB < intMAXTerminalFromLicence) {
+						if (jObj.get("RegisterTerminal").toString().equalsIgnoreCase("True")) 
+						{
+							hasTerminalLicence = true;
+						}
+						else
+						{
+							JSONObject res=funRegisterTerminal(hostName, macAddress, clientCode, userCode, "POSBI");
+							if(res.get("Status").toString().equalsIgnoreCase("success"))
+							{
+								hasTerminalLicence = true;
+							}
+							else
+							{
+								hasTerminalLicence = false;
+							}	
+						}
+					} else {
+						hasTerminalLicence = false;
+					}
+					if (hasTerminalLicence)
+					{
+						String posVersion=funSetPOSVerion(clientCode);
+						objResult.put("Status", "success");
+						objResult.put("POSVersion",posVersion);
+					}
+					else
+					{
+						if (intMAXTerminalFromDB > intMAXTerminalFromLicence)
+						{
+							objResult.put("Status", "Terminal Exceeded");
+							objResult.put("POSVersion","NotFound");
+						}
+						else if (intMAXTerminalFromDB == intMAXTerminalFromLicence) 
+						{
+							objResult.put("Status", "Terminal Exceeded");
+							objResult.put("POSVersion","NotFound");
+						}
+					}
+				
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			} 
+   		else 
+   		{
+   			try {
+				objResult.put("Status", "Please Contact Technical Support!!");
+				objResult.put("POSVersion","NotFound");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+				
+		}
+           return objResult;
+   	}
 
     private int funGetMAXTerminalFromLicence(String clientCode) {
    		int intMAXTerminal = 0;
@@ -15978,6 +16170,21 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
    			String trminal = clsEncryptDecryptClientCode.funDecryptClientCode(String.valueOf(objClientDetails.getIntMAXAPOSTerminals()));
    			intMAXTerminal=Integer.parseInt(trminal);
    			System.out.println("Total APOS Terminals :"+trminal);
+
+   		} catch (Exception e) {
+   			e.printStackTrace();
+   		} finally {
+   			return intMAXTerminal;
+   		}
+   	}
+    
+    private int funGetMAXPOSBITerminalFromLicence(String clientCode) {
+   		int intMAXTerminal = 0;
+   		try {
+   			clsClientDetails objClientDetails = clsClientDetails.hmClientDtl.get(clsEncryptDecryptClientCode.funEncryptClientCode(clientCode));
+   			String trminal = clsEncryptDecryptClientCode.funDecryptClientCode(String.valueOf(objClientDetails.getStrPOSBITerminal()));
+   			intMAXTerminal=Integer.parseInt(trminal);
+   			System.out.println("Total POSBI Terminals :"+trminal);
 
    		} catch (Exception e) {
    			e.printStackTrace();
