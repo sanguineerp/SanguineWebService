@@ -534,6 +534,10 @@ public class clsSynchPOSDataWithMMS
 		{
 		    remarks = "Stock=" + mJsonObject.getString("StockQty");
 		}
+		else if(orderType.equals("Daily Order"))
+		{
+			  remarks = "Daily Order";
+		}
 		else
 		{
 		    remarks = mJsonObject.getString("AdvOrderNo");
