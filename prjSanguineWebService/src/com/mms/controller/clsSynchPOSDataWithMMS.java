@@ -468,8 +468,9 @@ public class clsSynchPOSDataWithMMS
     }
     */
     
+    // Commented By Mahesh on 04-10-2019 
 
-    private String funPlaceSalesOrder(JSONObject objSalesData)
+/*    private String funPlaceSalesOrder(JSONObject objSalesData)
     {
 	//clsDatabaseConnection objDb = new clsDatabaseConnection();
 	Connection webmms = null;
@@ -620,6 +621,167 @@ public class clsSynchPOSDataWithMMS
 	    return res;
 	}
     }
+    
+    */
+    
+    private String funPlaceSalesOrder(JSONObject objSalesData)
+    {
+		//clsDatabaseConnection objDb = new clsDatabaseConnection();
+		Connection webmms = null;
+		Statement st = null;
+		String res = "";
+		
+		try
+		{
+		    webmms = clsDatabaseConnection.DBMMSCONNECTION;
+		    st = webmms.createStatement();
+		    String sql = "", existOrderCode = "", SOCode = "";
+		    JSONArray mJsonArray = (JSONArray) objSalesData.get("OrderData");
+		    JSONArray mJsonArraySOChar = (JSONArray) objSalesData.get("OrderCharData");
+		    String locCode = objSalesData.getString("LocCode");
+		    String clientCode = objSalesData.getString("WSClientCode");
+		    String fullFillmentDate = objSalesData.getString("fullFillmentDate");
+		    String SOOrderDate = objSalesData.getString("SODate");
+		    String orderType = objSalesData.getString("OrderType");
+		    // String existSOCode=objSalesData.getString("SOCode");
+		    existOrderCode = objSalesData.getString("OrderCode");
+		    String POSClientCode = objSalesData.getString("ClientCode");
+		    
+		    String custCode = "";
+		    int index = 0;
+		    sql = "select strPCode from tblpartymaster " + " where strManualCode='" + POSClientCode + "' and strPType='cust'";
+		    ResultSet rsCust = st.executeQuery(sql);
+		    if (rsCust.next())
+		    {
+			   custCode = rsCust.getString(1);
+		    }
+		    rsCust.close();
+		    
+		    double totalAmt = 0;
+		    SOCode = funSalesOrderCode(clientCode, locCode,SOOrderDate);
+		    index = Integer.parseInt(SOCode.split(",")[1]);
+		    SOCode = SOCode.split(",")[0];
+		    
+		    sql = "delete from tblsalesorderhd where strSOCode='" + SOCode + "'";
+		    st.execute(sql);
+		    
+		    sql = "delete from tblsalesorderdtl where strSOCode='" + SOCode + "'";
+		    st.execute(sql);
+		    
+		    sql = "delete from tblsaleschar where strSOCode='" + SOCode + "'";
+		    st.execute(sql);
+		    sql = "";
+		    
+		    clsUtilityFunctions objUtility = new clsUtilityFunctions();
+		    String date = objUtility.funGetCurrentDateTime("yyyy-MM-dd");
+		    String narration = "Sales Order From POS";
+		    double dblSubTotal=0;
+		    String sqlInsertSODtl = "insert into tblsalesorderdtl " + "(strSOCode,strProdCode,dblQty,dblWeight,strRemarks,intindex,strClientCode,dblAcceptQty,dblUnitPrice) " + "values ";
+		    JSONObject mJsonObject = new JSONObject();
+		    for (int i = 0; i < mJsonArray.length(); i++)
+		    {
+			mJsonObject = (JSONObject) mJsonArray.get(i);
+			// System.out.println(mJsonObject);
+			// String remarks="Stock="+mJsonObject.getString("StockQty");
+			
+			String remarks = "";
+			if (orderType.equals("Normal Order"))
+			{
+			    remarks = "Stock=" + mJsonObject.getString("StockQty");
+			}
+			else if(orderType.equals("Daily Order"))
+			{
+				  remarks = "Daily Order";
+			}
+			else
+			{
+			    remarks = mJsonObject.getString("AdvOrderNo");
+			}
+			double dblProdPrice=funGetProductPrice( mJsonObject.getString("ProductCode"),custCode);
+			if (i == 0)
+			{
+				sqlInsertSODtl += "('" + SOCode + "','" + mJsonObject.getString("ProductCode") + "'" + ",'" + mJsonObject.getString("OrderQty") + "','" + mJsonObject.getString("Weight") + "','" + remarks + "'," + index + "" + ",'" + clientCode + "','" + mJsonObject.getString("OrderQty") + "',"+dblProdPrice+")";
+			}
+			else
+			{
+			   sqlInsertSODtl += ",('" + SOCode + "','" + mJsonObject.getString("ProductCode") + "','" + mJsonObject.getString("OrderQty") + "'" + ",'" + mJsonObject.getString("Weight") + "','" + remarks + "'," + index + ",'" + clientCode + "','" + mJsonObject.getString("OrderQty") + "',"+dblProdPrice+")";
+			}
+			totalAmt += Double.parseDouble(mJsonObject.getString("OrderQty"));
+			
+			dblProdPrice=dblProdPrice *  Double.parseDouble(mJsonObject.getString("OrderQty"));
+			if( Double.parseDouble(mJsonObject.getString("Weight"))!=0)
+			{
+				dblProdPrice=dblProdPrice * Double.parseDouble(mJsonObject.getString("Weight")); 
+			}
+			dblSubTotal+=dblProdPrice;
+		    }
+		    // System.out.println("SODtl Data:="+sqlInsertSODtl);
+		    st.executeUpdate(sqlInsertSODtl);
+		    
+		    if (mJsonArraySOChar.length() > 0)
+		    {
+			Set setAdvOrderDtl = new HashSet();
+			String sqlInsertSOCharDtl = "insert into tblsaleschar " + "(strSOCode,strProdCode,strCharCode,strCharValue,strAdvOrderNo) values ";
+			
+			for (int i = 0; i < mJsonArraySOChar.length(); i++)
+			{
+			    JSONObject mJsonCharObject = (JSONObject) mJsonArraySOChar.get(i);
+			    String productCode = mJsonCharObject.getString("ProductCode");
+			    String advanceOrderNo = mJsonCharObject.getString("AdvOrderNo");
+			    String[] characterstics = mJsonCharObject.getString("Charcterstics").split(":");
+			    
+			    String data = productCode + "!" + advanceOrderNo + "!" + characterstics[0];
+			    if (setAdvOrderDtl.add(data))
+			    {
+				if (i == 0)
+				{
+				    sqlInsertSOCharDtl += "('" + SOCode + "','" + productCode + "','" + characterstics[0] + "','" + characterstics[1] + "','" + advanceOrderNo + "')";
+				}
+				else
+				{
+				    sqlInsertSOCharDtl += ",('" + SOCode + "','" + productCode + "','" + characterstics[0] + "','" + characterstics[1] + "','" + advanceOrderNo + "')";
+				}
+			    }
+			}
+			// System.out.println("SOCharDtl Data:="+sqlInsertSOCharDtl);
+			st.executeUpdate(sqlInsertSOCharDtl);
+		    }
+		    
+		    String sqlInsertSOHd = "insert into tblsalesorderhd (strSOCode,intid,dteSODate,strCustCode" + ",strStatus,strLocCode,strPayMode,dblTotal,strUserCreated,strUserModified,dteDateCreated,dteLastModified" + ",strNarration,strCurrency,strAgainst,intwarmonth,strClientCode,dteFulmtDate,strSettlementCode,dblSubTotal) " + "values" + "('" + SOCode + "',0,'" + SOOrderDate + "','" + custCode + "','" + orderType + "','" + locCode + "','Cash','" + dblSubTotal + "'" + ",'SUPER','SUPER','" + date + "','" + date + "','" + narration + "','RS','Direct',0,'" + clientCode + "','" + fullFillmentDate + "','',"+dblSubTotal+")";
+		    st.executeUpdate(sqlInsertSOHd);
+		    if (existOrderCode.isEmpty())
+		    {
+			existOrderCode = "New";
+		    }
+		    res = SOCode + "#" + fullFillmentDate + "#" + existOrderCode;
+		    // System.out.println("res:" +res);
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		    new clsUtilityFunctions().funWriteErrorLog(e);
+		}
+		finally
+		{
+		    try
+		    {
+			if (null != st)
+			{
+			    st.close();
+			}
+	//		if (null != webmms)
+	//		{
+	//		    webmms.close();
+	//		}
+		    }
+		    catch (SQLException e)
+		    {
+			e.printStackTrace();
+		    }
+		    return res;
+		}
+    }
+    
     
     
     private String funSalesOrderCode(String clientCode, String locCode,String SOOrderDate)
