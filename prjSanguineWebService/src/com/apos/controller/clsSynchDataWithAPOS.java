@@ -19359,7 +19359,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	        String sql="";
 	        String remark="";
 	        sql="SELECT a.strPromoCode AS promocode,a.strPromoName,a.dblBuyQty,b.dblGetQty FROM tblpromotionmaster a, "
-	        	+ "tblpromotiondtl b WHERE a.strPromoCode=b.strPromoCode AND DATE(a.dteDateEdited)='"+date+"' AND a.strClientCode='"+clientCode+"' ";
+	        	+ "tblpromotiondtl b WHERE a.strPromoCode=b.strPromoCode AND '"+date+"' BETWEEN DATE(a.dteFromDate) AND DATE(a.dteToDate) AND a.strClientCode='"+clientCode+"' ";
 	        ResultSet rsPromotions=st.executeQuery(sql);
 	        while(rsPromotions.next())
 	        {
