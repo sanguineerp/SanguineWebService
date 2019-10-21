@@ -8239,6 +8239,8 @@ public class clsPostPOSBillData
 				obj.put("strDebtorCode", rsItemOrderingMasterData.getString(41));
 				obj.put("strAccountCode", rsItemOrderingMasterData.getString(42));
 				obj.put("dblCreditLimit", rsItemOrderingMasterData.getString(43));
+				obj.put("strOfficeName", rsItemOrderingMasterData.getString(44));
+
 
 				arrObj.put(obj);
 			}
@@ -9866,7 +9868,7 @@ public class clsPostPOSBillData
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
 					+ " strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill,strUserWiseShowBill,strDisplayTotalShowBill,strShowNotificationsOnTransaction,strBlankDayEndPrint," // 240
-					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd,strCashDenominationCompulsary,strCashManagementCompulsary,strShowItemCodeOnPLU,strDirectSettleOnSelection) "//248
+					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd,strCashDenominationCompulsary,strCashManagementCompulsary,strShowItemCodeOnPLU,strDirectSettleOnSelection,strPrintOrderNoOnMakeKot) "//248
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -10153,6 +10155,7 @@ public class clsPostPOSBillData
 					
 					String strShowItemCodeOnPLU=dataObject.get("strShowItemCodeOnPLU").toString().trim();//247
 					String strDirectSettleOnSelection=dataObject.get("strDirectSettleOnSelection").toString().trim();//248
+					String strPrintOrderNoOnMakeKot=dataObject.get("strPrintOrderNoOnMakeKot").toString().trim();//249
 					
 					if (i == 0)
 					{
@@ -10182,7 +10185,7 @@ public class clsPostPOSBillData
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
 							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "'" //236
 							+ ", '" + strUserWiseShowBill + "','" + strDisplayTotalShowBill + "','" + strShowNotificationsOnTransaction + "','" + strBlankDayEndPrint + "'," //240
-							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"','"+strCashDenominationCompulsary+"','"+strCashManagementCompulsary+"','"+strShowItemCodeOnPLU+"','"+strDirectSettleOnSelection+"') "); // 247 
+							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"','"+strCashDenominationCompulsary+"','"+strCashManagementCompulsary+"','"+strShowItemCodeOnPLU+"','"+strDirectSettleOnSelection+"','"+strPrintOrderNoOnMakeKot+"') "); // 249
 					flgData = true;
 				}
 			}
