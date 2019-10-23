@@ -6497,14 +6497,13 @@ public class clsPostPOSBillData
 				{
 					clientPOSCode = clientPOSCode.substring(1, clientPOSCode.length());
 					String sql = "select a.strUserCode,a.strUserName,a.strPassword,a.strSuperType,a.dteValidDate,'" + clientPOSCode + "',a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited, "
-							+ " a.strClientCode,a.strDataPostFlag,a.imgUserIcon,a.strImgUserIconPath,a.strDebitCardString ,strWaiterNo,strUserType,intNoOfDaysReportsView"
+							+ " a.strClientCode,a.strDataPostFlag,a.imgUserIcon,a.strImgUserIconPath,a.strDebitCardString ,strWaiterNo,strUserType,intNoOfDaysReportsView,strShowDocs"
 							+ " from " + masterName + " a " + " where a.strUserCode='" + userCode + "' and a.dteDateEdited > '" + lastModifiedDate + "' ";
 					System.out.println(sql);
 					ResultSet rsMasterData = st.executeQuery(sql);
 					while (rsMasterData.next())
 					{
 						JSONObject obj = new JSONObject();
-
 						obj.put("UserCode", rsMasterData.getString(1));
 						obj.put("UserName", rsMasterData.getString(2));
 						obj.put("Password", rsMasterData.getString(3));
@@ -6523,6 +6522,8 @@ public class clsPostPOSBillData
 						obj.put("strWaiterNo", rsMasterData.getString(16));
 						obj.put("strUserType", rsMasterData.getString(17));
 						obj.put("intNoOfDaysReportsView", rsMasterData.getString(18));
+						obj.put("strShowDocs", rsMasterData.getString(19));
+						
 						
 						arrObj.put(obj);
 					}
