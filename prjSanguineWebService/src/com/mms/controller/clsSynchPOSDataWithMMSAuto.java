@@ -441,7 +441,7 @@ public class clsSynchPOSDataWithMMSAuto {
 						stUpdate.setInt(8,0);
 						stUpdate.setString(9,"BOM Code:"+strBOMCode+":Parent Code:"+strParentCode+":Qty:"+qty+":ItemName:"+posItemName);
 						stUpdate.setString(10,clientCode);
-						stUpdate.setDouble(11,rate);
+						stUpdate.setDouble(11,dblCostRM);
 						stUpdate.setString(12,Displyqty);
 						stUpdate.setString(13,strParentCode);
 						stUpdate.setDouble(14,qty);
