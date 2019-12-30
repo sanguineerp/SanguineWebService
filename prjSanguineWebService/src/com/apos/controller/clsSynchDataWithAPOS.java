@@ -19,15 +19,18 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -41,6 +44,7 @@ import javax.print.attribute.DocAttributeSet;
 import javax.print.attribute.HashDocAttributeSet;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -57,6 +61,11 @@ import org.codehaus.jettison.json.JSONObject;
 import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.POSLicence.controller.clsClientDetails;
 import com.POSLicence.controller.clsEncryptDecryptClientCode;
@@ -65,6 +74,11 @@ import com.apos.bean.clsBillSeriesBillDtl;
 import com.apos.bean.clsBillSettlementDtl;
 import com.apos.bean.clsMakeKotItemDtlBean;
 import com.apos.bean.clsSalesFlashColumns;
+import com.apos.bean.clsStockInDtl;
+import com.apos.bean.clsStockInHd;
+import com.apos.bean.clsStockInTaxDtl;
+import com.apos.bean.clsStockOutDtl;
+import com.apos.bean.clsStockOutHd;
 import com.apos.listener.intfSynchDataWithAPOS;
 import com.apos.util.clsAPOSKOT;
 import com.apos.util.clsAPOSUtility;
@@ -74,6 +88,7 @@ import com.apos.util.clsKOTJasperFileGenerationForMakeKOT;
 import com.apos.util.clsTextFileGenerator;
 import com.apos.util.clsTextFormatVoidKOT;
 import com.cmsws.controller.clsCMSIntegration;
+import com.hopos.controller.clsPostPOSBillData;
 import com.webservice.controller.clsDatabaseConnection;
 import com.webservice.util.clsBillDtl;
 import com.webservice.util.clsBillItemDtl;
@@ -119,6 +134,9 @@ public class clsSynchDataWithAPOS implements intfSynchDataWithAPOS
 	
 	@Autowired
 	clsUtilityController objUtilityController;
+	
+	@Autowired
+	clsAPOSMasterController objAPOSMasterController;
 	
 	Map<String, List<Map<String, clsBillSettlementDtl>>> mapPOSDtlForSettlement;
 	Map<String, Map<String, clsBillItemDtl>> mapPOSItemDtl;
@@ -235,6 +253,127 @@ public class clsSynchDataWithAPOS implements intfSynchDataWithAPOS
 	    }
 	
 	
+@GET 
+@Path("/funValidateClient")
+@Produces(MediaType.APPLICATION_JSON)
+public JSONObject login(@QueryParam("strClientCode") String clientCode,@QueryParam("strClientPassword") String clientPassword,@QueryParam("strDate") String strDate)
+{
+	clsDatabaseConnection objDb=new clsDatabaseConnection();
+    Connection cmsCon=null;
+    Statement st=null;
+    JSONObject jObj=new JSONObject();
+    JSONArray returnObj=new JSONArray();
+	try
+	{
+		cmsCon=objDb.funOpenAPOSCon("mysql","master");
+        st = cmsCon.createStatement();
+        String sql="";
+        boolean status=false,strCheckHOPOS=false;
+        int clientCount=0;
+        
+        sql="SELECT a.strPropertyPOSCode FROM tblposmaster a WHERE a.strClientCode='"+clientCode+"';";
+        ResultSet rs = st.executeQuery(sql);
+        if(rs.next())
+        {
+        	String data=rs.getString(1);
+        	if(data.equals(""))
+        	{
+        		strCheckHOPOS=false;
+        	}
+        	else
+        	{
+        		strCheckHOPOS=true;
+        	}
+        }
+        rs.close();
+        
+        if(!strCheckHOPOS)
+        {
+        	sql="SELECT COUNT(a.strClientCode) FROM tblsetup a WHERE a.strClientCode='"+clientCode+"'; ";
+        }
+        else
+        {
+        	sql="SELECT COUNT(a.strPropertyPOSCode) FROM tblposmaster a WHERE LEFT(a.strPropertyPOSCode,7)='"+clientCode+"'; ";
+        }
+        ResultSet rsClient=st.executeQuery(sql);
+		if(rsClient.next())
+		{
+			clientCount=rsClient.getInt(1);
+		}
+		if(clientCount>=1)
+		{
+			String encryptedClientCodeFromDB = clsEncryptDecryptClientCode.funEncryptClientCode(clientCode);
+	        String encryptedClientPasswordFromDB = clsEncryptDecryptClientCode.funEncryptClientCode(clientPassword);
+
+	        clsClientDetails.funAddClientCodeAndName();
+
+			String decryptedClientCodeFromHm = clsEncryptDecryptClientCode.funDecryptClientCode(clsClientDetails.hmClientDtl.get(encryptedClientCodeFromDB).getId());
+			String decryptedClientNameFromHm = clsEncryptDecryptClientCode.funDecryptClientCode(clsClientDetails.hmClientDtl.get(encryptedClientCodeFromDB).Client_Name);
+			String decryptedClientPasswordFromHm = clsEncryptDecryptClientCode.funDecryptClientCode(clsClientDetails.hmClientDtl.get(encryptedClientCodeFromDB).getStrClientPassword());
+
+			SimpleDateFormat dFormat = new SimpleDateFormat("yyyy-MM-dd");
+			Date systemDate = dFormat.parse(dFormat.format(new Date()));
+
+			String encryptedExpDate = clsClientDetails.hmClientDtl.get(encryptedClientCodeFromDB).expiryDate;
+			String decryptedExpDate = clsEncryptDecryptClientCode.funDecryptClientCode(encryptedExpDate);
+						
+			String encryptedPOSVersion=clsClientDetails.hmClientDtl.get(encryptedClientCodeFromDB).getPosVersion();
+			String gPOSVerion = clsEncryptDecryptClientCode.funDecryptClientCode(encryptedPOSVersion);
+						
+			Date posExpiryDate = dFormat.parse(decryptedExpDate);
+			if (systemDate.compareTo(posExpiryDate) <= 0)
+			{
+				if (clientCode.equalsIgnoreCase(decryptedClientCodeFromHm))
+				{
+					returnObj=funGetPropertySetup(clientCode, strDate,strCheckHOPOS);
+					jObj.put("listsetup", returnObj);
+					jObj.put("ClientStatus", true);
+					if(clientPassword.equalsIgnoreCase(decryptedClientPasswordFromHm))
+					{
+						jObj.put("PasswordStatus", true);
+					}
+					else
+					{
+						jObj.put("PasswordStatus", false);
+					}
+				}
+				else
+				{
+					jObj.put("ClientStatus", false);
+					jObj.put("PasswordStatus", false);
+				}
+				/*if (clientCode.equalsIgnoreCase(decryptedClientCodeFromHm) && clientPassword.equalsIgnoreCase(decryptedClientPasswordFromHm))
+				{
+					returnObj=funGetPropertySetup(clientCode, strDate,strCheckHOPOS);
+					jObj.put("listsetup", returnObj);
+					jObj.put("ClientStatus", true);
+				}
+				else
+				{
+					returnObj=funGetPropertySetup(clientCode, strDate,strCheckHOPOS);
+					jObj.put("listsetup", returnObj);
+					jObj.put("ClientStatus", false);
+				}*/
+			}
+			else
+			{
+			jObj.put("POSExpiry", "Expired");
+			}
+		}
+		else
+		{
+			jObj.put("ClientStatus", false);
+		}
+	}
+	catch (Exception e)
+	{
+		e.printStackTrace();
+	}
+	return jObj;
+}
+
+	
+	
 	
 @GET 
 @Path("/funAuthenticateUser")
@@ -268,7 +407,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         ResultSet rsLogin=st.executeQuery(sql);
         if(rsLogin.next())
         {
-        	sql="select strUserName,strSuperType,strWaiterNo from tbluserhd "
+        	sql="select strUserName,strSuperType,strWaiterNo,strClientCode from tbluserhd "
         		+ "WHERE strUserCode = '" + userCode+"' and strPassword='" + encPassword + "' "
         		+ "AND dteValidDate>='" + currentDate + "'";
         	ResultSet rsLogin1=st.executeQuery(sql);
@@ -279,6 +418,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         		jObj.put("UserName", rsLogin1.getString(1));
                 jObj.put("SuperType", rsLogin1.getString(2));
                 jObj.put("WaiterNo", rsLogin1.getString(3));
+                jObj.put("ClientCode", rsLogin1.getString(4));
+                
         	}
         	else
         	{
@@ -287,6 +428,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         		jObj.put("UserName", "");
                 jObj.put("SuperType","");
                 jObj.put("WaiterNo", "");
+                jObj.put("ClientCode", "");
         	}
         	rsLogin1.close();
         }
@@ -297,6 +439,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         	jObj.put("UserName", "");
             jObj.put("SuperType","");
             jObj.put("WaiterNo", "");
+            jObj.put("ClientCode", "");
         }
         
         System.out.println(jObj);
@@ -2909,24 +3052,26 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	@GET
 	@Path("/funGetItemMaster")
 	@Produces(MediaType.APPLICATION_JSON)
-	
-	public String funGetItemMaster(@QueryParam("clientCode") String clientCode)
+	public JSONObject funGetItemMaster(@QueryParam("clientCode") String clientCode)
 	{
 		return funFetchItemMaster(clientCode);
 	}
 
-	private String funFetchItemMaster(String clientCode )
+	private JSONObject funFetchItemMaster(String clientCode )
 	{
 		clsDatabaseConnection objDb=new clsDatabaseConnection();
         Connection aposCon=null;
         Statement st=null;
         JSONObject jObj=new JSONObject();
-		String sql=" select a.strItemCode, a.strItemName, a.strSubGroupCode, a.strExternalCode, a.dblSalePrice  "
-				+  " from tblitemmaster a ";
+		String sql=" select a.strItemCode, a.strItemName,a.strShortName, a.strExternalCode, a.dblPurchaseRate,a.dblSalePrice,a.strRawMaterial  "
+				+  " from tblitemmaster a where a.strClientCode='"+clientCode+"' order by a.strItemName; ";
+        /*String sql="SELECT a.strItemCode, a.strItemName,a.strShortName, a.strExternalCode, a.dblPurchaseRate,a.dblSalePrice, "
+        		+ "a.strRawMaterial,a.strItemType,b.strSubGroupName FROM tblitemmaster a left outer join tblsubgrouphd b "
+        		+ "on b.strSubGroupCode=a.strSubGroupCode WHERE a.strClientCode='"+clientCode+"' ORDER BY a.strItemName;";*/
 		JSONArray arrObj=new JSONArray();
 		
 		 try
-	        {
+	     {
 			 aposCon=objDb.funOpenAPOSCon("mysql","master");
 	            st = aposCon.createStatement();
 	            
@@ -2936,10 +3081,13 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         	        JSONObject obj=new JSONObject();
         	        obj.put("ItemCode",rsMasterData.getString(1));
         	        obj.put("ItemName",rsMasterData.getString(2));
-        	        obj.put("ItemSubGroupCode",rsMasterData.getString(3));
+        	        obj.put("ShortName",rsMasterData.getString(3));
         	        obj.put("ItemExternalCode",rsMasterData.getString(4));
-        	        obj.put("ItemSalePrice",rsMasterData.getString(5));
-        	       // obj.put("ItemImage",rsMasterData.getString(6));
+        	        obj.put("ItemPurchaseRate",rsMasterData.getString(5));
+        	        obj.put("SalePrice",rsMasterData.getString(6));
+        	        obj.put("RawMaterial",rsMasterData.getString(7));
+        	        /*obj.put("ItemType",rsMasterData.getString(8));
+        	        obj.put("SubGroup",rsMasterData.getString(9));*/
         	        arrObj.put(obj);
                 }
                 rsMasterData.close();
@@ -2952,7 +3100,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		 {
 	    	 e.printStackTrace();
 		 }
-		 return jObj.toString();
+		 return jObj;
 	}
 	
 	
@@ -3047,7 +3195,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	    			+ "or a.strModuleName='Day End' or a.strModuleName='KDSForKOTBookAndProcess' "
 	    			+ "or a.strModuleName='Kitchen Process System' or a.strModuleName='Change Settlement' "
 	    			+ "or a.strModuleName='Customer Master' or a.strModuleName='Move KOT' or a.strModuleName='Move Table' "
-	    			+ "or a.strModuleName='Move Items To Table') ";	
+	    			+ "or a.strModuleName='Move Items To Table' or a.strModuleName='Billing' or a.strModuleName='Modify Bill' "
+	    			+ "or a.strModuleName='Stock Out' or a.strModuleName='Menu Item' or a.strModuleName='Stock In Out Flash') ";	
 	    	}
 	    }
 	    else
@@ -3112,7 +3261,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ ",'NCKOT','Take Away','Table Reservation','POS Wise Sales','Customer Order'"
 				//+ ",'Non Available Items','Mini Make KOT','Day End','KDSForKOTBookAndProcess','Kitchen Process System') "
 				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement','Customer Master','Move KOT','Move Table'"
-				+ ",'Move Items To Table') "
+				+ ",'Move Items To Table','Billing','Modify Bill','Menu Item','Stock Out','Stock In Out Flash') "
 				+ " order by b.intSequence";
 	    	}
 	    }
@@ -3198,6 +3347,239 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				
 		
 	}
+	
+	/*private JSONObject  funFetchMainMenu(String userCode,String moduleType,String  clientCode,boolean superUser, String POSCode)
+	{
+			
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection aposCon=null;
+	    Statement st=null;
+	    Statement st1=null;
+	    JSONObject jObj=new JSONObject();
+	    String sql=null;
+	    
+	    if(userCode.equalsIgnoreCase("Sanguine"))
+	    {
+	    	if(moduleType.equals("T"))
+	    	{
+	    		sql=" select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	    				+ " FROM tblforms a WHERE (a.strModuleType='T' OR a.strModuleType='U' OR strModuleName='Customer Master') "
+	    				+ " AND a.strModuleName!='NCKOT' AND a.strModuleName!='Complimentry Settlement'  "
+	    				+ " AND a.strModuleName!='Discount On Bill' AND a.strModuleName!='NCKOT' "
+	    				+ " AND a.strModuleName!='Take Away' AND a.strModuleName LIKE '%%';  ";
+	    	}
+	    	else if (moduleType.equals("M"))
+	    	{
+	    		sql=" SELECT DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	    				+ " FROM tblforms a WHERE (a.strModuleType='M' OR a.strModuleType='U') "
+	    				+ " AND a.strModuleName<>'ReOrderTime' AND a.strModuleName<>'Customer Master' "
+	    				+ " AND a.strModuleName LIKE '%%'  ";
+	    	}
+	    	else if (moduleType.equals("R"))
+	    	{
+	        	sql=" SELECT DISTINCT  a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	        			+ " FROM tblforms a  WHERE (a.strModuleType='R' OR a.strModuleType='U') "
+	        			+ " AND a.strModuleName LIKE '%%'; ";
+	    	}
+	    	
+	    	
+	    }else  if(superUser)
+	    {
+	    	if(moduleType.equals("T"))
+	    	{
+	    		sql="select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	          	    + "from tblforms a,tblsuperuserdtl b  "
+	           		+ " where b.strUserCode='"+userCode+"'  "
+	           	    +  "and a.strModuleName=b.strFormName "
+	           		+  "and  (a.strModuleType='T' or a.strModuleType='U'  or strModuleName='Customer Master')   "
+	           	    + "order by b.intSequence ";
+	    	}
+	    	else if (moduleType.equals("M"))
+	    	{
+	    		sql="select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	          	    + "from tblforms a,tblsuperuserdtl b  "
+	           		+ " where b.strUserCode='"+userCode+"'  "
+	           	    +  "and a.strModuleName=b.strFormName "
+	           		+  "and  (a.strModuleType='M' or a.strModuleType='U')   "
+	           	    + "order by b.intSequence ";
+	    	}
+	    	else if (moduleType.equals("R"))
+	    	{
+	        	sql="select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	        	    + "from tblforms a,tblsuperuserdtl b  "
+	        		+ " where b.strUserCode='"+userCode+"' "
+	        	    +  "and a.strModuleName=b.strFormName "
+	        		+  "and  (a.strModuleType='R' or a.strModuleType='U')   "
+	        	    + "order by b.intSequence ";
+	    	}
+	    	else
+	    	{
+	    		sql="select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	    			+ "from tblforms a,tblsuperuserdtl b "
+	    			+ "where b.strUserCode='"+userCode+"' "
+	    			+ "and a.strModuleName=b.strFormName "
+	    			+ "and (a.strModuleName='Direct Biller' or a.strModuleName='Make KOT' "
+	    			+ "or a.strModuleName='VoidKot' "
+	    			+ "or a.strModuleName='Make Bill' or a.strModuleName='Sales Report' "
+	    			+ "or a.strModuleName='Reprint' or a.strModuleName='SettleBill' "
+	    			+ "or a.strModuleName='TableStatusReport' or a.strModuleName='NCKOT' "
+	    	        + "or a.strModuleName='Take Away' or a.strModuleName='Table Reservation' "
+	    			+ "or a.strModuleName='POS Wise Sales' or a.strModuleName='Customer Order' "
+	    			//+ "or a.strModuleName='Non Available Items' or a.strModuleName='Mini Make KOT' "
+	    			+ "or a.strModuleName='Day End' or a.strModuleName='KDSForKOTBookAndProcess' "
+	    			+ "or a.strModuleName='Kitchen Process System' or a.strModuleName='Change Settlement' "
+	    			+ "or a.strModuleName='Customer Master' or a.strModuleName='Move KOT' or a.strModuleName='Move Table' "
+	    			+ "or a.strModuleName='Move Items To Table' or a.strModuleName='Billing' ) ";	
+	    	}
+	    }
+	    else
+	    {
+	    	if(moduleType.equals("T"))
+	    	{
+	    		sql=" select DISTINCT a.strModuleName,a.strImageName,b.intSequence,a.strFormName,a.strRequestMapping  "
+	    			+  "from tblforms a,tbluserdtl b  "
+	    	        +  "where (a.strModuleType='T' or a.strModuleType='U' or strModuleName='Customer Master')  "
+	    	        +  "and b.strUserCode='"+userCode+"'  "
+	    	        +   "and a.strModuleName=b.strFormName  "
+	    	        +   "and (b.strAdd='true' or b.strEdit='true' or b.strDelete = 'true' or b.strView='true' "
+	    	        +    "or b.strPrint = 'true' or b.strSave = 'true' or b.strGrant = 'true')  "
+	    	        +  "order by b.intSequence ";
+	    	}
+	    	else if(moduleType.equals("M"))
+	    	{
+	    		sql=" select DISTINCT a.strModuleName,a.strImageName,b.intSequence,a.strFormName,a.strRequestMapping  "
+	          	      +  "from tblforms a,tbluserdtl b  "
+	          	      +  "where (a.strModuleType='M' or a.strModuleType='U')  "
+	          	      +  "and b.strUserCode='"+userCode+"'  "
+	          	      +  "and a.strModuleName=b.strFormName  "
+	          	      +  "and (b.strAdd='true' or b.strEdit='true' or b.strDelete = 'true' or b.strView='true' "
+	          	      +  "or b.strPrint = 'true' or b.strSave = 'true' or b.strGrant = 'true')  "
+	          	      +  "order by b.intSequence ";
+	    	}
+	    	else if (moduleType.equals("R"))
+	    	{
+	    		sql=" select DISTINCT a.strModuleName,a.strImageName,b.intSequence,a.strFormName,a.strRequestMapping  "
+	    			+  "from tblforms a,tbluserdtl b  "
+	            	+  "where (a.strModuleType='R' or a.strModuleType='U' )  "
+	            	+  "and b.strUserCode='"+userCode+"'  "
+	            	+  "and a.strModuleName=b.strFormName  "
+	            	+  "and (b.strAdd='true' or b.strEdit='true' or b.strDelete = 'true' or b.strView='true' "
+	            	+  "or b.strPrint = 'true' or b.strSave = 'true' or b.strGrant = 'true')  "
+	            	+  "order by b.intSequence ";
+	    	}
+	    	else 
+	    	{
+	    		sql="select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping "
+	    			+ "from tblforms a,tbluserdtl b "
+	    			+ "where b.strUserCode='"+userCode+"' "
+	    			+ "and a.strModuleName=b.strFormName "
+	    			+ "and (a.strModuleName='Direct Biller' or a.strModuleName='Make KOT' "
+	    			+ "or a.strModuleName='RechargeDebitCard' or a.strModuleName='ShowCard' "
+	    			+ "or a.strModuleName='VoidKot' or a.strModuleName='DebitCardRegister' "
+	    			+ "or a.strModuleName='Make Bill' or a.strModuleName='Sales Report' "
+	    			+ "or a.strModuleName='Reprint' or a.strModuleName='SettleBill'"
+	    			+ "or a.strModuleName='TableStatusReport' or a.strModuleName='NCKOT' "
+	    			+ "or a.strModuleName='Take Away' or a.strModuleName='Table Reservation') ";
+	    		
+	    		
+	    		sql="select DISTINCT a.strModuleName,a.strImageName,a.strFormName,a.strRequestMapping  "
+				+ " from tblforms a,tbluserdtl b "
+				+ " where (a.strModuleType='T'  or a.strModuleType='U' or a.strModuleType='R'  or a.strModuleName='Customer Master')  "
+				+ " and a.strModuleName!='Complimentry Settlement' and a.strModuleName!='Discount On Bill'  "
+				+ " and b.strUserCode='"+userCode+"' and a.strModuleName like '%%' and a.strModuleName=b.strFormName "
+				+ " and (b.strAdd='true' or b.strEdit='true' or b.strDelete = 'true' or b.strView='true' "
+				+ " or b.strPrint = 'true' or b.strSave = 'true' or b.strGrant = 'true' or b.strTLA='true' ) "
+				+ " and a.strModuleName in ('Direct Biller','Make KOT','VoidKot'"
+				+ ",'Make Bill','Sales Report','Reprint','SettleBill','TableStatusReport'"
+				+ ",'NCKOT','Take Away','Table Reservation','POS Wise Sales','Customer Order'"
+				//+ ",'Non Available Items','Mini Make KOT','Day End','KDSForKOTBookAndProcess','Kitchen Process System') "
+				+ ",'Day End','KDSForKOTBookAndProcess','Kitchen Process System','Change Settlement','Customer Master','Move KOT','Move Table'"
+				+ ",'Move Items To Table','Billing') "
+				+ " order by b.intSequence";
+	    	}
+	    }
+	    
+		JSONArray arrObj=new JSONArray();
+		try
+	    {
+			aposCon=objDb.funOpenAPOSCon("mysql","master");
+	        st = aposCon.createStatement();
+	        st1 = aposCon.createStatement();
+	        
+	        //System.out.println(sql);
+	        ResultSet rsMasterData=st.executeQuery(sql);
+	        while(rsMasterData.next())
+	        {
+	        	JSONObject obj=new JSONObject();            	
+	        	obj.put("ModuleName",rsMasterData.getString(1));
+	        	obj.put("ImageName", rsMasterData.getString(2));
+	        	obj.put("FormName", rsMasterData.getString(3));
+	        	obj.put("RequestMapping", rsMasterData.getString(4));
+	        	arrObj.put(obj);
+	        }
+	        rsMasterData.close();
+	        
+	        String posDate="StartDay";
+	        String dayStatus="";
+	        sql = "select date(max(dtePOSDate)),intShiftCode,strShiftEnd,strDayEnd "
+	            + " from tbldayendprocess "
+	            + " where strPOSCode='"+ POSCode + "' and strDayEnd='N' and (strShiftEnd='' or strShiftEnd='N')";
+	        //System.out.println(sql);
+	        rsMasterData=st1.executeQuery(sql);
+	        if(rsMasterData.next())
+	        {
+	        	String shiftEnd=rsMasterData.getString(3);
+	        	String dayEnd=rsMasterData.getString(4);
+	        	if(shiftEnd.equals("") && dayEnd.equals("N"))
+	        	{
+	        		posDate=rsMasterData.getString(1);
+	        		dayStatus = "StartDay";
+	        	}
+	        	else
+	        	{
+	        		posDate=rsMasterData.getString(1);
+	        	}
+	        }
+	        jObj.put("POSDate",posDate);
+	        jObj.put("MainMenuList", arrObj);
+	        jObj.put("DayStatus",dayStatus);
+	        if(true){
+	        	JSONObject obj=new JSONObject();            	
+	        	obj.put("ModuleName","Item Voice Capture");
+	        	obj.put("ImageName", "imgItemVoiceSave");
+	        	obj.put("FormName", "Item Voice Capture");
+	        	obj.put("RequestMapping", "ItemVoiceCapture");
+	        	arrObj.put(obj);
+	        	
+	        	JSONObject obj1=new JSONObject();            	
+	        	obj1.put("ModuleName","Printer Setup");
+	        	obj1.put("ImageName", "imgprintersetup");
+	        	obj1.put("FormName", "Printer Setup");
+	        	obj1.put("RequestMapping", "PrinterSetup");
+	        	arrObj.put(obj1);
+	        	if(superUser)
+	        	{
+	        		JSONObject obj1=new JSONObject();
+		        	obj1.put("ModuleName","Dash Board");
+		        	obj1.put("ImageName", "imgdashboard");
+		        	obj1.put("FormName", "Dash Board");
+		        	obj1.put("RequestMapping", "Dashboard");
+		        	arrObj.put(obj1);
+	        	}	
+	        }
+	        rsMasterData.close();
+	        st1.close();
+	        st.close();
+	        aposCon.close();
+	        
+	    }catch(Exception e)
+	    {
+	        e.printStackTrace();
+	    }
+		return jObj;
+				
+		
+	}*/
 	
 	
 	@GET
@@ -6507,15 +6889,74 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
     
     
     
-    @GET
-   	@Path("/funGenerateBillNo")
-   	@Produces(MediaType.APPLICATION_JSON)
-    public JSONObject funGetBillNo(@QueryParam("POSCode") String posCode)
-    {
-    	return funGenerateBillNo(posCode);
-    }
+   @GET
+   @Path("/funGenerateBillNo")
+   @Produces(MediaType.APPLICATION_JSON)
+   public JSONObject funGetBillNo(@QueryParam("POSCode") String posCode,@QueryParam("lastBillNoCount")int lastBillNoCount)
+   {
+   		return funGenerateBillNo(posCode,lastBillNoCount);
+   }
+   
+   private JSONObject funGenerateBillNo(String posCode,int lastBillNoCount)
+   {
+   	JSONObject objJSON=new JSONObject();
+   	String voucherNo="";
+   	clsDatabaseConnection objDb=new clsDatabaseConnection();
+       Connection posCon=null;
+       Statement st=null;
+       
+       try
+       {        	
+       	posCon=objDb.funOpenAPOSCon("mysql","master");
+	        st = posCon.createStatement();
+          /* if(lastBillNoCount>0){
+           	String sqlUpdateLast="update tblstorelastbill set strBillNo='" + lastBillNoCount + "' where strPosCode='" + posCode + "'";
+           	
+           }*/
+	        
+           long code = 0;
+           String sql_GetlastBillNo = "select strBillNo from tblstorelastbill "
+           		+ "where strPosCode='" + posCode + "'";
+           System.out.println(sql_GetlastBillNo);
+           ResultSet rsLastBillNo = st.executeQuery(sql_GetlastBillNo);
+
+           if (rsLastBillNo.next())
+           {
+               code = rsLastBillNo.getLong(1);
+               if(lastBillNoCount>code){
+               	code=lastBillNoCount;
+               }
+               code = code + 1;
+               rsLastBillNo.close();
+
+               voucherNo = posCode + String.format("%05d", code);
+               System.out.println(voucherNo);
+               String sql_Update_lastBill = "update tblstorelastbill set strBillNo='" + code + "' where strPosCode='" + posCode + "'";
+               st.executeUpdate(sql_Update_lastBill);
+           }
+           else
+           {
+               rsLastBillNo.close();
+               voucherNo = posCode + "00001";
+               String sql_insert = "insert into tblstorelastbill values('" + posCode + "','1')";
+               st.executeUpdate(sql_insert);
+           }
+           objJSON.put("BillNo", voucherNo);
+           
+           st.close();
+           posCon.close();
+       }
+       catch (Exception e)
+       {
+           e.printStackTrace();
+       }
+       finally
+       {
+       	return objJSON;//.toString();
+       }
+   }
     
-    private JSONObject funGenerateBillNo(String posCode)
+    /*private JSONObject funGenerateBillNo(String posCode)
     {
     	JSONObject objJSON=new JSONObject();
     	String voucherNo="";
@@ -6565,7 +7006,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
         {
         	return objJSON;//.toString();
         }
-    }
+    }*/
     
     
 		
@@ -9602,6 +10043,30 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 	        return jObj.toString();
 		}
         
+        private JSONObject funGetUserHDForHO(String strClientCode,String strUserName)
+        {
+        	clsDatabaseConnection objDb=new clsDatabaseConnection();
+	        String masterData="";
+	        Connection cmsCon=null;
+	        Statement st=null;
+	        JSONObject jObj=new JSONObject();
+	        
+	        try
+	        {
+	        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+	            st = cmsCon.createStatement();
+	            
+	            String sql="SELECT * FROM tbluserhd a, tblposmaster b WHERE a.strPOSAccess=b.strPosCode AND "
+	            		+ "a.strPOSAccess=(SELECT b.strPosCode FROM tblposmaster b WHERE "
+	            		+ "LEFT(b.strPropertyPOSCode,7)='"+strClientCode+"'); ";
+	        }
+	        catch(Exception e)
+	        {
+	        	e.printStackTrace();
+	        }
+	        
+	        return jObj;
+        }
         
         private String funGetUserHD(String masterName,String propertyPOSCode,String lastModifiedDate) {
 			
@@ -14175,6 +14640,638 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			 }
 			 return jObj.toString();
 		}
+    
+    public JSONArray funGetPropertySetup(String strClientCode,String strDate,boolean strPOSType)
+    {
+    	clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection cmsCon=null;
+        Statement st=null;
+        JSONObject obj=null;
+        JSONArray returnObj=new JSONArray();
+        
+        try 
+        {
+        	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="";
+            
+            if(strPOSType)
+            {
+            	sql = "SELECT * FROM tblsetup a WHERE a.strPOSCode IN (SELECT a.strPosCode FROM tblposmaster a WHERE "
+                		+ "LEFT(a.strPropertyPOSCode,7)='"+strClientCode+"'); ";
+            }
+            else
+            {
+            	sql="SELECT * FROM tblsetup a WHERE a.strClientCode='"+strClientCode+"';";
+            }
+            ResultSet rsTableInfo = st.executeQuery(sql);
+            while (rsTableInfo.next()) 
+            {
+            	obj=new JSONObject();
+            	     
+            	obj.put("ClientCode",rsTableInfo.getString(1));
+            	obj.put("ClientName",rsTableInfo.getString(2));
+            	obj.put("AddressLine1",rsTableInfo.getString(3));
+            	obj.put("AddressLine2",rsTableInfo.getString(4));
+            	obj.put("AddressLine3",rsTableInfo.getString(5));
+            	
+            	obj.put("Email",rsTableInfo.getString(6));            	
+            	obj.put("BillFooter",rsTableInfo.getString(7));
+            	obj.put("BillFooterStatus",rsTableInfo.getString(8));
+            	obj.put("BillPaperSize",rsTableInfo.getString(9));
+            	obj.put("NegativeBilling",rsTableInfo.getString(10));
+            	
+            	obj.put("DayEnd",rsTableInfo.getString(11));
+            	obj.put("PrintMode",rsTableInfo.getString(12));
+            	obj.put("DiscountNote",rsTableInfo.getString(13));
+            	obj.put("CityName",rsTableInfo.getString(14));
+            	obj.put("State",rsTableInfo.getString(15));
+            	
+            	obj.put("Country",rsTableInfo.getString(16));
+            	obj.put("TelephoneNo",rsTableInfo.getString(17));
+            	obj.put("StartDate",rsTableInfo.getString(18));
+            	obj.put("EndDate",rsTableInfo.getString(19));
+            	obj.put("NatureOfBusinnes",rsTableInfo.getString(20));
+            	
+            	obj.put("MultipleBillPrinting",rsTableInfo.getString(21));
+            	obj.put("EnableKOT",rsTableInfo.getString(22));
+            	obj.put("EffectOnPSP",rsTableInfo.getString(23));
+            	obj.put("PrintVatNo",rsTableInfo.getString(24));
+            	obj.put("VatNo",rsTableInfo.getString(25));
+            	
+            	obj.put("ShowBill",rsTableInfo.getString(26));
+            	obj.put("PrintServiceTaxNo",rsTableInfo.getString(27));
+            	obj.put("ServiceTaxNo",rsTableInfo.getString(28));
+            	obj.put("ManualBillNo",rsTableInfo.getString(29));
+            	obj.put("MenuItemDispSeq",rsTableInfo.getString(30));
+            	
+            	obj.put("SenderEmailId",rsTableInfo.getString(31));
+            	obj.put("EmailPassword",rsTableInfo.getString(32));
+            	obj.put("ConfirmEmailPassword",rsTableInfo.getString(33));
+            	obj.put("Body",rsTableInfo.getString(34));
+            	obj.put("EmailServerName",rsTableInfo.getString(35));
+            	
+            	obj.put("SMSApi",rsTableInfo.getString(36));
+            	obj.put("UserCreated",rsTableInfo.getString(37));
+            	obj.put("UserEdited",rsTableInfo.getString(38));
+            	obj.put("DateCreated",rsTableInfo.getString(39));
+            	obj.put("DateEdited",rsTableInfo.getString(40));
+            	
+            	obj.put("POSType",rsTableInfo.getString(41));
+            	obj.put("WebServiceLink",rsTableInfo.getString(42));
+            	obj.put("DataSendFrequency",rsTableInfo.getString(43));
+            	obj.put("HOServerDate",rsTableInfo.getString(44));
+            	obj.put("RFID",rsTableInfo.getString(45));
+            	
+            	obj.put("ServerName",rsTableInfo.getString(46));
+            	obj.put("DBUserName",rsTableInfo.getString(47));
+            	obj.put("DBPassword",rsTableInfo.getString(48));
+            	obj.put("DatabaseName",rsTableInfo.getString(49));
+            	obj.put("EnableKOTForDirectBiller",rsTableInfo.getString(50));
+            	
+            	obj.put("PinCode",rsTableInfo.getString(51));
+            	obj.put("ChangeTheme",rsTableInfo.getString(52));
+            	obj.put("MaxDiscount",rsTableInfo.getString(53));
+            	obj.put("AreaWisePricing",rsTableInfo.getString(54));
+            	obj.put("MenuItemSortingOn",rsTableInfo.getString(55));
+            	
+            	obj.put("DirectAreaCode",rsTableInfo.getString(56));
+            	obj.put("ColumnSize",rsTableInfo.getString(57));
+            	obj.put("PrintType",rsTableInfo.getString(58));
+            	obj.put("EditHomeDelivery",rsTableInfo.getString(59));
+            	obj.put("SlabBasedHDCharges",rsTableInfo.getString(60));
+            	
+            	obj.put("SkipWaiterAndPax",rsTableInfo.getString(61));
+            	obj.put("SkipWaiter",rsTableInfo.getString(62));
+            	obj.put("DirectKOTPrintMakeKOT",rsTableInfo.getString(63));
+            	obj.put("SkipPax",rsTableInfo.getString(64));
+            	obj.put("CRMInterface",rsTableInfo.getString(65));
+            	
+            	obj.put("GetWebserviceURL",rsTableInfo.getString(66));
+            	obj.put("PostWebserviceURL",rsTableInfo.getString(67));
+            	obj.put("OutletUID",rsTableInfo.getString(68));
+            	obj.put("POSID",rsTableInfo.getString(69));
+            	obj.put("StockInOption",rsTableInfo.getString(70));
+            	
+            	obj.put("CustSeries",rsTableInfo.getString(71));
+            	obj.put("AdvReceiptPrintCount",rsTableInfo.getString(72));
+            	obj.put("HomeDeliverySMS",rsTableInfo.getString(73));
+            	obj.put("BillStettlementSMS",rsTableInfo.getString(74));
+            	obj.put("BillFormatType",rsTableInfo.getString(75));
+            	
+               
+        	  
+        	   
+        	    
+            	obj.put("ActivePromotions",rsTableInfo.getString(76));
+            	obj.put("SendHomeDelSMS",rsTableInfo.getString(77));
+            	obj.put("SendBillSettlementSMS",rsTableInfo.getString(78));
+            	obj.put("SMSType",rsTableInfo.getString(79));
+            	obj.put("PrintShortNameOnKOT",rsTableInfo.getString(80));
+            	
+          	    
+            	obj.put("ShowCustHelp",rsTableInfo.getString(81));
+            	obj.put("PrintOnVoidBill",rsTableInfo.getString(82));
+            	obj.put("PostSalesDataToMMS",rsTableInfo.getString(83));
+            	obj.put("CustAreaMasterCompulsory",rsTableInfo.getString(84));
+            	obj.put("PriceFrom",rsTableInfo.getString(85));
+            	
+            	obj.put("ShowPrinterErrorMessage",rsTableInfo.getString(86));
+            	obj.put("TouchScreenMode",rsTableInfo.getString(87));
+            	obj.put("CardInterfaceType",rsTableInfo.getString(88));
+            	obj.put("CMSIntegrationYN",rsTableInfo.getString(89));
+            	obj.put("CMSWebServiceURL",rsTableInfo.getString(90));
+            	
+            	 
+      	    
+      	   
+      	    
+            	obj.put("ChangeQtyForExternalCode",rsTableInfo.getString(91));
+            	obj.put("PointsOnBillPrint",rsTableInfo.getString(92));
+            	obj.put("CMSPOSCode",rsTableInfo.getString(93));
+            	obj.put("ManualAdvOrderNoCompulsory",rsTableInfo.getString(94));
+            	obj.put("PrintManualAdvOrderNoOnBill",rsTableInfo.getString(95));
+            	
+            
+           	   
+           	    
+            	obj.put("PrintModifierQtyOnKOT",rsTableInfo.getString(96));
+            	obj.put("NoOfLinesInKOTPrint",rsTableInfo.getString(97));
+            	obj.put("MultipleKOTPrintYN",rsTableInfo.getString(98));
+            	obj.put("ItemQtyNumpad",rsTableInfo.getString(99));
+            	obj.put("TreatMemberAsTable",rsTableInfo.getString(100));
+            	
+            	obj.put("KOTToLocalPrinter",rsTableInfo.getString(101));
+            	//obj.put("blobReportImage",rsTableInfo.getString(102));
+            	obj.put("SettleBtnForDirectBillerBill",rsTableInfo.getString(103));
+            	obj.put("DelBoySelCompulsoryOnDirectBiller",rsTableInfo.getString(104));
+            	obj.put("CMSMemberForKOTJPOS",rsTableInfo.getString(105));
+            	
+            	
+        	    
+        	   
+            	obj.put("CMSMemberForKOTMPOS",rsTableInfo.getString(106));
+            	obj.put("DontShowAdvOrderInOtherPOS",rsTableInfo.getString(107));
+            	obj.put("PrintZeroAmtModifierInBill",rsTableInfo.getString(108));
+            	obj.put("PrintKOTYN",rsTableInfo.getString(109));
+            	obj.put("CreditCardSlipNoCompulsoryYN",rsTableInfo.getString(110));
+            	
+            	
+          	    
+            	
+            	obj.put("CreditCardExpiryDateCompulsoryYN",rsTableInfo.getString(111));
+            	obj.put("SelectWaiterFromCardSwipe",rsTableInfo.getString(112));
+            	obj.put("MultiWaiterSelectionOnMakeKOT",rsTableInfo.getString(113));
+            	obj.put("MoveTableToOtherPOS",rsTableInfo.getString(114));
+            	obj.put("MoveKOTToOtherPOS",rsTableInfo.getString(115));
+            	
+            	
+            	obj.put("CalculateTaxOnMakeKOT",rsTableInfo.getString(116));
+            	obj.put("ReceiverEmailId",rsTableInfo.getString(117));
+            	obj.put("CalculateDiscItemWise",rsTableInfo.getString(118));
+            	obj.put("TakewayCustomerSelection",rsTableInfo.getString(119));
+            	obj.put("ShowItemStkColumnInDB",rsTableInfo.getString(120));
+            	
+            	
+            	
+            	//mahesh
+            	
+            	obj.put("ItemType",rsTableInfo.getString(121));
+            	obj.put("AllowNewAreaMasterFromCustMaster",rsTableInfo.getString(122));
+            	obj.put("CustAddressSelectionForBill",rsTableInfo.getString(123));
+            	obj.put("GenrateMI",rsTableInfo.getString(124));
+            	obj.put("FTPAddress",rsTableInfo.getString(125));
+            	
+            	obj.put("FTPServerUserName",rsTableInfo.getString(126));
+            	obj.put("FTPServerPass",rsTableInfo.getString(127));
+            	obj.put("AllowToCalculateItemWeight",rsTableInfo.getString(128));
+            	obj.put("ShowBillsDtlType",rsTableInfo.getString(129));
+            	obj.put("PrintTaxInvoiceOnBill",rsTableInfo.getString(130));
+            	
+            	obj.put("PrintInclusiveOfAllTaxesOnBill",rsTableInfo.getString(131));
+            	obj.put("ApplyDiscountOn",rsTableInfo.getString(132));
+	       	    obj.put("MemberCodeForKotInMposByCardSwipe",rsTableInfo.getString(133));
+	       	 	obj.put("PrintBillYN",rsTableInfo.getString(134));
+	       	 	obj.put("VatAndServiceTaxFromPos",rsTableInfo.getString(135));
+	       	 	
+	       	 	
+            	obj.put("MemberCodeForMakeBillInMPOS",rsTableInfo.getString(136));
+            	obj.put("ItemWiseKOTYN",rsTableInfo.getString(137));
+
+        	   
+            	obj.put("LastPOSForDayEnd",rsTableInfo.getString(138));
+            	obj.put("CMSPostingType",rsTableInfo.getString(139));
+            	obj.put("PopUpToApplyPromotionsOnBill",rsTableInfo.getString(140));
+
+            	obj.put("SelectCustomerCodeFromCardSwipe",rsTableInfo.getString(141));
+            	obj.put("CheckDebitCardBalOnTransactions",rsTableInfo.getString(142));
+            	obj.put("SettlementsFromPOSMaster",rsTableInfo.getString(143));
+            	obj.put("ShiftWiseDayEndYN",rsTableInfo.getString(144));
+            	obj.put("ProductionLinkup",rsTableInfo.getString(145));
+            	
+            	
+            	obj.put("LockDataOnShift",rsTableInfo.getString(146));
+            	obj.put("WSClientCode",rsTableInfo.getString(147));
+            	obj.put("POSCode",rsTableInfo.getString(148));
+            	obj.put("EnableBillSeries",rsTableInfo.getString(149));
+            	obj.put("EnablePMSIntegrationYN",rsTableInfo.getString(150));
+            	
+            	
+            	
+            	obj.put("PrintTimeOnBill",rsTableInfo.getString(151));
+            	obj.put("PrintTDHItemsInBill",rsTableInfo.getString(152));
+            	obj.put("PrintRemarkAndReasonForReprint",rsTableInfo.getString(153));
+            	obj.put("DaysBeforeOrderToCancel",rsTableInfo.getString(154));
+            	obj.put("NoOfDelDaysForAdvOrder",rsTableInfo.getString(155));
+            	
+            	
+            	obj.put("NoOfDelDaysForUrgentOrder",rsTableInfo.getString(156));
+            	obj.put("SetUpToTimeForAdvOrder",rsTableInfo.getString(157));
+            	obj.put("SetUpToTimeForUrgentOrder",rsTableInfo.getString(158));
+            	obj.put("UpToTimeForAdvOrder",rsTableInfo.getString(159));
+            	obj.put("UpToTimeForUrgentOrder",rsTableInfo.getString(160));
+            	
+            	
+            	obj.put("EnableBothPrintAndSettleBtnForDB",rsTableInfo.getString(161));
+            	obj.put("InrestoPOSIntegrationYN",rsTableInfo.getString(162));
+            	obj.put("InrestoPOSWebServiceURL",rsTableInfo.getString(163));
+            	obj.put("InrestoPOSId",rsTableInfo.getString(164));
+            	obj.put("InrestoPOSKey",rsTableInfo.getString(165));
+            	obj.put("CarryForwardFloatAmtToNextDay",rsTableInfo.getString(166));
+            
+            	obj.put("OpenCashDrawerAfterBillPrintYN",rsTableInfo.getString(167));
+            	obj.put("PropertyWiseSalesOrderYN",rsTableInfo.getString(168));
+            	obj.put("ShowItemDetailsGrid",rsTableInfo.getString(170));
+            	
+            
+            	obj.put("ShowPopUpForNextItemQuantity",rsTableInfo.getString(171));
+            	obj.put("JioMoneyIntegration",rsTableInfo.getString(172));
+            	obj.put("JioWebServiceUrl",rsTableInfo.getString(173));
+            	obj.put("JioMID",rsTableInfo.getString(174));
+            	obj.put("JioTID",rsTableInfo.getString(175));
+            	
+            
+            	obj.put("JioActivationCode",rsTableInfo.getString(176));
+            	obj.put("JioDeviceID",rsTableInfo.getString(177));
+            	obj.put("NewBillSeriesForNewDay",rsTableInfo.getString(178));
+            	obj.put("ShowReportsPOSWise",rsTableInfo.getString(179));
+            	obj.put("EnableDineIn",rsTableInfo.getString(180));
+            
+            	obj.put("AutoAreaSelectionInMakeKOT",rsTableInfo.getString(181));
+            	obj.put("ConsolidatedKOTPrinterPort",rsTableInfo.getString(182));
+            	obj.put("RoundOff",rsTableInfo.getString(183));
+            	obj.put("ShowUnSettlementForm",rsTableInfo.getString(184));
+            	obj.put("PrintOpenItemsOnBill",rsTableInfo.getString(185));
+            	
+            	obj.put("PrintHomeDeliveryYN",rsTableInfo.getString(186));
+            	
+            	obj.put("ScanQRYN",rsTableInfo.getString(187));
+            	obj.put("AreaWisePromotions",rsTableInfo.getString(188));
+            	
+            	//this fields are comment in apos
+            	/*obj.put("PrintItemsOnMoveKOTMoveTable",rsTableInfo.getString(189));
+            	obj.put("ShowPurRateInDirectBiller",rsTableInfo.getString(190));
+            	*/
+            	
+            	
+            	
+        	  
+            	obj.put("EnableTableReservationForCustomer",rsTableInfo.getString(191));
+            	
+            	obj.put("AutoShowPopItems",rsTableInfo.getString(192));
+            	obj.put("ShowPopItemsOfDays",rsTableInfo.getString(193));
+            	obj.put("PostSalesCostOrLoc",rsTableInfo.getString(194));
+            	obj.put("EffectOfSales",rsTableInfo.getString(195));
+            	obj.put("POSWiseItemToMMSProductLinkUpYN",rsTableInfo.getString(196));
+            	
+            	
+            	obj.put("EnableMasterDiscount",rsTableInfo.getString(197));
+            	obj.put("EnableNFCInterface",rsTableInfo.getString(198));
+            	obj.put("BenowIntegrationYN",rsTableInfo.getString(199));
+            	obj.put("XEmail",rsTableInfo.getString(200));
+            	
+            	obj.put("MerchantCode",rsTableInfo.getString(201));
+            	obj.put("AuthenticationKey",rsTableInfo.getString(202));
+            	obj.put("Salt",rsTableInfo.getString(203));
+            	obj.put("EnableLockTable",rsTableInfo.getString(204));
+            	obj.put("HomeDeliveryAreaForDirectBiller",rsTableInfo.getString(205));
+            	
+            
+         	    
+            	obj.put("TakeAwayAreaForDirectBiller",rsTableInfo.getString(206));
+            	obj.put("RoundOffBillFinalAmt",rsTableInfo.getString(207));
+            	obj.put("NoOfDecimalPlace",rsTableInfo.getString(208));
+            	obj.put("SendDBBackupOnClientMail",rsTableInfo.getString(209));
+            	obj.put("PrintOrderNoOnBillYN",rsTableInfo.getString(210));
+            	
+            	
+            	
+            	obj.put("PrintDeviceAndUserDtlOnKOTYN",rsTableInfo.getString(211));
+            	obj.put("RemoveSCTaxCode",rsTableInfo.getString(212));
+            	obj.put("AutoAddKOTToBill",rsTableInfo.getString(213));
+            	obj.put("AreaWiseCostCenterKOTPrintingYN",rsTableInfo.getString(214));
+            	obj.put("WERAOnlineOrderIntegration",rsTableInfo.getString(215));
+            	
+            	obj.put("WERAMerchantOutletId",rsTableInfo.getString(216));
+            	obj.put("WERAAuthenticationAPIKey",rsTableInfo.getString(217));
+            	obj.put("FireCommunication",rsTableInfo.getString(218));
+            	
+            	obj.put("USDConverionRate",rsTableInfo.getString(219));
+            	obj.put("DBBackupMailReceiver",rsTableInfo.getString(220));
+            	obj.put("PrintMoveTableMoveKOTYN",rsTableInfo.getString(221));
+            	obj.put("PrintQtyTotal",rsTableInfo.getString(222));
+            	obj.put("ShowReportsInCurrency",rsTableInfo.getString(223));
+            	obj.put("POSToMMSPostingCurrency",rsTableInfo.getString(224));
+            	obj.put("POSToWebBooksPostingCurrency",rsTableInfo.getString(225));
+            	obj.put("LockTableForWaiter",rsTableInfo.getString(226));
+            	
+            	
+            	/*obj.put("ClientCode",rsTableInfo.getString(1));
+            	obj.put("ClientName",rsTableInfo.getString(2));
+            	obj.put("AddressLine1",rsTableInfo.getString(3));
+            	obj.put("AddressLine2",rsTableInfo.getString(4));
+            	obj.put("AddressLine3",rsTableInfo.getString(5));
+            	
+            	obj.put("Email",rsTableInfo.getString(6));            	
+            	obj.put("BillFooter",rsTableInfo.getString(7));
+            	obj.put("BillFooterStatus",rsTableInfo.getString(8));
+            	obj.put("BillPaperSize",rsTableInfo.getString(9));
+            	obj.put("NegativeBilling",rsTableInfo.getString(10));
+            	
+            	obj.put("DayEnd",rsTableInfo.getString(11));
+            	obj.put("PrintMode",rsTableInfo.getString(12));
+            	obj.put("DiscountNote",rsTableInfo.getString(13));
+            	obj.put("CityName",rsTableInfo.getString(14));
+            	obj.put("State",rsTableInfo.getString(15));
+            	
+            	obj.put("Country",rsTableInfo.getString(16));
+            	obj.put("TelephoneNo",rsTableInfo.getString(17));
+            	obj.put("StartDate",rsTableInfo.getString(18));
+            	obj.put("EndDate",rsTableInfo.getString(19));
+            	obj.put("NatureOfBusinnes",rsTableInfo.getString(20));
+          	    
+            	 
+        	   
+        	    
+            	obj.put("MultipleBillPrinting",rsTableInfo.getString(21));
+            	obj.put("EnableKOT",rsTableInfo.getString(22));
+            	obj.put("EffectOnPSP",rsTableInfo.getString(23));
+            	obj.put("PrintVatNo",rsTableInfo.getString(24));
+            	obj.put("VatNo",rsTableInfo.getString(25));
+            	 
+            	
+            	obj.put("ShowBill",rsTableInfo.getString(26));
+            	obj.put("PrintServiceTaxNo",rsTableInfo.getString(27));
+            	obj.put("ServiceTaxNo",rsTableInfo.getString(28));
+            	obj.put("ManualBillNo",rsTableInfo.getString(29));
+            	obj.put("MenuItemDispSeq",rsTableInfo.getString(30));
+            	
+            	
+            	obj.put("SenderEmailId",rsTableInfo.getString(31));
+            	obj.put("EmailPassword",rsTableInfo.getString(32));
+            	obj.put("ConfirmEmailPassword",rsTableInfo.getString(33));
+            	obj.put("Body",rsTableInfo.getString(34));
+            	obj.put("EmailServerName",rsTableInfo.getString(35));
+            	
+            	
+            	obj.put("SMSApi",rsTableInfo.getString(36));
+            	obj.put("UserCreated",rsTableInfo.getString(37));
+            	obj.put("UserEdited",rsTableInfo.getString(38));
+            	obj.put("DateCreated",rsTableInfo.getString(39));
+            	obj.put("DateEdited",rsTableInfo.getString(40));
+            	
+            	
+         	    
+            	obj.put("POSType",rsTableInfo.getString(41));
+            	obj.put("WebServiceLink",rsTableInfo.getString(42));
+            	obj.put("DataSendFrequency",rsTableInfo.getString(43));
+            	obj.put("HOServerDate",rsTableInfo.getString(44));
+            	obj.put("RFID",rsTableInfo.getString(45));
+            	
+            	obj.put("ServerName",rsTableInfo.getString(46));
+            	obj.put("DBUserName",rsTableInfo.getString(47));
+            	obj.put("DBPassword",rsTableInfo.getString(48));
+            	obj.put("DatabaseName",rsTableInfo.getString(49));
+            	obj.put("EnableKOTForDirectBiller",rsTableInfo.getString(50));
+            	
+            	
+         	   
+            	obj.put("PinCode",rsTableInfo.getString(51));
+            	obj.put("ChangeTheme",rsTableInfo.getString(52));
+            	obj.put("MaxDiscount",rsTableInfo.getString(53));
+            	obj.put("AreaWisePricing",rsTableInfo.getString(54));
+            	obj.put("MenuItemSortingOn",rsTableInfo.getString(55));
+            	
+            	obj.put("DirectAreaCode",rsTableInfo.getString(56));
+            	obj.put("ColumnSize",rsTableInfo.getString(57));
+            	obj.put("PrintType",rsTableInfo.getString(58));
+            	obj.put("EditHomeDelivery",rsTableInfo.getString(59));
+            	obj.put("SlabBasedHDCharges",rsTableInfo.getString(60));
+            	
+            	obj.put("SkipWaiterAndPax",rsTableInfo.getString(61));
+            	obj.put("SkipWaiter",rsTableInfo.getString(62));
+            	obj.put("DirectKOTPrintMakeKOT",rsTableInfo.getString(63));
+            	obj.put("SkipPax",rsTableInfo.getString(64));
+            	obj.put("CRMInterface",rsTableInfo.getString(65));
+            	
+                //private String SkipPax;
+            	 
+            	
+            	obj.put("GetWebserviceURL",rsTableInfo.getString(66));
+            	obj.put("PostWebserviceURL",rsTableInfo.getString(67));
+            	obj.put("OutletUID",rsTableInfo.getString(68));
+            	obj.put("POSID",rsTableInfo.getString(69));
+            	obj.put("StockInOption",rsTableInfo.getString(70));
+            	
+            	obj.put("CustSeries",rsTableInfo.getString(71));
+            	obj.put("AdvReceiptPrintCount",rsTableInfo.getString(72));
+            	obj.put("HomeDeliverySMS",rsTableInfo.getString(73));
+            	obj.put("BillSettlementSMS",rsTableInfo.getString(74));
+            	obj.put("BillFormatType",rsTableInfo.getString(75));
+            	
+            	obj.put("ActivePromotions",rsTableInfo.getString(76));
+            	obj.put("SendHomeDelSMS",rsTableInfo.getString(77));
+            	obj.put("SendBillSettlementSMS",rsTableInfo.getString(78));
+            	obj.put("SMSType",rsTableInfo.getString(79));
+            	obj.put("PrintShortNameOnKOT",rsTableInfo.getString(80));
+            	
+            	obj.put("ShowCustHelp",rsTableInfo.getString(81));
+            	obj.put("PrintOnVoidBill",rsTableInfo.getString(82));
+            	obj.put("PostSalesDataToMMS",rsTableInfo.getString(83));
+            	obj.put("CustAreaMasterCompulsory",rsTableInfo.getString(84));
+            	obj.put("PriceFrom",rsTableInfo.getString(85));
+            	
+            	obj.put("ShowPrinterErrorMessage",rsTableInfo.getString(86));
+            	obj.put("TouchScreenMode",rsTableInfo.getString(87));
+            	obj.put("CardInterfaceType",rsTableInfo.getString(88));
+            	obj.put("CMSIntegrationYN",rsTableInfo.getString(89));
+            	obj.put("CMSWebServiceURL",rsTableInfo.getString(90));
+            	
+            	obj.put("ChangeQtyForExternalCode",rsTableInfo.getString(91));
+            	obj.put("PointsOnBillPrint",rsTableInfo.getString(92));
+            	obj.put("CMSPOSCode",rsTableInfo.getString(93));
+            	obj.put("ManualAdvOrderNoCompulsory",rsTableInfo.getString(94));
+            	obj.put("PrintManualAdvOrderNoOnBill",rsTableInfo.getString(95));
+            	
+            	obj.put("PrintModifierQtyOnKOT",rsTableInfo.getString(96));
+            	obj.put("NoOfLinesInKOTPrint",rsTableInfo.getString(97));
+            	obj.put("MultipleKOTPrintYN",rsTableInfo.getString(98));
+            	obj.put("ItemQtyNumpad",rsTableInfo.getString(99));
+            	obj.put("TreatMemberAsTable",rsTableInfo.getString(100));
+            	
+            	obj.put("KOTToLocalPrinter",rsTableInfo.getString(101));
+            	//obj.put("ReportImage",rsTableInfo.getString(102));
+            	obj.put("SettleBtnForDirectBillerBill",rsTableInfo.getString(103));
+            	obj.put("DelBoySelCompulsoryOnDirectBiller",rsTableInfo.getString(104));
+            	obj.put("CMSMemberForKOTJPOS",rsTableInfo.getString(105));
+            	
+            	obj.put("CMSMemberForKOTMPOS",rsTableInfo.getString(106));
+            	obj.put("DontShowAdvOrderInOtherPOS",rsTableInfo.getString(107));
+            	obj.put("PrintZeroAmtModifierInBill",rsTableInfo.getString(108));
+            	obj.put("PrintKOTYN",rsTableInfo.getString(109));
+            	obj.put("CreditCardSlipNoCompulsoryYN",rsTableInfo.getString(110));
+            	
+            	obj.put("CreditCardExpiryDateCompulsoryYN",rsTableInfo.getString(111));
+            	obj.put("SelectWaiterFromCardSwipe",rsTableInfo.getString(112));
+            	obj.put("MultiWaiterSelectionOnMakeKOT",rsTableInfo.getString(113));
+            	obj.put("MoveTableToOtherPOS",rsTableInfo.getString(114));
+            	obj.put("MoveKOTToOtherPOS",rsTableInfo.getString(115));
+            	
+            	obj.put("CalculateTaxOnMakeKOT",rsTableInfo.getString(116));
+            	obj.put("ReceiverEmailId",rsTableInfo.getString(117));
+            	obj.put("CalculateDiscItemWise",rsTableInfo.getString(118));
+            	obj.put("TakewayCustomerSelection",rsTableInfo.getString(119));
+            	obj.put("ShowItemStkColumnInDB",rsTableInfo.getString(120));
+            	
+            	obj.put("ItemType",rsTableInfo.getString(121));
+            	obj.put("AllowNewAreaMasterFromCustMaster",rsTableInfo.getString(122));
+            	obj.put("CustAddressSelectionForBill",rsTableInfo.getString(123));
+            	obj.put("GenrateMI",rsTableInfo.getString(124));
+            	obj.put("FTPAddress",rsTableInfo.getString(125));
+            	
+            	obj.put("FTPServerUserName",rsTableInfo.getString(126));
+            	obj.put("FTPServerPass",rsTableInfo.getString(127));
+            	obj.put("AllowToCalculateItemWeight",rsTableInfo.getString(128));
+            	obj.put("ShowBillsDtlType",rsTableInfo.getString(129));
+            	obj.put("PrintTaxInvoiceOnBill",rsTableInfo.getString(130));
+            	obj.put("PrintInclusiveOfAllTaxesOnBill",rsTableInfo.getString(131));
+            	obj.put("ApplyDiscountOn",rsTableInfo.getString(132));
+            	obj.put("MemberCodeForKotInMposByCardSwipe",rsTableInfo.getString(133));
+            	obj.put("PrintBillPopUp",rsTableInfo.getString(134));
+            	obj.put("UseVatAndServiceTaxNoFromPOS",rsTableInfo.getString(135));
+            	obj.put("MemberCodeForMakeBillInMPOS",rsTableInfo.getString(136));
+            	obj.put("ItemWiseKOTPrintYN",rsTableInfo.getString(137));
+            	obj.put("LastPOSForDayEnd",rsTableInfo.getString(138));
+            	obj.put("CMSPostingType",rsTableInfo.getString(139));
+            	obj.put("PopUpToApplyPromotionsOnBill",rsTableInfo.getString(140));
+            	obj.put("SelectCustomerCodeFromCardSwipe",rsTableInfo.getString(141));
+            	obj.put("CheckDebitCardBalOnTransactions",rsTableInfo.getString(142));
+            	obj.put("SettlementsFromPOSMaster",rsTableInfo.getString(143));
+            	obj.put("ShiftWiseDayEndYN",rsTableInfo.getString(144));
+            	obj.put("ProductionLinkup",rsTableInfo.getString(145));
+            	obj.put("LockDataOnShift",rsTableInfo.getString(146));
+            	obj.put("WSClientCode",rsTableInfo.getString(147));
+            	obj.put("POSCode",rsTableInfo.getString(148));
+            	obj.put("EnableBillSeries",rsTableInfo.getString(149));
+            	obj.put("EnablePMSIntegrationYN",rsTableInfo.getString(150));
+            	obj.put("PrintTimeOnBill",rsTableInfo.getString(151));
+            	obj.put("PrintTDHItemsInBill",rsTableInfo.getString(152));
+            	obj.put("PrintRemarkAndReasonForReprint",rsTableInfo.getString(153));
+            	obj.put("DaysBeforeOrderToCancel",rsTableInfo.getString(154));
+            	obj.put("NoOfDelDaysForAdvOrder",rsTableInfo.getString(155));
+            	obj.put("NoOfDelDaysForUrgentOrder",rsTableInfo.getString(156));
+            	obj.put("SetUpToTimeForAdvOrder",rsTableInfo.getString(157));
+            	obj.put("SetUpToTimeForUrgentOrder",rsTableInfo.getString(158));
+            	obj.put("UpToTimeForAdvOrder",rsTableInfo.getString(159));
+            	obj.put("UpToTimeForUrgentOrder",rsTableInfo.getString(160));
+            	obj.put("EnableBothPrintAndSettleBtnForDB",rsTableInfo.getString(161));
+            	obj.put("InrestoPOSIntegrationYN",rsTableInfo.getString(162));
+            	obj.put("InrestoPOSWebServiceURL",rsTableInfo.getString(163));
+            	obj.put("InrestoPOSId",rsTableInfo.getString(164));
+            	obj.put("InrestoPOSKey",rsTableInfo.getString(165));
+            	obj.put("CarryForwardFloatAmtToNextDay",rsTableInfo.getString(166));
+            	obj.put("OpenCashDrawerAfterBillPrintYN",rsTableInfo.getString(167));
+            	obj.put("PropertyWiseSalesOrderYN",rsTableInfo.getString(168));
+            	obj.put("ShowItemDetailsGrid",rsTableInfo.getString(170));
+            	obj.put("ShowPopUpForNextItemQuantity",rsTableInfo.getString(171));
+            	obj.put("JioMoneyIntegration",rsTableInfo.getString(172));
+            	obj.put("JioWebServiceUrl",rsTableInfo.getString(173));
+            	obj.put("JioMID",rsTableInfo.getString(174));
+            	obj.put("JioTID",rsTableInfo.getString(175));
+            	obj.put("JioActivationCode",rsTableInfo.getString(176));
+            	obj.put("JioDeviceID",rsTableInfo.getString(177));
+            	obj.put("NewBillSeriesForNewDay",rsTableInfo.getString(178));
+            	obj.put("ShowReportsPOSWise",rsTableInfo.getString(179));
+            	obj.put("EnableDineIn",rsTableInfo.getString(180));
+            	obj.put("AutoAreaSelectionInMakeKOT",rsTableInfo.getString(181));
+            	obj.put("ConsolidatedKOTPrinterPort",rsTableInfo.getString(182));
+            	obj.put("ScanQRYN",rsTableInfo.getString(187));
+            	obj.put("AreaWisePromotions",rsTableInfo.getString(188));
+            	
+            	obj.put("EnableTableReservationForCustomer",rsTableInfo.getString(191));
+            	obj.put("AutoShowPopItems",rsTableInfo.getString(192));
+            	obj.put("ShowPopItemsOfDays",rsTableInfo.getString(193));
+            	obj.put("PostSalesCostOrLoc",rsTableInfo.getString(194));
+            	obj.put("EffectOfSales",rsTableInfo.getString(195));
+            	
+            	obj.put("POSWiseItemToMMSProductLinkUpYN",rsTableInfo.getString(196));
+            	obj.put("EnableMasterDiscount",rsTableInfo.getString(197));
+            	obj.put("EnableNFCInterface",rsTableInfo.getString(198));
+            	obj.put("BenowIntegrationYN",rsTableInfo.getString(199));
+            	obj.put("XEmail",rsTableInfo.getString(200));
+            	
+            	obj.put("MerchantCode",rsTableInfo.getString(201));
+            	obj.put("AuthenticationKey",rsTableInfo.getString(202));
+            	obj.put("Salt",rsTableInfo.getString(203));
+            	obj.put("EnableLockTable",rsTableInfo.getString(204));
+            	obj.put("HomeDeliveryAreaForDirectBiller",rsTableInfo.getString(205));
+            	
+            	obj.put("TakeAwayAreaForDirectBiller",rsTableInfo.getString(206));
+            	obj.put("RoundOffBillFinalAmt",rsTableInfo.getString(207));
+            	obj.put("NoOfDecimalPlace",rsTableInfo.getString(208));
+            	obj.put("SendDBBackupOnClientMail",rsTableInfo.getString(209));
+            	obj.put("PrintOrderNoOnBillYN",rsTableInfo.getString(210));
+            	
+            	obj.put("PrintDeviceAndUserDtlOnKOTYN",rsTableInfo.getString(211));
+            	obj.put("RemoveSCTaxCode",rsTableInfo.getString(212));
+            	obj.put("AutoAddKOTToBill",rsTableInfo.getString(213));
+            	obj.put("AreaWiseCostCenterKOTPrintingYN",rsTableInfo.getString(214));
+            	obj.put("WERAOnlineOrderIntegration",rsTableInfo.getString(215));
+            	
+            	obj.put("WERAMerchantOutletId",rsTableInfo.getString(216));
+            	obj.put("WERAAuthenticationAPIKey",rsTableInfo.getString(217));
+            	obj.put("FireCommunication",rsTableInfo.getString(218));
+            	obj.put("USDConverionRate",rsTableInfo.getString(219));
+            	obj.put("DBBackupMailReceiver",rsTableInfo.getString(220));
+            	
+            	obj.put("PrintMoveTableMoveKOTYN",rsTableInfo.getString(221));
+            	obj.put("PrintQtyTotal",rsTableInfo.getString(222));
+            	obj.put("ShowReportsInCurrency",rsTableInfo.getString(223));
+            	obj.put("POSToMMSPostingCurrency",rsTableInfo.getString(224));
+            	obj.put("POSToWebBooksPostingCurrency",rsTableInfo.getString(225));
+            	
+            	obj.put("LockTableForWaiter",rsTableInfo.getString(226));*/
+            	returnObj.put(obj);
+            }
+            rsTableInfo.close();
+            st.close();
+            cmsCon.close();
+            
+        }
+        catch(Exception e)
+        {
+        	e.printStackTrace();
+        	try {
+				obj.put("Status","Error");
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        }
+        return returnObj;
+    }
+    
+    
 
     @GET 
 	@Path("/funGetSetupValues")
@@ -14361,7 +15458,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	obj.put("LastPOSForDayEnd",rsTableInfo.getString(138));
             	obj.put("CMSPostingType",rsTableInfo.getString(139));
             	obj.put("PopUpToApplyPromotionsOnBill",rsTableInfo.getString(140));
-
+            	
             	obj.put("strSelectCustomerCodeFromCardSwipe",rsTableInfo.getString(141));
             	obj.put("strCheckDebitCardBalOnTransactions",rsTableInfo.getString(142));
             	obj.put("strSettlementsFromPOSMaster",rsTableInfo.getString(143));
@@ -14373,9 +15470,6 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	obj.put("strPOSCode",rsTableInfo.getString(148));
             	obj.put("strEnableBillSeries",rsTableInfo.getString(149));
             	obj.put("EnablePMSIntegrationYN",rsTableInfo.getString(150));
-            	
-            	
-            	
             	
             	obj.put("strPrintTimeOnBill",rsTableInfo.getString(151));
             	obj.put("strPrintTDHItemsInBill",rsTableInfo.getString(152));
@@ -14463,6 +15557,130 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
             	obj.put("strPOSToMMSPostingCurrency",rsTableInfo.getString(224));
             	obj.put("strPOSToWebBooksPostingCurrency",rsTableInfo.getString(225));
             	obj.put("strLockTableForWaiter",rsTableInfo.getString(226));
+
+            	/*obj.put("SelectCustomerCodeFromCardSwipe",rsTableInfo.getString(141));
+            	obj.put("CheckDebitCardBalOnTransactions",rsTableInfo.getString(142));
+            	obj.put("SettlementsFromPOSMaster",rsTableInfo.getString(143));
+            	obj.put("ShiftWiseDayEndYN",rsTableInfo.getString(144));
+            	obj.put("ProductionLinkup",rsTableInfo.getString(145));
+            	
+            	
+            	obj.put("LockDataOnShift",rsTableInfo.getString(146));
+            	obj.put("WSClientCode",rsTableInfo.getString(147));
+            	obj.put("POSCode",rsTableInfo.getString(148));
+            	obj.put("EnableBillSeries",rsTableInfo.getString(149));
+            	obj.put("EnablePMSIntegrationYN",rsTableInfo.getString(150));
+            	
+            	
+            	
+            	obj.put("PrintTimeOnBill",rsTableInfo.getString(151));
+            	obj.put("PrintTDHItemsInBill",rsTableInfo.getString(152));
+            	obj.put("PrintRemarkAndReasonForReprint",rsTableInfo.getString(153));
+            	obj.put("DaysBeforeOrderToCancel",rsTableInfo.getString(154));
+            	obj.put("NoOfDelDaysForAdvOrder",rsTableInfo.getString(155));
+            	
+            	
+            	obj.put("NoOfDelDaysForUrgentOrder",rsTableInfo.getString(156));
+            	obj.put("SetUpToTimeForAdvOrder",rsTableInfo.getString(157));
+            	obj.put("SetUpToTimeForUrgentOrder",rsTableInfo.getString(158));
+            	obj.put("UpToTimeForAdvOrder",rsTableInfo.getString(159));
+            	obj.put("UpToTimeForUrgentOrder",rsTableInfo.getString(160));
+            	
+            	
+            	obj.put("EnableBothPrintAndSettleBtnForDB",rsTableInfo.getString(161));
+            	obj.put("InrestoPOSIntegrationYN",rsTableInfo.getString(162));
+            	obj.put("InrestoPOSWebServiceURL",rsTableInfo.getString(163));
+            	obj.put("InrestoPOSId",rsTableInfo.getString(164));
+            	obj.put("InrestoPOSKey",rsTableInfo.getString(165));
+            	obj.put("CarryForwardFloatAmtToNextDay",rsTableInfo.getString(166));
+            
+            	obj.put("OpenCashDrawerAfterBillPrintYN",rsTableInfo.getString(167));
+            	obj.put("PropertyWiseSalesOrderYN",rsTableInfo.getString(168));
+            	obj.put("ShowItemDetailsGrid",rsTableInfo.getString(170));
+            	
+            
+            	obj.put("ShowPopUpForNextItemQuantity",rsTableInfo.getString(171));
+            	obj.put("JioMoneyIntegration",rsTableInfo.getString(172));
+            	obj.put("JioWebServiceUrl",rsTableInfo.getString(173));
+            	obj.put("JioMID",rsTableInfo.getString(174));
+            	obj.put("JioTID",rsTableInfo.getString(175));
+            	
+            
+            	obj.put("JioActivationCode",rsTableInfo.getString(176));
+            	obj.put("JioDeviceID",rsTableInfo.getString(177));
+            	obj.put("NewBillSeriesForNewDay",rsTableInfo.getString(178));
+            	obj.put("ShowReportsPOSWise",rsTableInfo.getString(179));
+            	obj.put("EnableDineIn",rsTableInfo.getString(180));
+            
+            	obj.put("AutoAreaSelectionInMakeKOT",rsTableInfo.getString(181));
+            	obj.put("ConsolidatedKOTPrinterPort",rsTableInfo.getString(182));
+            	obj.put("RoundOff",rsTableInfo.getString(183));
+            	obj.put("ShowUnSettlementForm",rsTableInfo.getString(184));
+            	obj.put("PrintOpenItemsOnBill",rsTableInfo.getString(185));
+            	
+            	obj.put("PrintHomeDeliveryYN",rsTableInfo.getString(186));
+            	
+            	obj.put("ScanQRYN",rsTableInfo.getString(187));
+            	obj.put("AreaWisePromotions",rsTableInfo.getString(188));
+            	
+            	//this fields are comment in apos
+            	obj.put("PrintItemsOnMoveKOTMoveTable",rsTableInfo.getString(189));
+            	obj.put("ShowPurRateInDirectBiller",rsTableInfo.getString(190));
+            	
+            	
+            	
+            	
+        	  
+            	obj.put("EnableTableReservationForCustomer",rsTableInfo.getString(191));
+            	
+            	obj.put("AutoShowPopItems",rsTableInfo.getString(192));
+            	obj.put("ShowPopItemsOfDays",rsTableInfo.getString(193));
+            	obj.put("PostSalesCostOrLoc",rsTableInfo.getString(194));
+            	obj.put("EffectOfSales",rsTableInfo.getString(195));
+            	obj.put("POSWiseItemToMMSProductLinkUpYN",rsTableInfo.getString(196));
+            	
+            	
+            	obj.put("EnableMasterDiscount",rsTableInfo.getString(197));
+            	obj.put("EnableNFCInterface",rsTableInfo.getString(198));
+            	obj.put("BenowIntegrationYN",rsTableInfo.getString(199));
+            	obj.put("XEmail",rsTableInfo.getString(200));
+            	
+            	obj.put("MerchantCode",rsTableInfo.getString(201));
+            	obj.put("AuthenticationKey",rsTableInfo.getString(202));
+            	obj.put("Salt",rsTableInfo.getString(203));
+            	obj.put("EnableLockTable",rsTableInfo.getString(204));
+            	obj.put("HomeDeliveryAreaForDirectBiller",rsTableInfo.getString(205));
+            	
+            
+         	    
+            	obj.put("TakeAwayAreaForDirectBiller",rsTableInfo.getString(206));
+            	obj.put("RoundOffBillFinalAmt",rsTableInfo.getString(207));
+            	obj.put("NoOfDecimalPlace",rsTableInfo.getString(208));
+            	obj.put("SendDBBackupOnClientMail",rsTableInfo.getString(209));
+            	obj.put("PrintOrderNoOnBillYN",rsTableInfo.getString(210));
+            	
+            	
+            	
+            	obj.put("PrintDeviceAndUserDtlOnKOTYN",rsTableInfo.getString(211));
+            	obj.put("RemoveSCTaxCode",rsTableInfo.getString(212));
+            	obj.put("AutoAddKOTToBill",rsTableInfo.getString(213));
+            	obj.put("AreaWiseCostCenterKOTPrintingYN",rsTableInfo.getString(214));
+            	obj.put("WERAOnlineOrderIntegration",rsTableInfo.getString(215));
+            	
+            	obj.put("WERAMerchantOutletId",rsTableInfo.getString(216));
+            	obj.put("WERAAuthenticationAPIKey",rsTableInfo.getString(217));
+            	obj.put("FireCommunication",rsTableInfo.getString(218));
+            	
+            	obj.put("USDConverionRate",rsTableInfo.getString(219));
+            	obj.put("DBBackupMailReceiver",rsTableInfo.getString(220));
+            	obj.put("PrintMoveTableMoveKOTYN",rsTableInfo.getString(221));
+            	obj.put("PrintQtyTotal",rsTableInfo.getString(222));
+            	obj.put("ShowReportsInCurrency",rsTableInfo.getString(223));
+            	obj.put("POSToMMSPostingCurrency",rsTableInfo.getString(224));
+            	obj.put("POSToWebBooksPostingCurrency",rsTableInfo.getString(225));
+            	obj.put("LockTableForWaiter",rsTableInfo.getString(226));*/
+            	
+            	
             	
             	
             	obj.put("Status","Success");
@@ -17428,8 +18646,7 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
     Connection cmsCon=null;
     Statement st=null;
     Statement st2=null;
-	String taxAmt="";
-    double subTotalForTax=0;
+	double subTotalForTax=0;
 	double taxAmount=0.0;
 	String insert_qry="";
 	 JSONObject jObj=new JSONObject();   
@@ -17457,23 +18674,32 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 		    mJsonObject =(JSONObject) mJsonArray.get(i);
 		    BillNo=mJsonObject.get("BillNo").toString();
 		    ClientCode=mJsonObject.get("ClientCode").toString();
+		    String taxCode=mJsonObject.get("TaxCode").toString();
+		    taxAmount=Double.parseDouble(mJsonObject.get("TaxAmount").toString());
+		    String taxableAmount=mJsonObject.get("TaxableAmount").toString();
+		    String dataPostFlag=mJsonObject.get("DataPostFlag").toString();
+		    billDate=mJsonObject.get("BillDate").toString();
+		    
+		    
+		    /*BillNo=mJsonObject.get("BillNo").toString();
+		    ClientCode=mJsonObject.get("ClientCode").toString();
 		    String itemName=mJsonObject.get("ItemName").toString();
 		    String itemCode=mJsonObject.get("ItemCode").toString();
 		    System.out.println(itemName);
 		    double amt=Double.parseDouble(mJsonObject.get("Amount").toString());
-		    billDate=mJsonObject.get("BillDate").toString();
+		    billDate=mJsonObject.get("BillDate").toString();*/
 	
-            objItemDtl.setItemCode(itemCode);
+            /*objItemDtl.setItemCode(itemCode);
             objItemDtl.setItemName(itemName);
             objItemDtl.setAmount(amt);
             objItemDtl.setDiscAmt(0);
             objItemDtl.setDiscPer(0);
             arrListItemDtls.add(objItemDtl);
-            subTotalForTax+=amt;
+            subTotalForTax+=amt;*/
 		   
 		    
 		   // tableNo=mJsonObject.get("strTableNo").toString();
-		    posCode=mJsonObject.get("POSCode").toString();
+		    //posCode=mJsonObject.get("POSCode").toString();
 		   
 		    sql="select strOperationType,strAreaCode from tblbillhd where strBillNo='"+BillNo+"' ";
 		    ResultSet rs=st.executeQuery(sql);
@@ -17486,43 +18712,25 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 			   {
 				   operationType="DineIn";
 			   }
-			   
-			   
 		    }
 		    
 		    rs.close();
 		    
-		}
-		
-		   Date dt=new Date();            
-            String date=(dt.getYear()+1900)+"-"+(dt.getMonth()+1)+"-"+dt.getDate();            
-            clsTaxCalculation objTaxCalculation=new clsTaxCalculation();
-            List <clsTaxCalculationDtls> arrListTaxDtl=objTaxCalculation.funCalculateTax(arrListItemDtls,posCode
-                , date, areaCode, operationType, subTotalForTax, 0,"");
-            
+		    sql="";
             insert_qry = "INSERT INTO `tblbilltaxdtl` (`strBillNo`, `strTaxCode`,"
     				+ " `dblTaxableAmount`, `dblTaxAmount`, `strClientCode`, "
     				+ "`strDataPostFlag`,`dteBillDate`) VALUES";
             
-         
-            sql="";
-            for(int cnt=0;cnt<arrListTaxDtl.size();cnt++)
-            {
-            	String deleteSql="delete from tblbilltaxdtl "
-    			    	+ "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
-    			st.executeUpdate(deleteSql);
-    			
-            	clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
-            	System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+obj.getTaxAmount());
-            	taxAmt+=obj.getTaxAmount();
-                sql+=",('"+BillNo+"','"+obj.getTaxCode()+"','"+obj.getTaxableAmount()+"','"+obj.getTaxAmount()+"','"
-    				    +ClientCode+"','N','"+billDate+"')";				    
-    			flgData=true;
-    			
-    		 	
-            }
-            
-            if(flgData)
+            String deleteSql="delete from tblbilltaxdtl "
+			    	+ "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
+			st.executeUpdate(deleteSql);
+			
+        	//clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
+        	System.out.println("Tax Dtl= "+taxCode+"\t"+taxAmount);
+        	sql+=",('"+BillNo+"','"+taxCode+"','"+taxableAmount+"','"+taxAmount+"','"
+				    +ClientCode+"','N','"+billDate+"')";				    
+			flgData=true;
+			if(flgData)
 			{
 				sql=sql.substring(1,sql.length());
 		        insert_qry+=" "+sql;
@@ -17537,11 +18745,54 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 			{
 				res=1;
 			}
+		    
+		}
+		
+		   /*Date dt=new Date();            
+            String date=(dt.getYear()+1900)+"-"+(dt.getMonth()+1)+"-"+dt.getDate();            
+            clsTaxCalculation objTaxCalculation=new clsTaxCalculation();
+            List <clsTaxCalculationDtls> arrListTaxDtl=objTaxCalculation.funCalculateTax(arrListItemDtls,posCode
+                , date, areaCode, operationType, subTotalForTax, 0,"");*/
+            
+			/*sql="";
+            insert_qry = "INSERT INTO `tblbilltaxdtl` (`strBillNo`, `strTaxCode`,"
+    				+ " `dblTaxableAmount`, `dblTaxAmount`, `strClientCode`, "
+    				+ "`strDataPostFlag`,`dteBillDate`) VALUES";
+            
+            String deleteSql="delete from tblbilltaxdtl "
+			    	+ "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
+			st.executeUpdate(deleteSql);
+			
+        	//clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
+        	System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+obj.getTaxAmount());
+        	taxAmt+=obj.getTaxAmount();
+            sql+=",('"+BillNo+"','"+obj.getTaxCode()+"','"+obj.getTaxableAmount()+"','"+obj.getTaxAmount()+"','"
+				    +ClientCode+"','N','"+billDate+"')";				    
+			flgData=true;*/
+         
+            /*sql="";
+            for(int cnt=0;cnt<arrListTaxDtl.size();cnt++)
+            {
+            	String deleteSql="delete from tblbilltaxdtl "
+    			    	+ "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
+    			st.executeUpdate(deleteSql);
+    			
+            	clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
+            	System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+obj.getTaxAmount());
+            	taxAmt+=obj.getTaxAmount();
+                sql+=",('"+BillNo+"','"+obj.getTaxCode()+"','"+obj.getTaxableAmount()+"','"+obj.getTaxAmount()+"','"
+    				    +ClientCode+"','N','"+billDate+"')";				    
+    			flgData=true;
+    			
+    		 	
+            }*/
+            
+            
        cmsCon.close();
        st.close();
        
        
-       jObj.put("taxAmount", taxAmt);
+       //jObj.put("taxAmount", taxAmt);
         
 	} catch (Exception e) 
 	{
@@ -18522,8 +19773,16 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 		}
 		else
 		{
-			sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
-					+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
+			if(clientCode.equals("240.001"))
+			{
+				sql=" SELECT IFNULL(SUM(b.dblSettlementAmt-a.dblTaxAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
+						+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
+			}
+			else
+			{
+				sql=" SELECT IFNULL(SUM(b.dblSettlementAmt),0) FROM tblbillhd a,tblbillsettlementdtl b WHERE a.strBillNo=b.strBillNo "
+						+ " AND DATE(a.dteBillDate)='"+POSDate+"' AND a.strClientCode='"+clientCode+"' ";
+			}
 		}
 		ResultSet rsSales = st.executeQuery(sql);
         JSONObject objSales=new JSONObject();
@@ -18691,13 +19950,26 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 		}
 		else
 		{
-			sql="SELECT SUM(grandtotal) grandTotal "
-		    	+ "FROM ( SELECT SUM(c.dblSettlementAmt) grandtotal FROM tblbillhd a,tblbillsettlementdtl c "
-		    	+ "WHERE a.strBillNo=c.strBillNo AND DATE(a.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
-		    	+ "AND a.strClientCode='"+clientCode+"' "
-		    	+ "UNION SELECT SUM(d.dblSettlementAmt) grandtotal FROM tblqbillhd b,tblqbillsettlementdtl d "
-		    	+ "WHERE b.strBillNo=d.strBillNo AND DATE(b.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
-		    	+ "AND b.strClientCode='"+clientCode+"') e; ";
+			if(clientCode.equals("240.001"))
+			{
+				sql="SELECT SUM(grandtotal) grandTotal "
+				    	+ "FROM ( SELECT SUM(c.dblSettlementAmt-a.dblTaxAmt) grandtotal FROM tblbillhd a,tblbillsettlementdtl c "
+				    	+ "WHERE a.strBillNo=c.strBillNo AND DATE(a.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
+				    	+ "AND a.strClientCode='"+clientCode+"' "
+				    	+ "UNION SELECT SUM(d.dblSettlementAmt-b.dblTaxAmt) grandtotal FROM tblqbillhd b,tblqbillsettlementdtl d "
+				    	+ "WHERE b.strBillNo=d.strBillNo AND DATE(b.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
+				    	+ "AND b.strClientCode='"+clientCode+"') e; ";
+			}
+			else
+			{
+				sql="SELECT SUM(grandtotal) grandTotal "
+				    	+ "FROM ( SELECT SUM(c.dblSettlementAmt) grandtotal FROM tblbillhd a,tblbillsettlementdtl c "
+				    	+ "WHERE a.strBillNo=c.strBillNo AND DATE(a.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
+				    	+ "AND a.strClientCode='"+clientCode+"' "
+				    	+ "UNION SELECT SUM(d.dblSettlementAmt) grandtotal FROM tblqbillhd b,tblqbillsettlementdtl d "
+				    	+ "WHERE b.strBillNo=d.strBillNo AND DATE(b.dtBillDate) BETWEEN '"+firstDateOfMonth+"' AND DATE_SUB('"+POSDate+"',INTERVAL 1 DAY) "
+				    	+ "AND b.strClientCode='"+clientCode+"') e; ";
+			}
 		}
 		ResultSet rsFirstDate = st.executeQuery(sql);
 	    JSONObject objFirstDate=new JSONObject();
@@ -18716,9 +19988,17 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	{
 		int month=Integer.parseInt(POSDate.split(" ")[0].split("-")[1]);
 		month=month-1;
-	    
-	    String sql="SELECT MONTH(a.dteBillDate),IFNULL(SUM(a.dblGrandTotal),0) FROM tblqbillhd a where month(a.dteBillDate)='"+month+"' "
-	    		+ "AND a.strClientCode='"+clientCode+"'; ";
+		String sql="";
+		if(clientCode.equals("240.001"))
+		{
+			sql="SELECT MONTH(a.dteBillDate),IFNULL(SUM(a.dblGrandTotal-a.dblTaxAmt),0) FROM tblqbillhd a where month(a.dteBillDate)='"+month+"' "
+		    		+ "AND a.strClientCode='"+clientCode+"'; ";
+		}
+		else
+		{
+			sql="SELECT MONTH(a.dteBillDate),IFNULL(SUM(a.dblGrandTotal),0) FROM tblqbillhd a where month(a.dteBillDate)='"+month+"' "
+		    		+ "AND a.strClientCode='"+clientCode+"'; ";
+		}
 	    ResultSet rsPrevMonth = st.executeQuery(sql);
 	    JSONObject objPrevMonth=new JSONObject();
 	    objPrevMonth.put("TableHeader","Last Month Sales");
@@ -18734,8 +20014,17 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	
 	private void funFillSalesGrowth(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat format,String strPOSType) throws Exception
 	{
-		String sql="SELECT SUM(a.dblGrandTotal) FROM tblbillhd a WHERE DATE(dteBillDate) = '"+POSDate+"' "
-    		+ " and a.strClientCode='"+clientCode+"'; ";
+		String sql="";
+		if(clientCode.equals("240.001"))
+		{
+			sql="SELECT SUM(a.dblGrandTotal-a.dblTaxAmt) FROM tblbillhd a WHERE DATE(dteBillDate) = '"+POSDate+"' "
+		    		+ " and a.strClientCode='"+clientCode+"'; ";
+		}
+		else
+		{
+			sql="SELECT SUM(a.dblGrandTotal) FROM tblbillhd a WHERE DATE(dteBillDate) = '"+POSDate+"' "
+		    		+ " and a.strClientCode='"+clientCode+"'; ";
+		}
 	    ResultSet rsCurrent=st.executeQuery(sql);
 	    JSONObject objPrevCurrent=new JSONObject();
 	    objPrevCurrent.put("TableHeader","Sales Growth");
@@ -18747,8 +20036,16 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	    }
 	    rsCurrent.close();
 	    
-	    sql="SELECT SUM(a.dblGrandTotal) from tblqbillhd a where DATE(dteBillDate) = "
-    		+ "DATE_SUB('"+POSDate+"',INTERVAL 7 DAY) and a.strClientCode='"+clientCode+"'; ";
+	    if(clientCode.equals("240.001"))
+		{
+	    	sql="SELECT SUM(a.dblGrandTotal-a.dblTaxAmt) from tblqbillhd a where DATE(dteBillDate) = "
+	        		+ "DATE_SUB('"+POSDate+"',INTERVAL 7 DAY) and a.strClientCode='"+clientCode+"'; ";
+		}
+	    else
+	    {
+	    	sql="SELECT SUM(a.dblGrandTotal) from tblqbillhd a where DATE(dteBillDate) = "
+	        		+ "DATE_SUB('"+POSDate+"',INTERVAL 7 DAY) and a.strClientCode='"+clientCode+"'; ";
+	    }
 	    ResultSet rsPrevious=st.executeQuery(sql);
 	    while(rsPrevious.next())
 	    {
@@ -18768,10 +20065,21 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	
 	private void funFillBestDay(String POSCode, String POSDate, String clientCode, Statement st, JSONArray arrObj, NumberFormat formatter,String strPOSType) throws Exception
 	{
-		String sql="SELECT IFNULL(sum(a.dblGrandTotal),''),DAYNAME(date(a.dteBillDate)) FROM tblqbillhd a where date(dteBillDate) "
-        	+ "between date(DATE_SUB('"+POSDate+"', INTERVAL 7 DAY)) and '"+POSDate+"' "
-        	+ " and a.strClientCode='"+clientCode+"' "
-        	+ "group by date(dteBillDate) order by sum(a.dblGrandTotal) desc limit 1; ";
+		String sql="";
+		if(clientCode.equals("240.001"))
+		{
+			sql="SELECT IFNULL(sum(a.dblGrandTotal-a.dblTaxAmt),''),DAYNAME(date(a.dteBillDate)) FROM tblqbillhd a where date(dteBillDate) "
+		        	+ "between date(DATE_SUB('"+POSDate+"', INTERVAL 7 DAY)) and '"+POSDate+"' "
+		        	+ " and a.strClientCode='"+clientCode+"' "
+		        	+ "group by date(dteBillDate) order by sum(a.dblGrandTotal-a.dblTaxAmt) desc limit 1; ";
+		}
+		else
+		{
+			sql="SELECT IFNULL(sum(a.dblGrandTotal),''),DAYNAME(date(a.dteBillDate)) FROM tblqbillhd a where date(dteBillDate) "
+		        	+ "between date(DATE_SUB('"+POSDate+"', INTERVAL 7 DAY)) and '"+POSDate+"' "
+		        	+ " and a.strClientCode='"+clientCode+"' "
+		        	+ "group by date(dteBillDate) order by sum(a.dblGrandTotal) desc limit 1; ";
+		}
         ResultSet rsBestDay = st.executeQuery(sql);
         JSONObject objBestDay=new JSONObject();
         objBestDay.put("TableHeader","Best Day");
@@ -18822,7 +20130,7 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
         	cmsCon=objDb.funOpenAPOSCon("mysql","master");
 	        st = cmsCon.createStatement();
 	        String sql="";
-	            
+	           
 	        sql="SELECT a.strClientCode FROM tblsetup a WHERE a.strClientCode='"+clientCode+"'; ";
 	        ResultSet rsClientCode=st.executeQuery(sql);
 	        if(rsClientCode.next())
@@ -19983,5 +21291,1654 @@ private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	    }
 	    rsFirstDate.close();
 	    arrObj.put(objFirstDate);
+	}
+	
+
+	@GET 
+	@Path("/funFetchUser")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funFetchUser( @QueryParam("clientCode") String propertyPOSCode, @QueryParam("strLastModifiedDate") String lastModifiedDate)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    
+	    JSONObject jObj=new JSONObject();
+	    JSONArray arrObj=new JSONArray();
+		try
+		{
+			//
+			clsPostPOSBillData objPostPOSBillData  =new clsPostPOSBillData();
+			JSONObject jObj1= new JSONObject(objPostPOSBillData.funFetchMasterData("tbluserhd",  propertyPOSCode,  lastModifiedDate));
+			JSONObject jObj2= new JSONObject(objAPOSMasterController.funGetUserDetail("tbluserdtl",  propertyPOSCode,  lastModifiedDate));
+			JSONObject jObj3= new JSONObject(objAPOSMasterController.funGetSuperUserDetail("tblsuperuserdtl",  propertyPOSCode,  lastModifiedDate));
+
+			arrObj=jObj1.getJSONArray("tbluserhd");
+			jObj.put("tbluserhd", arrObj);
+			arrObj=jObj2.getJSONArray("tbluserdtl");
+			jObj.put("tbluserdtl", arrObj);
+			arrObj=jObj3.getJSONArray("tblsuperuserdtl");
+			jObj.put("tblsuperuserdtl", arrObj);
+			
+			//arrObj=jObj.getJSONArray("tbluserhd");
+			//jObj.put("clsUserData",arrObj );
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return jObj;
+	}
+	
+	
+	@GET 
+	@Path("/funGetMasterData")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetMasterData(@QueryParam("strMasterName") String masterName, @QueryParam("strPropertyPOSCode") String propertyPOSCode, @QueryParam("strLastModifiedDate") String lastModifiedDate)
+	{
+		JSONObject jObj=new JSONObject();
+	    try
+		{
+	    	if(masterName.equals("DayEnd"))
+	    	{
+	    		jObj= objAPOSMasterController.funGetDayEndProcess(propertyPOSCode.substring(0,7), lastModifiedDate);
+	    	}
+	    	else if(masterName.equals("Internal"))
+	    	{
+	    		jObj= objAPOSMasterController.funGetInternal(propertyPOSCode.substring(0,7), lastModifiedDate);
+	    	}
+	    	else if(masterName.equalsIgnoreCase("storelastbill"))
+	    	{
+	    		jObj= objAPOSMasterController.funGetLastStoreBill(propertyPOSCode, lastModifiedDate);
+	    	}
+	    	else
+	    	{
+	    		jObj= objAPOSMasterController.funGetMasterData( masterName,   propertyPOSCode, lastModifiedDate);
+	    	}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return jObj;
+	}
+	
+
+	@GET 
+	@Path("/funFetchPOSMaster")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funFetchPOSMaster(@QueryParam("clientCode") String clientCode, @QueryParam("strLastModifiedDate") String lastModifiedDate)
+	{
+		JSONObject jObj=new JSONObject();
+	    try
+		{
+	    	jObj= objAPOSMasterController.funGetPOSMaster(  clientCode, lastModifiedDate);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+		return jObj;
+	}
+	
+	@GET 
+	@Path("/funFetchUnsettledBills")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funFetchUnsettledBills(@QueryParam("clientCode") String clientCode,@QueryParam("POSCode") String strPOSCode,@QueryParam("Date") String strDate,@QueryParam("TableNo") String tableNo)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+		JSONObject returnObject=new JSONObject();
+		JSONObject jObj=null;
+		JSONArray jArr=new JSONArray();
+	    try
+		{
+	    	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+	    	
+	    	String sql="SELECT a.strBillNo, IFNULL(b.strTableNo,''), IFNULL(b.strTableName,''), IFNULL(c.strWaiterNo,''),"
+	    			+ "IFNULL(c.strWShortName,''), IFNULL(d.strCustomerCode,''), IFNULL(d.strCustomerName,''),a.dblGrandTotal,"
+	    			+ "DATE_FORMAT(a.dteBillDate,'%h:%i'),(select p.strPosName from tblposmaster p where p.strPosCode='"+strPOSCode+"') FROM tblbillhd a LEFT OUTER JOIN tbltablemaster b ON a.strTableNo=b.strTableNo "
+	    			+ "LEFT OUTER JOIN tblwaitermaster c ON a.strWaiterNo=c.strWaiterNo LEFT OUTER JOIN tblcustomermaster d ON a.strCustomerCode=d.strCustomerCode "
+	    			+ "WHERE a.strPOSCode='"+strPOSCode+"' AND DATE(a.dteBillDate)='"+strDate+"' AND a.strClientCode='"+clientCode+"' AND a.strBillNo NOT IN( SELECT strBillNo "
+	    			+ "FROM tblbillsettlementdtl WHERE DATE(dteBillDate)='"+strDate+"' AND a.strClientCode='"+clientCode+"') ";
+	    	if(!tableNo.equals("All"))
+	    	{
+	    		sql+= "AND b.strTableName='"+tableNo+"'";
+	    	}
+	    	ResultSet rs=st.executeQuery(sql);
+	    	while(rs.next())
+	    	{
+	    		jObj=new JSONObject();
+	    		jObj.put("BillNo",rs.getString(1));
+	    		jObj.put("TableNo",rs.getString(2));
+	    		jObj.put("TableName",rs.getString(3));
+	    		jObj.put("WaiterNo",rs.getString(4));
+	    		jObj.put("WaiterName",rs.getString(5));
+	    		jObj.put("CustomerCode",rs.getString(6));
+	    		jObj.put("CustomerName",rs.getString(7));
+	    		jObj.put("Amount",rs.getString(8));
+	    		jObj.put("Time",rs.getString(9));
+	    		jObj.put("POSName",rs.getString(10));
+	    		jArr.put(jObj);
+	    	}
+	    	returnObject.put("BillData", jArr);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	    finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return returnObject;
+	}
+	
+	@GET 
+	@Path("/funGetSupplierList")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetSupplierList(@QueryParam("clientCode") String clientCode)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject jObject;
+	    JSONObject returnObject=new JSONObject();
+	    JSONArray returnArray=new JSONArray();
+	    try
+	    {
+	    	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+	    	
+	    	String sql="select strSupplierCode as Supplier_Code,strSupplierName as Supplier_Name,intMobileNumber as Mobile_No "
+				    + "from tblsuppliermaster where strClientCode='"+clientCode+"' order by strSupplierName";
+	    	ResultSet rs=st.executeQuery(sql);
+	    	while(rs.next())
+	    	{
+	    		jObject=new JSONObject();
+	    		jObject.put("Suppliercode", rs.getString(1));
+	    		jObject.put("SupplierName", rs.getString(2));
+	    		jObject.put("SupplierMobile", rs.getString(3));
+	    		returnArray.put(jObject);
+	    	}
+	    	rs.close();
+	    	returnObject.put("Supplier", returnArray);
+	    	
+	    	st.close();
+	    	cmsCon.close();
+	    }
+	    catch(Exception e)
+	    {
+	    	e.printStackTrace();
+	    }
+	    finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return returnObject;
+	}
+	
+	@GET 
+	@Path("/funCalculateTaxForStock")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funCalculateTaxForStock(@QueryParam("POSDate") String strPOSDate) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            
+            int fixedTaxAmount = 0;
+            String strTaxCode="";
+            StringBuilder sqlTaxCal = new StringBuilder();
+            sqlTaxCal.setLength(0);
+            sqlTaxCal.append("select strTaxCode,strTaxDesc,dblAmount from tbltaxhd where strTaxType='Fixed Amount' and strTaxOnSP='Purchase'"
+                    + " and date(dteValidFrom) <='" + strPOSDate + "' and date(dteValidTo)>='" + strPOSDate + "' ");
+
+            ResultSet rsTaxCal = st.executeQuery(sqlTaxCal.toString());
+            while (rsTaxCal.next())
+            {
+                fixedTaxAmount += rsTaxCal.getDouble(3);
+                strTaxCode=rsTaxCal.getString(1);
+            }
+            rsTaxCal.close();
+            st.close();
+            cmsCon.close();
+            
+            returnObject.put("StockTax", fixedTaxAmount);
+            returnObject.put("TaxCode", strTaxCode);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return returnObject;
+        
+    }
+	
+	@POST 
+	@Path("/funSaveStockIn")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funSaveStockIn(JSONObject object) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+	    int ex=0;
+	    String sql="";
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            JSONObject map=(JSONObject)object.get("nameValuePairs");
+            int stockCount=0;
+            String stockInCode="";
+            
+            sql="SELECT COUNT(*) FROM tblstkinhd a WHERE a.strStkInCode='"+map.get("StockInCode").toString()+"'; ";
+            ResultSet rsStock=st.executeQuery(sql);
+            if(rsStock.next())
+            {
+            	stockCount=rsStock.getInt(1);
+            }
+            rsStock.close();
+            
+            if(stockCount==0)
+            {
+            	stockInCode= funGenerateStockInCode();
+            }
+            System.out.println("Stock in code=" + stockInCode);
+			
+			clsStockInHd objStockInHd = new clsStockInHd();
+			clsStockInDtl objStockInDtl = new clsStockInDtl();
+			objStockInHd.setStrPOSCode(map.get("POSCode").toString());
+			objStockInHd.setDteStkInDate(map.get("StockInDate").toString());
+			sql="SELECT a.strReasonCode FROM tblreasonmaster a WHERE a.strReasonName='"+map.get("Reason").toString()+"' "
+					+ "AND a.strClientCode='"+map.get("ClientCode").toString()+"'; ";
+			ResultSet rs=st.executeQuery(sql);
+			if(rs.next())
+			{
+				objStockInHd.setStrReasonCode(rs.getString(1));
+			}
+			else
+			{
+				objStockInHd.setStrReasonCode("");
+			}
+			rs.close();
+			objStockInHd.setStrPurchaseBillNo(map.get("PurchaseBillNo").toString());
+			objStockInHd.setDtePurchaseBillDate(map.get("PurchaseBillDate").toString());
+			objStockInHd.setIntShiftCode(0);
+			objStockInHd.setStrUserCreated(map.get("UserCreated").toString());
+			objStockInHd.setStrUserEdited(map.get("UserEdited").toString());
+			objStockInHd.setDteDateCreated(map.get("DateCreated").toString());
+			objStockInHd.setDteDateEdited(map.get("DateEdited").toString());
+			objStockInHd.setStrClientCode(map.get("ClientCode").toString());
+			objStockInHd.setStrInvoiceCode(map.get("InvoiceCode").toString());
+			objStockInHd.setDblTaxAmt(Double.parseDouble(map.get("TaxAmt").toString()));
+			objStockInHd.setDblExtraAmt(0.00);
+			objStockInHd.setDblGrandTotal(Double.parseDouble(map.get("GrandTotal").toString()));
+			objStockInHd.setStrSupplierCode(map.get("SupplierCode").toString());
+			if(stockCount==0)
+			{
+				objStockInHd.setStrStkInCode(stockInCode);
+			}
+			else
+			{
+				objStockInHd.setStrStkInCode(map.get("StockInCode").toString());
+			}
+			JSONArray arrListItemDtl=(JSONArray)map.get("ItemDtl");
+			JSONArray arrListTaxDtl=(JSONArray)map.get("TaxDtl");
+
+			ex = funInsertStockInDataTable(arrListItemDtl, arrListTaxDtl,objStockInHd);
+			if (ex > 0)
+			{
+				returnObject.put("StockIn", stockInCode);
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+		return returnObject;
+        
+    }
+	
+	public String funGenerateStockInCode()
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+		long lastNo = 0;
+		String sql = "", stockInCode = "";
+	
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+			
+		    sql = "select strTransactionType,dblLastNo from tblinternal where strTransactionType='stockInNo'";
+		    ResultSet rsStockinno = st.executeQuery(sql);
+		    if (rsStockinno.next())
+		    {
+				lastNo = rsStockinno.getLong(2);
+				lastNo = lastNo + 1;
+				
+				stockInCode = "SI" + String.format("%07d", lastNo);
+				System.out.println(stockInCode);
+				sql = "update tblinternal set dblLastNo='" + lastNo + "' where strTransactionType='stockinNo'";
+				st.executeUpdate(sql);
+		    }
+		    rsStockinno.close();
+		    st.close();
+		    cmsCon.close();
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return stockInCode;
+    }
+	
+	public int funInsertStockInDataTable(JSONArray arrListItemDtl, JSONArray arrListTaxCal,clsStockInHd objStockInHd) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    int rows = 0;
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+			
+			String sql = "delete from tblstkinhd where strStkInCode='" + objStockInHd.getStrStkInCode() + "'";
+			st.executeUpdate(sql);
+		
+			sql = "insert into tblstkinhd (strStkInCode,strPOSCode,dteStkInDate,strReasonCode,strPurchaseBillNo"
+				+ ",dtePurchaseBillDate,strUserCreated,strUserEdited,dteDateCreated,dteDateEdited,strClientCode"
+				+ ",strInvoiceCode,dblTaxAmt,dblExtraAmt,dblGrandTotal,strSupplierCode)"
+				+ " values('" + objStockInHd.getStrStkInCode() + "','" + objStockInHd.getStrPOSCode() + "','" + objStockInHd.getDteStkInDate() + "','" + objStockInHd.getStrReasonCode()
+				+ "','" + objStockInHd.getStrPurchaseBillNo() + "','" + objStockInHd.getDtePurchaseBillDate()
+				+ "','" + objStockInHd.getStrUserCreated() + "','" + objStockInHd.getStrUserEdited() + "','" + objStockInHd.getDteDateCreated()
+				+ "','" + objStockInHd.getDteDateEdited() + "','" + objStockInHd.getStrClientCode() + "'"
+				+ ",'" + objStockInHd.getStrInvoiceCode() + "'," + objStockInHd.getDblTaxAmt() + "," + objStockInHd.getDblExtraAmt() + ""
+				+ "," + objStockInHd.getDblGrandTotal() + ",'" + objStockInHd.getStrSupplierCode() + "')";
+			st.executeUpdate(sql);
+			
+			sql = "delete from tblstkindtl where strStkInCode='" + objStockInHd.getStrStkInCode() + "'";
+			st.executeUpdate(sql);
+		
+			boolean flgSql = false;
+			StringBuilder sb = new StringBuilder();
+			sb.append(" insert into tblstkindtl (strStkInCode,strItemCode,dblQuantity,dblPurchaseRate,dblAmount,strClientCode,strDataPostFlag)"
+				+ " values ");
+			
+			for(int i=0;i<arrListItemDtl.length();i++)
+			{
+				JSONObject objStkinDtl=(JSONObject)arrListItemDtl.get(i);
+				flgSql = true;
+			    sb.append("('" + objStockInHd.getStrStkInCode() + "','" + objStkinDtl.get("strItemCode") + "','" + objStkinDtl.get("dblQuantity") + "','" + objStkinDtl.get("dblPurchaseRate") + "','"
+				    + objStkinDtl.get("dblAmount") + "','" + objStkinDtl.get("strClientCode") + "','" + objStkinDtl.get("strDataPostFlag") + "'),");
+			}
+			
+			/*for (clsStockInDtl objStkinDtl : hmStockInDtl.values())
+			{
+			    flgSql = true;
+			    sb.append("('" + objStockInHd.getStrStkInCode() + "','" + objStkinDtl.getStrItemCode() + "','" + objStkinDtl.getDblQuantity() + "','" + objStkinDtl.getDblPurchaseRate() + "','"
+				    + objStkinDtl.getDblAmount() + "','" + objStkinDtl.getStrClientCode() + "','" + objStkinDtl.getStrDataPostFlag() + "'),");
+			}*/
+		
+			int index = 0;
+			if (flgSql)
+			{
+			    index = sb.lastIndexOf(",");
+			    sb = sb.delete(index, sb.length());
+			    rows = st.executeUpdate(sb.toString());
+			}
+		
+			if (null != arrListTaxCal)
+			{
+			    sql = "delete from tblstkintaxdtl where strStkInCode='" + objStockInHd.getStrStkInCode() + "'";
+			    st.executeUpdate(sql);
+			    flgSql = false;
+			    sb.setLength(0);
+			    sb.append(" insert into tblstkintaxdtl (strStkInCode,strTaxCode,dblTaxableAmt,dblTaxAmt,strClientCode,strDataPostFlag)"
+				    + " values ");
+			    
+			    for(int i=0;i<arrListTaxCal.length();i++)
+			    {
+			    	JSONObject objTaxCalDtl=(JSONObject)arrListTaxCal.get(i);
+			    	if (Double.parseDouble(objTaxCalDtl.get("dblTaxAmt").toString()) > 0)
+					{
+					    flgSql = true;
+					    sb.append("('" + objStockInHd.getStrStkInCode() + "','" + objTaxCalDtl.get("strTaxCode") + "','" + objTaxCalDtl.get("dblTaxableAmt") + "'"
+						    + ",'" + objTaxCalDtl.get("dblTaxAmt") + "','" + objStockInHd.getStrClientCode() + "','N'),");
+					}
+			    }
+			    
+			    
+			    
+			    /*for (clsTaxCalculationDtls objTaxCalDtl : arrListTaxCal)
+			    {
+					if (objTaxCalDtl.getTaxAmount() > 0)
+					{
+					    flgSql = true;
+					    sb.append("('" + objStockInHd.getStrStkInCode() + "','" + objTaxCalDtl.getTaxCode() + "','" + objTaxCalDtl.getTaxableAmount() + "'"
+						    + ",'" + objTaxCalDtl.getTaxAmount() + "','" + objStockInHd.getStrClientCode() + "','N'),");
+					}
+			    }*/
+		
+			    /*for (int cn = 0; cn < tblTaxCal.getRowCount(); cn++)
+			    {
+					flgSql = true;
+					sb.append("('" + objStockInHd.getStrStkInCode() + "','" + tblTaxCal.getValueAt(cn, 2).toString() + "'"
+						+ "," + Double.parseDouble(txtTotal.getText()) + "," + Double.parseDouble(tblTaxCal.getValueAt(cn, 1).toString()) + ""
+						+ ",'" + objStockInHd.getStrClientCode() + "','N'),");
+			    }*/
+		
+			    if (flgSql)
+			    {
+					index = sb.lastIndexOf(",");
+					sb = sb.delete(index, sb.length());
+					rows = st.executeUpdate(sb.toString());
+			    }
+			}
+		
+			String sqlUpdatePO = "update tblpurchaseorderhd set strClosePO='Y' "
+				+ " where strPOCode='" + objStockInHd.getStrPurchaseBillNo() + "' and strClientCode='" + objStockInHd.getStrClientCode() + "' ";
+			st.executeUpdate(sqlUpdatePO);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	
+		return rows;
+    }
+	
+	@GET 
+	@Path("/funGetAllModifyStockIn")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funModifyStockIn(@QueryParam("clientCode") String strClientCode) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+	    JSONArray array=new JSONArray();
+	    
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="SELECT a.strStkInCode AS Stk_In_Code,c.strSupplierName AS Supplier_Name,b.strReasonName AS Reason_Name, "
+            		+ "a.dteDateCreated AS Date_Created FROM tblstkinhd a LEFT OUTER JOIN tblreasonmaster b "
+            		+ "ON a.strReasonCode=b.strReasonCode,tblsuppliermaster c WHERE a.strReasonCode=b.strReasonCode "
+            		+ "AND a.strSupplierCode=c.strSupplierCode and a.strClientCode='"+strClientCode+"' ORDER BY a.strStkInCode ";
+            ResultSet rs=st.executeQuery(sql);
+            while(rs.next())
+            {
+            	JSONObject object=new JSONObject();
+            	object.put("StockInCode", rs.getString(1));
+            	object.put("SupplierName", rs.getString(2));
+            	object.put("Reason", rs.getString(3));
+            	object.put("Date", rs.getString(4));
+            	array.put(object);
+            }
+            returnObject.put("StockInData", array);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return returnObject;
+		
+    }
+	
+	@GET 
+	@Path("/funGetModifyStockIn")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funModifyStockIn(@QueryParam("StockInCode") String strStockInCode,@QueryParam("clientCode") String strClientCode) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+	    JSONArray array=new JSONArray();
+	    
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String strReason="",strSupplierCode="",strSupplierName="";
+            double taxAmt=0;
+            
+            String sql = "select b.strReasonName from tblstkinhd a,tblreasonmaster b where a.strStkInCode='" + strStockInCode + "'"
+        		    + " and a.strReasonCode=b.strReasonCode and a.strClientCode='"+strClientCode+"' ";
+    	    ResultSet rsReason = st.executeQuery(sql);
+    	    if(rsReason.next())
+    	    {
+    	    	strReason=rsReason.getString(1);
+    	    }
+    	    rsReason.close();
+    	    
+    	    sql = " SELECT a.strSupplierCode,b.strSupplierName "
+    		    + " FROM tblstkinhd a,tblsuppliermaster b"
+    		    + " WHERE a.strStkInCode='" + strStockInCode + "' AND a.strSupplierCode=b.strSupplierCode and a.strClientCode='"+strClientCode+"'";
+    	    ResultSet rsSupplier = st.executeQuery(sql);
+    	    if(rsSupplier.next())
+    	    {
+    	    	strSupplierCode=rsSupplier.getString(1);
+        	    strSupplierName=rsSupplier.getString(2);
+    	    }
+    	    rsSupplier.close();
+    	    String purchaseBillNo = "";
+    	    Date purchaseBillDate = null;
+    	    sql="SELECT a.strTaxCode,a.strTaxDesc,b.dblTaxAmt FROM tbltaxhd a,tblstkintaxdtl b "
+    	    	+ "WHERE a.strTaxCode=b.strTaxCode AND a.strTaxType='Fixed Amount' AND a.strTaxOnSP='Purchase' "
+    	    	+ "AND b.strStkInCode='"+strStockInCode+"' and a.strClientCode='"+strClientCode+"'; ";
+    	    ResultSet rsStockTax=st.executeQuery(sql);
+    	    while(rsStockTax.next())
+    	    {
+    	    	taxAmt+=rsStockTax.getDouble(3);
+    	    }
+    	    rsStockTax.close();
+    	    
+    	    sql = "select a.strStkInCode,c.strItemName,a.strItemCode,a.dblQuantity,a.dblPurchaseRate,a.dblAmount,"
+    			+ "b.strPurchaseBillNo,date(b.dtePurchaseBillDate) from tblstkindtl a,tblstkinhd b,tblitemmaster c  "
+    			+ "where a.strStkInCode='" + strStockInCode + "' and a.strStkInCode=b.strStkInCode and "
+    			+ "a.strItemCode=c.strItemCode and a.strClientCode='"+strClientCode+"' ";
+    	    ResultSet rsStockIn = st.executeQuery(sql);
+    	    while (rsStockIn.next())
+    	    {
+	    		JSONObject objStockInDtl = new JSONObject();
+	    		objStockInDtl.put("ItemCode",rsStockIn.getString(3));
+    		    objStockInDtl.put("ItemName",rsStockIn.getString(2));
+    		    objStockInDtl.put("StockInCode",rsStockIn.getString(1));
+    		    objStockInDtl.put("Amount",Double.parseDouble(rsStockIn.getString(6)));
+    		    objStockInDtl.put("Qty",Double.parseDouble(rsStockIn.getString(4)));
+    		    objStockInDtl.put("PurchaseRate",Double.parseDouble(rsStockIn.getString(5)));
+    		    objStockInDtl.put("ClientCode",strClientCode);
+    		    objStockInDtl.put("DataPostFlag","N");
+    		    objStockInDtl.put("SupplierCode",strSupplierCode);
+    		    objStockInDtl.put("SupplierName",strSupplierName);
+    		    objStockInDtl.put("PurchaseBillNo",rsStockIn.getString(7));
+    		    objStockInDtl.put("PurchaseBillDate",rsStockIn.getDate(8));
+	    		array.put(objStockInDtl);
+    	    }
+    	    rsStockIn.close();
+    	    returnObject.put("StockInData", array);
+    	    returnObject.put("TaxAmt",taxAmt);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return returnObject;
+		
+    }
+	
+	@POST 
+	@Path("/funSaveItemMaster")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funSaveItemMaster(JSONObject object) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject jsonObject=new JSONObject();
+	    try
+	    {
+	    	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            
+            JSONObject jObject=(JSONObject)object.get("nameValuePairs");
+            
+            String sql="UPDATE tblitemmaster a SET a.strItemName='"+jObject.get("ItemName").toString()+"', "
+            		+ "a.strExternalCode='"+jObject.get("ExternalCode").toString()+"',a.dblPurchaseRate='"+jObject.get("PurchaseRate").toString()+"', "
+            		+ "a.dblSalePrice='"+jObject.get("SalePrice").toString()+"',a.strShortName='"+jObject.get("ShortName").toString()+"', "
+            		+ "a.strRawMaterial='"+jObject.get("RawMaterial").toString()+"',a.strItemType='"+jObject.get("ItemType").toString()+"', "
+            		+ "a.strSubGroupCode=(SELECT a.strSubGroupCode FROM tblsubgrouphd a WHERE a.strSubGroupName='"+jObject.get("SubGroup").toString()+"') "
+            		+ "WHERE a.strItemCode='"+jObject.get("ItemCode").toString()+"' AND a.strClientCode='"+jObject.get("ClientCode").toString()+"'; ";
+            int rows=st.executeUpdate(sql);
+            if(rows>0)
+            {
+            	jsonObject.put("Status", "Y");
+            }
+            else
+            {
+            	jsonObject.put("Status", "N");
+            }
+	    }
+	    catch(Exception e)
+	    {
+	    	e.printStackTrace();
+	    }
+	    finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	    return jsonObject;
+		
+    }
+	
+	@GET 
+	@Path("/funGetSubGroupList")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetSubGroupList(@QueryParam("clientCode") String strClientCode) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject jsonObject=new JSONObject();
+	    JSONArray array = new JSONArray();
+	    int size =0;
+	    try
+	    {
+	    	cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            
+            String sql="SELECT a.strSubGroupName FROM tblsubgrouphd a LEFT OUTER JOIN tblitemmaster b ON "
+            		+ "a.strSubGroupCode=b.strSubGroupCode WHERE a.strClientCode='"+strClientCode+"' GROUP BY a.strSubGroupCode ";
+            ResultSet rs=st.executeQuery(sql);
+            while(rs.next())
+            {
+            	array.put(rs.getString(1));
+            }
+            jsonObject.put("SubGroup", array);
+	    }
+	    catch(Exception e)
+	    {
+	    	e.printStackTrace();
+	    }
+	    finally
+		{
+			try
+			{
+				if (null != st)
+				{
+					st.close();
+				}
+				if (null != cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+	    return jsonObject;
+		
+    }
+	
+	/* Govinda Changes */
+	@GET 
+	@Path("/funGetModifyStockOut")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funModifyStockOut(@QueryParam("StockOutCode") String strStockOutCode,@QueryParam("clientCode") String strClientCode) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+	    JSONArray array=new JSONArray();
+	    
+		try
+		{ 
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String strReason="",strSupplierCode="",strSupplierName="";
+            double taxAmt=0;
+            
+            String sql = "select b.strReasonName from tblstkouthd a,tblreasonmaster b where a.strStkOutCode='" + strStockOutCode + "'"
+        		    + " and a.strReasonCode=b.strReasonCode and a.strClientCode='"+strClientCode+"' ";
+    	    ResultSet rsReason = st.executeQuery(sql);
+    	    if(rsReason.next())
+    	    {
+    	    	strReason=rsReason.getString(1);
+    	    }
+    	    rsReason.close();
+    	    
+    	    sql = " SELECT a.strSupplierCode,b.strSupplierName "
+    		    + " FROM tblstkouthd a,tblsuppliermaster b"
+    		    + " WHERE a.strStkOutCode='" + strStockOutCode + "' AND a.strSupplierCode=b.strSupplierCode and a.strClientCode='"+strClientCode+"'";
+    	    ResultSet rsSupplier = st.executeQuery(sql);
+    	    if(rsSupplier.next())
+    	    {
+    	    	strSupplierCode=rsSupplier.getString(1);
+        	    strSupplierName=rsSupplier.getString(2);
+    	    }
+    	    rsSupplier.close();
+    	    String purchaseBillNo = "";
+    	    Date purchaseBillDate = null;
+    	    sql="SELECT a.strTaxCode,a.strTaxDesc,b.dblTaxAmt FROM tbltaxhd a,tblstkouttaxdtl b "
+    	    	+ "WHERE a.strTaxCode=b.strTaxCode AND a.strTaxType='Fixed Amount' AND a.strTaxOnSP='Purchase' "
+    	    	+ "AND b.strStkOutCode='"+strStockOutCode+"' and a.strClientCode='"+strClientCode+"'; ";
+    	    ResultSet rsStockTax=st.executeQuery(sql);
+    	    while(rsStockTax.next())
+    	    {
+    	    	taxAmt+=rsStockTax.getDouble(3);
+    	    }
+    	    rsStockTax.close();
+    	    
+    	    sql = "select a.strStkOutCode,c.strItemName,a.strItemCode,a.dblQuantity,a.dblPurchaseRate,a.dblAmount,"
+    			+ "b.strPurchaseBillNo,date(b.dtePurchaseBillDate) from tblstkoutdtl a,tblstkouthd b,tblitemmaster c  "
+    			+ "where a.strStkOutCode='" + strStockOutCode + "' and a.strStkOutCode=b.strStkOutCode and "
+    			+ "a.strItemCode=c.strItemCode and a.strClientCode='"+strClientCode+"' ";
+    	    ResultSet rsStockIn = st.executeQuery(sql);
+    	    while (rsStockIn.next())
+    	    {
+	    		JSONObject objStockInDtl = new JSONObject();
+	    		objStockInDtl.put("ItemCode",rsStockIn.getString(3));
+    		    objStockInDtl.put("ItemName",rsStockIn.getString(2));
+    		    objStockInDtl.put("StockOutCode",rsStockIn.getString(1));
+    		    objStockInDtl.put("Amount",Double.parseDouble(rsStockIn.getString(6)));
+    		    objStockInDtl.put("Qty",Double.parseDouble(rsStockIn.getString(4)));
+    		    objStockInDtl.put("PurchaseRate",Double.parseDouble(rsStockIn.getString(5)));
+    		    objStockInDtl.put("ClientCode",strClientCode);
+    		    objStockInDtl.put("DataPostFlag","N");
+    		    objStockInDtl.put("SupplierCode",strSupplierCode);
+    		    objStockInDtl.put("SupplierName",strSupplierName);
+    		    objStockInDtl.put("PurchaseBillNo",rsStockIn.getString(7));
+    		    objStockInDtl.put("PurchaseBillDate",rsStockIn.getDate(8));
+	    		array.put(objStockInDtl);
+    	    }
+    	    
+    	    returnObject.put("StockOutCode", array);
+    	    returnObject.put("TaxAmt",taxAmt);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return returnObject;
+		
+    }
+	
+	
+	@POST 
+	@Path("/funSaveStockOut")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funSaveStockOut(JSONObject object) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+	    int ex=0;
+	    String sql="";
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            int stockCount=0;
+            String stockOutCode="";
+            
+            JSONObject map=(JSONObject)object.get("nameValuePairs");
+            
+            sql="SELECT COUNT(*) FROM tblstkouthd a WHERE a.strStkOutCode='"+map.get("StockInCode").toString()+"'; ";
+            ResultSet rsStock=st.executeQuery(sql);
+            if(rsStock.next())
+            {
+            	stockCount=rsStock.getInt(1);
+            }
+            rsStock.close();
+            if(stockCount==0)
+            {
+            	stockOutCode= funGenerateStockOutCode();
+            }
+			System.out.println("Stock Out code=" + stockOutCode);
+			clsStockOutHd objStockOutHd = new clsStockOutHd();
+			clsStockOutDtl objStockOutDtl = new clsStockOutDtl();
+			objStockOutDtl.setStrStkOutCode(stockOutCode);
+			objStockOutHd.setStrPOSCode(map.get("POSCode").toString());
+			objStockOutHd.setDteStkOutDate(map.get("StockInDate").toString());
+			sql="SELECT a.strReasonCode FROM tblreasonmaster a WHERE a.strReasonName='"+map.get("Reason").toString()+"' "
+				+ "AND a.strClientCode='"+map.get("ClientCode").toString()+"'; ";
+			ResultSet rs=st.executeQuery(sql);
+			if(rs.next())
+			{
+				objStockOutHd.setStrReasonCode(rs.getString(1));
+			}
+			else
+			{
+				objStockOutHd.setStrReasonCode("");
+			}
+			rs.close();
+			objStockOutHd.setStrPurchaseBillNo(map.get("PurchaseBillNo").toString());
+			objStockOutHd.setDtePurchaseBillDate(map.get("PurchaseBillDate").toString());
+			objStockOutHd.setIntShiftCode(0);
+			objStockOutHd.setStrUserCreated(map.get("UserCreated").toString());
+			objStockOutHd.setStrUserEdited(map.get("UserEdited").toString());
+			objStockOutHd.setDteDateCreated(map.get("DateCreated").toString());
+			objStockOutHd.setDteDateEdited(map.get("DateEdited").toString());
+			objStockOutHd.setStrClientCode(map.get("ClientCode").toString());
+			//objStockOutHd.setStrInvoiceCode(map.get("InvoiceCode").toString());
+			objStockOutHd.setDblTaxAmt(Double.parseDouble(map.get("TaxAmt").toString()));
+			objStockOutHd.setDblExtraAmt(0.00);
+			objStockOutHd.setDblGrandTotal(Double.parseDouble(map.get("GrandTotal").toString()));
+			objStockOutHd.setStrSupplierCode(map.get("SupplierCode").toString());
+			
+			JSONArray arrListItemDtl=(JSONArray)map.get("ItemDtl");
+			JSONArray arrListTaxDtl=(JSONArray)map.get("TaxDtl");
+
+			ex = funInsertStockOutDataTable(arrListItemDtl, arrListTaxDtl,objStockOutHd,stockOutCode,objStockOutDtl);
+			if (ex > 0)
+			{
+				returnObject.put("StockOut", stockOutCode);
+			}
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		return returnObject;
+        
+    }
+	
+	public String funGenerateStockOutCode()
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+		long lastNo = 0;
+		String sql = "", stockOutCode = "";
+	
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+			
+		    sql ="select strTransactionType,dblLastNo from tblinternal where strTransactionType='stockOutNo'";
+		    ResultSet rsStockinno = st.executeQuery(sql);
+		    if (rsStockinno.next())
+		    {
+				lastNo = rsStockinno.getLong(2);
+				lastNo = lastNo + 1;
+				
+				stockOutCode = "SO" + String.format("%07d", lastNo);
+				System.out.println(stockOutCode);
+				sql = "update tblinternal set dblLastNo='" + lastNo + "' where strTransactionType='stockOutNo'";
+				st.executeUpdate(sql);
+		    }
+		    rsStockinno.close();
+		    st.close();
+		    cmsCon.close();
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+		return stockOutCode;
+    }
+	
+	
+	
+	public int funInsertStockOutDataTable(JSONArray arrListItemDtl, JSONArray arrListTaxCal,clsStockOutHd objStockOutHd,String StockOutCode,clsStockOutDtl objStockOutDtl) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    int rows = 0;
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+			
+            String sql = "delete from tblstkouthd where strStkOutCode='" + objStockOutDtl.getStrStkOutCode() + "'";
+			st.executeUpdate(sql);
+		
+			sql = "insert into tblstkouthd (strStkOutCode,strPOSCode,dteStkOutDate"
+					+ ",strReasonCode,strPurchaseBillNo,dtePurchaseBillDate,strUserCreated,strUserEdited"
+					+ ",dteDateCreated,dteDateEdited,strClientCode,dblTaxAmt,dblExtraAmt,dblGrandTotal,strSupplierCode)"
+					+ " values('" + objStockOutDtl.getStrStkOutCode() + "','" + objStockOutHd.getStrPOSCode() + "','" + objStockOutHd.getDteStkOutDate() + "'"
+					+ ",'" + objStockOutHd.getStrReasonCode() + "','" + objStockOutHd.getStrPurchaseBillNo() + "','" + objStockOutHd.getDtePurchaseBillDate() + "'"
+					+ ",'" + objStockOutHd.getStrUserCreated() + "','" + objStockOutHd.getStrUserEdited() + "','" + objStockOutHd.getDteDateCreated() + "'"
+					+ ",'" + objStockOutHd.getDteDateEdited() + "','" + objStockOutHd.getStrClientCode() + "'"
+					+ "," + objStockOutHd.getDblTaxAmt() + "," + objStockOutHd.getDblExtraAmt() + ""
+					+ "," + objStockOutHd.getDblGrandTotal() + ",'" + objStockOutHd.getStrSupplierCode() + "')";
+			st.executeUpdate(sql);
+			
+			sql = "delete from tblstkoutdtl where strStkOutCode='" + objStockOutDtl.getStrStkOutCode() + "'";
+			st.executeUpdate(sql);
+		
+			boolean flgSql = false;
+			StringBuilder sb = new StringBuilder();
+			sb.append(" insert into tblstkoutdtl (strStkOutCode,strItemCode,dblQuantity,dblPurchaseRate,dblAmount,strClientCode,strDataPostFlag)"
+					+ " values ");
+			
+			for(int i=0;i<arrListItemDtl.length();i++)
+			{
+				JSONObject objStockOutDt=(JSONObject)arrListItemDtl.get(i);
+				flgSql = true;
+			    sb.append("('" + StockOutCode + "','" + objStockOutDt.get("strItemCode") + "','" + objStockOutDt.get("dblQuantity") + "','" + objStockOutDt.get("dblPurchaseRate") + "','"
+					    + objStockOutDt.get("dblAmount") + "','" + objStockOutDt.get("strClientCode") + "','" + objStockOutDt.get("strDataPostFlag") + "'),");
+			   
+			}
+			
+			int index = 0;
+			if (flgSql)
+			{
+			    index = sb.lastIndexOf(",");
+			    sb = sb.delete(index, sb.length());
+			    rows = st.executeUpdate(sb.toString());
+			}
+		
+			if (null != arrListTaxCal)
+			{
+			    sb.setLength(0);
+			    sb.append(" insert into tblstkouttaxdtl (strStkOutCode,strTaxCode,dblTaxableAmt,dblTaxAmt,strClientCode,strDataPostFlag)"
+					    + " values ");
+			    
+			    for(int i=0;i<arrListTaxCal.length();i++)
+			    {
+			    	JSONObject objTaxCalDtl=(JSONObject)arrListTaxCal.get(i);
+			    	if (Double.parseDouble(objTaxCalDtl.get("dblTaxAmt").toString()) > 0)
+					{
+					    flgSql = true;
+					    sb.append("('" + StockOutCode + "','" + objTaxCalDtl.get("strTaxCode") + "','" + objTaxCalDtl.get("dblTaxableAmt") + "'"
+							    + ",'" + objTaxCalDtl.get("dblTaxAmt") + "','" + objTaxCalDtl.get("strClientCode") + "','N'),");
+					}
+			    }
+		
+			    if (flgSql)
+			    {
+					index = sb.lastIndexOf(",");
+					sb = sb.delete(index, sb.length());
+					rows = st.executeUpdate(sb.toString());
+			    }
+			}
+
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+	
+		return rows;
+    }
+	
+	@GET 
+	@Path("/funGetAllModifyStockOut")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funModifyStockOut(@QueryParam("clientCode") String strClientCode) throws Exception
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject returnObject=new JSONObject();
+	    JSONArray array=new JSONArray();
+	    
+		try
+		{
+			cmsCon=objDb.funOpenAPOSCon("mysql","master");
+            st = cmsCon.createStatement();
+            String sql="SELECT a.strStkOutCode AS Stk_Out_Code,c.strSupplierName AS Supplier_Name,b.strReasonName AS Reason_Name, "
+            		+ "a.dteDateCreated AS Date_Created FROM tblstkouthd a LEFT OUTER JOIN tblreasonmaster b "
+            		+ "ON a.strReasonCode=b.strReasonCode,tblsuppliermaster c WHERE a.strReasonCode=b.strReasonCode "
+            		+ "AND a.strSupplierCode=c.strSupplierCode and a.strClientCode='"+strClientCode+"' ORDER BY a.strStkOutCode ";
+            ResultSet rs=st.executeQuery(sql);
+            while(rs.next())
+            {
+            	JSONObject object=new JSONObject();
+            	object.put("StockOutCode", rs.getString(1));
+            	object.put("SupplierName", rs.getString(2));
+            	object.put("Reason", rs.getString(3));
+            	object.put("Date", rs.getString(4));
+            	array.put(object);
+            }
+            returnObject.put("StockOutData", array);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return returnObject;
+		
+    }
+	
+	@POST 
+	@Path("/funStockFlashData")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funStockFlashData(JSONObject object) 
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+	    JSONObject jObj=new JSONObject();
+	    JSONObject returnObject=new JSONObject();
+	    JSONArray array=new JSONArray();
+	    JSONArray totalarray=new JSONArray();
+	    String sqlStock="";
+	    double dblOpening=0,dblStkIn=0,dblStkOut=0,dblSale=0,dblBal=0,reorderQty=0,openProductionQty=0;
+
+	    try 
+	    {
+			cmsCon = objDb.funOpenAPOSCon("mysql", "master");
+			st = cmsCon.createStatement();
+			
+			JSONObject jObject=(JSONObject)object.get("nameValuePairs");
+			
+			String strGroupWise=jObject.get("GroupWise").toString();
+			String fromDate=jObject.get("FromDate").toString();
+			String toDate=jObject.get("ToDate").toString();
+			String strPOSName=jObject.get("POSName").toString();
+			String strType=jObject.get("Type").toString();
+			String strReportType=jObject.get("ReportType").toString();
+			String balStockSign=jObject.get("StockWith").toString();
+			String showZeroBalStk=jObject.get("ShowBal").toString();
+			String startDate=jObject.get("StartDate").toString();
+			String strPOSCode=jObject.get("POSCode").toString();
+			
+			if(strReportType.equals("Stock"))
+			{
+				
+				sqlStock = "select strGroupName,strSubgroupName,strItemName,strPOSCode"
+					    + " ,intOpening,intIn,intOut,intSale,intBalance,dblPurchaseRate "
+					    + " from tblitemcurrentstk "
+					    + " where strGroupName=if('All'='" + strGroupWise + "' "
+					    + ",strGroupName,'" +strGroupWise + "') ";
+			    if (balStockSign.equalsIgnoreCase("Positive"))
+			    {
+					if (showZeroBalStk.equals("Yes"))
+					{
+					    sqlStock += " and intBalance >= 0 ";
+					}
+					else
+					{
+					    sqlStock += " and intBalance > 0 ";
+					}
+			    }
+			    else if (balStockSign.equalsIgnoreCase("Negative"))
+			    {
+					if (showZeroBalStk.equals("Yes"))
+					{
+					    sqlStock += " and intBalance <= 0 ";
+					}
+					else
+					{
+					    sqlStock += " and intBalance < 0 ";
+					}
+			    }
+			    sqlStock += " order by strItemName";
+			    System.out.println(sqlStock);
+				ResultSet rsStock=st.executeQuery(sqlStock);
+				while(rsStock.next())
+				{
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("Group", rsStock.getString(1));
+					jsonObject.put("SubGroup", rsStock.getString(2));
+					jsonObject.put("ItemName", rsStock.getString(3));
+					jsonObject.put("Rate", rsStock.getString(10));
+					jsonObject.put("OpStock", rsStock.getString(5));
+					jsonObject.put("StockIn", rsStock.getString(6));
+					jsonObject.put("StockOut", rsStock.getString(7));
+					jsonObject.put("Sale", rsStock.getString(8));
+					jsonObject.put("Balance", rsStock.getString(9));
+					array.put(jsonObject);
+					
+					//Total
+					dblOpening = dblOpening + new Double(rsStock.getString(5));
+					dblStkIn = dblStkIn + new Double(rsStock.getString(6));
+					dblStkOut = dblStkOut + new Double(rsStock.getString(7));
+					dblSale = dblSale + new Double(rsStock.getString(8));
+					dblBal = dblBal + new Double(rsStock.getString(9));
+				}
+				rsStock.close();
+				
+				JSONObject totalObject=new JSONObject();
+				totalObject.put("Opening",dblOpening);
+				totalObject.put("StockIn",dblStkIn);
+				totalObject.put("StockOut",dblStkOut);
+				totalObject.put("Sale",dblSale);
+				totalObject.put("Bal",dblBal);
+				totalObject.put("ReorderQty","0");
+				totalObject.put("OpenProdQty","0");
+				totalarray.put(totalObject);
+				returnObject.put("Stock", array);
+				returnObject.put("Total", totalarray);
+				
+			}
+			else
+			{
+				array=new JSONArray();
+				Date date1=new SimpleDateFormat("yyyy-MM-dd").parse(fromDate); 
+				Date date2=new SimpleDateFormat("yyyy-MM-dd").parse(toDate); 
+				Date date3=new SimpleDateFormat("yyyy-MM-dd").parse(startDate); 
+				funCalculateStock(date1, date2, strPOSName, strType, strReportType,date3,strPOSCode);
+				
+				sqlStock = "select a.strGroupName,a.strSubgroupName,a.strItemName,a.strPOSCode,a.intOpening"
+					    + ",a.intIn,a.intOut,a.intSale,a.intBalance,b.dblMinLevel,b.dblMaxLevel"
+					    + ",b.dblMaxLevel-a.intBalance-ifnull(c.dblOrderQty,0.00) as ReorderQty"
+					    + ",a.strItemCode,ifnull(c.dblOrderQty,0.00) as OpenProductionQty "
+					    + "from tblitemcurrentstk a "
+					    + "left outer join tblitemmaster b on a.strItemCode=b.strItemCode "
+					    + "left outer join tblproductiondtl c on a.strItemCode=c.strItemCode "
+					    + "left outer join tblproductionhd d on c.strProductionCode=d.strProductionCode and d.strClose='N' "
+					    + "where a.strGroupName=if('All'='" + strGroupWise + "'"
+					    + ",a.strGroupName,'" + strGroupWise + "') and a.intBalance<=b.dblMinLevel "
+					    + "and b.dblMaxLevel-a.intBalance-ifnull(c.dblOrderQty,0.00) > 0 "
+					    + "and (b.dblMaxLevel > 0 or b.dblMinLevel>0) "
+					    + "group by a.strGroupName,a.strSubgroupName,a.strItemCode "
+					    + "order by strItemName ";
+				ResultSet rsReorder=st.executeQuery(sqlStock);
+				while(rsReorder.next())
+				{
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("Group", rsReorder.getString(1));
+					jsonObject.put("SubGroup", rsReorder.getString(2));
+					jsonObject.put("ItemName", rsReorder.getString(3));
+					jsonObject.put("OpStock", rsReorder.getString(5));
+					jsonObject.put("StockIn", rsReorder.getString(6));
+					jsonObject.put("StockOut", rsReorder.getString(7));
+					jsonObject.put("Sale", rsReorder.getString(8));
+					jsonObject.put("Balance", rsReorder.getString(9));
+					jsonObject.put("OrderQty", rsReorder.getString(14));
+					jsonObject.put("MinLevel", rsReorder.getString(10));
+					jsonObject.put("MaxLevel", rsReorder.getString(11));
+					jsonObject.put("ReorderQty", rsReorder.getString(12));
+					array.put(jsonObject);
+					
+					//Total
+					dblOpening = dblOpening + new Double(rsReorder.getString(5));
+				    dblStkIn = dblStkIn + new Double(rsReorder.getString(6));
+				    dblStkOut = dblStkOut + new Double(rsReorder.getString(7));
+				    dblSale = dblSale + new Double(rsReorder.getString(8));
+				    dblBal = dblBal + new Double(rsReorder.getString(9));
+				    reorderQty += Double.parseDouble(rsReorder.getString(12));
+				    openProductionQty += Double.parseDouble(rsReorder.getString(14));
+				    
+				}
+				rsReorder.close();	
+				
+				JSONObject totalObject=new JSONObject();
+				totalObject.put("Opening",dblOpening);
+				totalObject.put("StockIn",dblStkIn);
+				totalObject.put("StockOut",dblStkOut);
+				totalObject.put("Sale",dblSale);
+				totalObject.put("Bal",dblBal);
+				totalObject.put("ReorderQty",reorderQty);
+				totalObject.put("OpenProdQty",openProductionQty);
+				totalarray.put(totalObject);
+				returnObject.put("Stock", array);
+				returnObject.put("Total", totalarray);
+			}
+			
+	    }
+	    catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	    finally
+		{
+			try
+			{
+				if(null!=st)
+				{
+					st.close();
+				}
+				if(null!=cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return returnObject;
+		
+	}
+	
+	public static int funCalculateStock(Date dt1, Date dt2, String posCode, String itemType, String reportType,Date strStartDate,String strPOSCode)
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+		
+		try
+		{
+			cmsCon = objDb.funOpenAPOSCon("mysql", "master");
+			st = cmsCon.createStatement();
+			
+		    String fromDate, toDate;
+		    Date installDate;
+		    String sql1 = "";
+		    if ((dt2.getTime() - dt1.getTime()) < 0)
+		    {
+		    	//JOptionPane.showMessageDialog(null, "Invalid Date");
+		    }
+		    else
+		    {
+				int d = dt1.getDate();
+				int m = dt1.getMonth() + 1;
+				int y = dt1.getYear() + 1900;
+				fromDate = y + "-" + m + "-" + d;
+				d = dt2.getDate();
+				m = dt2.getMonth() + 1;
+				y = dt2.getYear() + 1900;
+				toDate = y + "-" + m + "-" + d;
+				String psCode = strPOSCode;
+				StringBuilder sb = new StringBuilder(psCode);
+				int ind = sb.lastIndexOf(" ");
+				psCode = sb.substring(ind + 1, psCode.length());
+				installDate = strStartDate;
+				GregorianCalendar cal = new GregorianCalendar();
+				cal.setTime(dt1);
+				cal.add(Calendar.DATE, -1);
+				String newFromDate = (cal.getTime().getYear() + 1900) + "-" + (cal.getTime().getMonth() + 1) + "-" + (cal.getTime().getDate());
+				d = installDate.getDate();
+				m = installDate.getMonth() + 1;
+				y = installDate.getYear() + 1900;
+				String startDate = y + "-" + m + "-" + d;
+		
+				//Deleting from Temp Stk table
+				sql1 = "delete from tblitemcurrentstk";
+				st.executeUpdate(sql1);
+		
+				//Inserting into Temp table from Item Master
+				sql1 = "insert into tblitemcurrentstk "
+					+ "(strGroupName,strSubgroupName,strItemCode,strItemName,dblPurchaseRate) "
+					+ "select c.strGroupName,b.strSubGroupName,a.strItemCode,a.strItemName,a.dblPurchaseRate "
+					+ "from tblitemmaster a,tblsubgrouphd b,tblgrouphd c "
+					+ "where a.strSubGroupCode=b.strSubGroupCode "
+					+ "and b.strGroupCode=c.strGroupCode ";
+				if (itemType.equals("Raw Material"))
+				{
+				    sql1 += "and strRawMaterial='Y' ";
+				}
+				else if (itemType.equals("Menu Item"))
+				{
+				    sql1 += "and strItemForSale='Y' ";
+				}
+				System.out.println(sql1);
+				st.executeUpdate(sql1);
+				
+				if (!startDate.equals(fromDate))
+				{
+				    proCalculateStock(startDate, newFromDate, psCode);
+				    sql1 = "Update tblitemcurrentstk Set intOpening = intBalance , intIn = 0, intOut = 0, intSale = 0 ";
+				    st.executeUpdate(sql1);
+				    //System.out.println(sql1);
+				}
+				proCalculateStock(fromDate, toDate, psCode);
+				if (reportType.equalsIgnoreCase("Stock"))
+				{
+				    //clsGlobalVarClass.dbMysql.execute("delete from tblitemcurrentstk where intOpening=0 and intOut=0 and intIn=0 and  intSale=0 and intBalance=0");
+				}
+		    }
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if(null!=st)
+				{
+					st.close();
+				}
+				if(null!=cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}
+		return 0;
+    }
+	
+	public static void proCalculateStock(String fromDate, String toDate, String psCode)
+    {
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+	    Connection cmsCon=null;
+	    Statement st=null;
+		try
+		{	
+			cmsCon = objDb.funOpenAPOSCon("mysql", "master");
+			st = cmsCon.createStatement();
+	
+		    //STOCK IN UPDATE
+		    //deleting from Temp Item Stk
+		    String sql = "delete from tbltempitemstk";
+		    st.executeUpdate(sql);
+	
+		    //Inserting into Temp Item Stk from Stk IN table
+		    sql = "insert into tbltempitemstk select b.strItemCode,sum(b.dblQuantity) "
+			    + "from tblstkindtl b,tblstkinhd a where a.strStkInCode=b.strStkInCode ";
+		    sql = sql + "and date(a.dteStkInDate) between '" + fromDate + "' and '" + toDate + "' ";
+		    if (!psCode.equals("All"))
+		    {
+		    	sql = sql + "and a.strPOSCode='" + psCode + "' ";
+		    }
+		    sql = sql + "group by b.strItemCode";
+		    System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    //Join Update from Temp Table into Stock Table
+		    sql = "update tblitemcurrentstk a Set a.intIn =a.intIn + IFNULL((select b.dblQuantity ";
+		    sql = sql + "from tbltempitemstk b ";
+		    sql = sql + "where a.strItemCode = b.strItemCode and b.dblQuantity),0)";
+		    //System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    //STOCK OUT UPDATE 
+		    //deleting from Temp Item Stk
+		    sql = "delete from tbltempitemstk";
+		    st.executeUpdate(sql);
+	
+		    //Inserting into Temp Item Stk from Stk OUT table
+		    sql = "insert into tbltempitemstk select b.strItemCode,sum(b.dblQuantity) "
+			    + "from tblstkoutdtl b,tblstkouthd a "
+			    + "where a.strStkOutCode=b.strStkOutCode ";
+		    sql = sql + " and date(a.dteStkOutDate) between '" + fromDate + "' and '" + toDate + "' ";
+		    if (!psCode.equals("All"))
+		    {
+		    	sql = sql + " and a.strPOSCode='" + psCode + "'";
+		    }
+		    sql = sql + " group by b.strItemCode";
+		    st.executeUpdate(sql);
+	
+		    //Join Update from Temp Table into Stock Table
+		    sql = "update tblitemcurrentstk a Set a.intOut =a.intOut + IFNULL((select b.dblQuantity ";
+		    sql = sql + "from tbltempitemstk b ";
+		    sql = sql + "where a.strItemCode = b.strItemCode),0)";
+		    st.executeUpdate(sql);
+	
+		    //SALE UPDATE 
+		    //deleting from Temp Item Stk
+		    sql = "delete from tbltempitemstk";
+		    st.executeUpdate(sql);
+	
+		    //Inserting into Temp Item Stk from Sale table
+		    sql = "insert into tbltempitemstk select c.strChildItemCode,sum((a.dblQuantity * c.dblQuantity )) "
+			    + "from tblbilldtl a,tblrecipehd b, tblrecipedtl c,tblbillhd d "
+			    + "where a.strItemCode=b.strItemCode and b.strRecipeCode=c.strRecipeCode "
+			    + "and a.strBillNo=d.strBillNo ";
+		    sql = sql + "and date(d.dteBillDate) between '" + fromDate + "' and '" + toDate + "' ";
+		    if (!psCode.equals("All"))
+		    {
+		    	sql = sql + " and d.strPOSCode='" + psCode + "' ";
+		    }
+		    sql += "group by c.strChildItemCode";
+		    System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    sql = "insert into tbltempitemstk select c.strChildItemCode,sum((a.dblQuantity * c.dblQuantity )) "
+			    + "from tblqbilldtl a,tblrecipehd b, tblrecipedtl c,tblqbillhd d  "
+			    + "where a.strItemCode=b.strItemCode and b.strRecipeCode=c.strRecipeCode "
+			    + "and a.strBillNo=d.strBillNo ";
+		    sql = sql + "and date(d.dteBillDate) between '" + fromDate + "' and '" + toDate + "' ";
+		    if (!psCode.equals("All"))
+		    {
+		    	sql = sql + " and d.strPOSCode='" + psCode + "' ";
+		    }
+		    sql += "group by c.strChildItemCode";
+		    System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    sql = "insert into tbltempitemstk select a.strItemCode,sum(a.dblQuantity) from tblbilldtl a,tblbillhd b "
+			    + "where a.strBillNo=b.strBillNo "
+			    + "and a.strItemCode NOT IN (select strItemCode from tblrecipehd) ";
+		    sql += "and date(b.dteBillDate) between '" + fromDate + "' and '" + toDate + "' ";
+		    if (!psCode.equals("All"))
+		    {
+		    	sql = sql + " and b.strPOSCode='" + psCode + "' ";
+		    }
+		    sql += "group by a.strItemCode";
+		    System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    sql = "insert into tbltempitemstk select a.strItemCode,sum(a.dblQuantity) from tblqbilldtl a,tblqbillhd b "
+			    + "where a.strBillNo=b.strBillNo "
+			    + "and a.strItemCode NOT IN (select strItemCode from tblrecipehd) ";
+		    sql += "and date(b.dteBillDate) between '" + fromDate + "' and '" + toDate + "' ";
+		    if (!psCode.equals("All"))
+		    {
+		    	sql = sql + " and b.strPOSCode='" + psCode + "' ";
+		    }
+		    sql += "group by a.strItemCode";
+		    System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    //Join Update from Temp Table into Stock Table
+		    sql = "update tblitemcurrentstk a Set a.intSale =a.intSale + IFNULL((select sum(b.dblQuantity) ";
+		    sql = sql + "from tbltempitemstk b ";
+		    sql = sql + "where a.strItemCode = b.strItemCode group by b.strItemCode),0)";
+		    System.out.println(sql);
+		    st.executeUpdate(sql);
+	
+		    //Update Balance
+		    sql = "update tblitemcurrentstk Set intBalance = intOpening + intIn - intOut - intSale";
+		    st.executeUpdate(sql);
+	
+		}
+		catch (Exception e)
+		{
+		    e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if(null!=st)
+				{
+					st.close();
+				}
+				if(null!=cmsCon)
+				{
+					cmsCon.close();
+				}
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+			}
+		}	
+    }
+	
+	@GET
+	@Path("/funGetGroupList")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetGroupList(@QueryParam("clientCode") String clientCode)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection aposCon=null;
+        Statement st=null;
+        JSONObject jObj=new JSONObject();
+		JSONArray arrObj=new JSONArray();
+		 try
+	     {
+		 	aposCon=objDb.funOpenAPOSCon("mysql","master");
+            st = aposCon.createStatement();
+            
+            String sql=" SELECT a.strGroupCode,a.strGroupName,a.strGroupShortName,a.strOperationalYN,a.strDataPostFlag, "
+    				+ "a.strClientCode FROM tblgrouphd a where a.strClientCode='"+clientCode+"' ";
+            ResultSet rsMasterData=st.executeQuery(sql);
+            while(rsMasterData.next())
+            {
+    	        JSONObject obj=new JSONObject();
+    	        obj.put("GroupCode",rsMasterData.getString(1));
+    	        obj.put("GroupName",rsMasterData.getString(2));
+    	        obj.put("GroupShortName",rsMasterData.getString(3));
+    	        obj.put("Operational",rsMasterData.getString(4));
+    	        obj.put("DataPostFlag",rsMasterData.getString(5));
+    	        obj.put("ClientCode",rsMasterData.getString(6));
+    	        arrObj.put(obj);
+            }
+            rsMasterData.close();
+    
+            jObj.put("GroupList", arrObj);
+            st.close();
+            aposCon.close();
+        
+	     }catch(Exception e)
+		 {
+	    	 e.printStackTrace();
+		 }
+		 return jObj;
 	}
 }
