@@ -331,7 +331,7 @@ public class clsSynchPOSDataWithMMSAuto {
 	//Save or Update POSSalesDtl
 	
 		@SuppressWarnings("finally")
-		public String funAddUpdateDtl( String posItemCode,String posItemName,int quantity,double rate, String posCode,String billDate,String clientCode ,String wsProdCode,String strStkCode,long lastNo){
+		public String funAddUpdateDtl( String posItemCode,String posItemName,double quantity,double rate, String posCode,String billDate,String clientCode ,String wsProdCode,String strStkCode,long lastNo){
 			
 			clsDatabaseConnection objDb=new clsDatabaseConnection();
 			clsUtilityFunctions objUtility = new clsUtilityFunctions();
@@ -372,24 +372,25 @@ public class clsSynchPOSDataWithMMSAuto {
 				rs.close();
 				
 			// Check product is Recipe or Not	
-				if(wsProductType.equals("Produced"))
+				if(wsProductType.equals("Produced") || wsProductType.equals("Semi Finished"))
 				{
-					String sql_ProducedItems="select a.strChildCode,a.dblQty,b.dblCostRM,c.strBOMCode,c.strParentCode"
+					String sql_ProducedItems="select a.strChildCode,a.dblQty,b.dblCostRM,c.strBOMCode,c.strParentCode,b.strProdType "
 						+ " from tblbommasterdtl a,tblproductmaster b ,tblbommasterhd c "
 						+ " where a.strChildCode=b.strProdCode and a.strBOMCode=c.strBOMCode "
 						+ " and (c.strParentCode='"+wsProdCode+"' or c.strBOMCode='') "
 						+ " and a.strClientCode='"+clientCode+"' ";
 					st = webmms.createStatement();
-					ResultSet	rsBOM=st.executeQuery(sql_ProducedItems);
+					ResultSet rsBOM=st.executeQuery(sql_ProducedItems);
 					while(rsBOM.next())
 					{
+						
 						String childProdCode=rsBOM.getString(1);
-						double dblChildQty=rsBOM.getDouble(2);
+						int dblChildQty=rsBOM.getInt(2);
 						double dblCostRM=rsBOM.getDouble(3);
 						String strBOMCode = rsBOM.getString(4);
 						String strParentCode = rsBOM.getString(5);
-														
-					// for Recipe Conversions
+						String strProdType=rsBOM.getString(6);
+						
 						double conversionRatio=1;
 						String sql_Conversion="select dblReceiveConversion,dblIssueConversion,dblRecipeConversion, "
 							+ " strReceivedUOM,strIssueUOM,strRecipeUOM "
@@ -411,20 +412,34 @@ public class clsSynchPOSDataWithMMSAuto {
 							strRecipeUOM=rsConv.getString(6);
 						}
 						rsConv.close();
-						Integer objInt = new Integer(quantity);
-						Double qty = objInt.doubleValue();
+						//Integer objInt = new Integer((int) quantity);
+						Double qty = quantity;
 						Double finalQty = qty*dblChildQty*conversionRatio;
 						double finalRate = dblCostRM*finalQty ;	
 						String tempDisQty[]=finalQty.toString().split("\\.");
 						String Displyqty="";
-						if(tempDisQty[0].equals("0"))
+						/*if(tempDisQty[0].equals("0"))
 						{
 							Displyqty=Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
 						}else
 						{
 							Displyqty=tempDisQty[0]+" "+strReceivedUOM+"."+Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
-						}	          	           	
-													
+						}
+						*/
+						if(strProdType.equals("Produced") || strProdType.equals("Semi Finished")){
+							funAddUpdateDtl(  posItemCode, posItemName, finalQty, dblCostRM,  posCode, billDate, clientCode , childProdCode, strStkCode, lastNo);
+						}else{
+//private void funGetChildItem(String posItemCode,String posCode,String posItemName,String childProdCode,String clientCode,String billDate,String strStkCode,double dblChildQty,double quantity,double dblCostRM,String strBOMCode,String strParentCode){							
+							funGetChildItem( posItemCode, posCode, posItemName, childProdCode, clientCode, billDate, strStkCode, dblChildQty,quantity,dblCostRM,strBOMCode,wsProdCode);	
+						}
+						
+						
+						
+						
+														
+					// for Recipe Conversions
+							          	           	
+					/*								
 						String sqlDtl=" INSERT INTO `tblstockadjustmentdtl` ( `strSACode`, `strProdCode`, `dblQty`, `strType`, `dblPrice`, `dblWeight`, `strProdChar`, `intIndex`, `strRemark`, `strClientCode`, `dblRate`, `strDisplayQty`,`strWSLinkedProdCode`,`dblParentQty`,`strJVNo`) VALUES"
 								+" ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?) ";	
 						
@@ -452,7 +467,7 @@ public class clsSynchPOSDataWithMMSAuto {
 								+ "where strPOSItemCode='"+posItemCode+"' and strPOSCode='"+posCode+"' and strClientCode='"+clientCode+"' "
 								+ " and date(dteBillDate) between '"+billDate+"' and '"+billDate+"'   ";
 						st = webmms.createStatement();
-						st.executeUpdate(updateSACode);	
+						st.executeUpdate(updateSACode);	*/
 						
 					}
 					rsBOM.close();
@@ -477,7 +492,7 @@ public class clsSynchPOSDataWithMMSAuto {
 					strRecipeUOM=rs.getString(6);
 				}
 				rs.close();
-				Integer objint = new Integer(quantity);
+				Integer objint = new Integer((int) quantity);
 				Double qty = objint.doubleValue();
 				String tempDisQty[]=qty.toString().split("\\.");
 				String Displyqty=tempDisQty[0]+" "+strReceivedUOM+"."+Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
@@ -509,7 +524,123 @@ public class clsSynchPOSDataWithMMSAuto {
 					}
 				return retValue;		        		
 			}		        		
-			 }
+	}
+		
+		
+		
+		private void funGetChildItem(String posItemCode,String posCode,String posItemName,String childProdCode,String clientCode,String billDate,String strStkCode,double dblChildQty,double quantity,double dblCostRM,String strBOMCode,String strParentCode){
+			
+			clsDatabaseConnection objDb=new clsDatabaseConnection();
+			clsUtilityFunctions objUtility = new clsUtilityFunctions();
+		    Connection webmms=null;
+		    Statement st=null;
+		   // Statement stUpdate=null;
+		    PreparedStatement stUpdate=null;
+		    ResultSet rs=null;
+		    String startDate="";
+			String strReceivedUOM="";
+			String retValue="";
+			String strIssueUOM="";
+			String strRecipeUOM="";
+			boolean flgSACode=false;
+			double dblTotalAmt=0.00;
+			
+			String dtUserCreate=objUtility.funGetCurrentDateTime("yyyy-MM-dd");
+			BigDecimal recipe=new BigDecimal(0.00);
+		
+			try{
+
+				webmms=objDb.funOpenMMSCon("mysql","transection");
+		        st = webmms.createStatement();
+		        String postSADate = billDate;
+		        String wsProductType="";
+		        double conversionRatio=1;
+				String sql_Conversion="select dblReceiveConversion,dblIssueConversion,dblRecipeConversion, "
+					+ " strReceivedUOM,strIssueUOM,strRecipeUOM "
+					+ " from tblproductmaster where strProdCode='"+childProdCode+"' "
+					+ " and strClientCode='"+clientCode+"' ";
+				st = webmms.createStatement();
+				ResultSet rsConv=st.executeQuery(sql_Conversion);
+				strReceivedUOM="";
+				strIssueUOM="";
+				strRecipeUOM="";
+				recipe=new BigDecimal(0.00);
+				while(rsConv.next())
+				{
+					BigDecimal issue=rsConv.getBigDecimal(1);
+					recipe=rsConv.getBigDecimal(3);
+					conversionRatio=1/issue.doubleValue()/recipe.doubleValue();
+					strReceivedUOM=rsConv.getString(4);
+					strIssueUOM=rsConv.getString(5);
+					strRecipeUOM=rsConv.getString(6);
+				}
+				rsConv.close();
+				Integer objInt = new Integer((int) quantity);
+				Double qty = quantity;//objInt.doubleValue();
+				Double finalQty = qty*dblChildQty*conversionRatio;
+				double finalRate = dblCostRM*finalQty ;	
+				String tempDisQty[]=finalQty.toString().split("\\.");
+				String Displyqty="";
+				if(tempDisQty[0].equals("0"))
+				{
+					Displyqty=Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
+				}else
+				{
+					Displyqty=tempDisQty[0]+" "+strReceivedUOM+"."+Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
+				}	          	           	
+											
+				String sqlDtl=" INSERT INTO `tblstockadjustmentdtl` ( `strSACode`, `strProdCode`, `dblQty`, `strType`, `dblPrice`, `dblWeight`, `strProdChar`, `intIndex`, `strRemark`, `strClientCode`, `dblRate`, `strDisplayQty`,`strWSLinkedProdCode`,`dblParentQty`,`strJVNo`) VALUES"
+						+" ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?) ";	
+				
+			//		+" ( '"+strStkCode+"', '"+childProdCode+"', "+finalQty+", 'Out', "+finalRate+", 0.00, ' ', 0, 'BOM Code:"+strBOMCode+":Parent Code:"+strParentCode+"', '"+clientCode+"', "+rate+", '"+Displyqty+"') ";
+				
+				stUpdate= webmms.prepareStatement(sqlDtl);
+				stUpdate.setString(1, strStkCode);
+				stUpdate.setString(2,childProdCode);
+				stUpdate.setDouble(3,finalQty);
+				stUpdate.setString(4,"Out");
+				stUpdate.setDouble(5,finalRate);
+				stUpdate.setDouble(6,0.00);
+				stUpdate.setString(7," ");
+				stUpdate.setInt(8,0);
+				stUpdate.setString(9,"BOM Code:"+strBOMCode+":Parent Code:"+strParentCode+":Qty:"+qty+":ItemName:"+posItemName);
+				stUpdate.setString(10,clientCode);
+				stUpdate.setDouble(11,dblCostRM);
+				stUpdate.setString(12,Displyqty);
+				stUpdate.setString(13,strParentCode);
+				stUpdate.setDouble(14,qty);
+				stUpdate.setString(15,"");
+				int i=stUpdate.executeUpdate();  
+			
+				String updateSACode="update tblpossalesdtl set strSACode='"+strStkCode+"' "
+						+ "where strPOSItemCode='"+posItemCode+"' and strPOSCode='"+posCode+"' and strClientCode='"+clientCode+"' "
+						+ " and date(dteBillDate) between '"+billDate+"' and '"+billDate+"'   ";
+				st = webmms.createStatement();
+				st.executeUpdate(updateSACode);
+					
+				/*}
+				rsBOM.close();*/
+								
+			
+		
+				
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			finally
+			{
+			
+					try {
+						st.close();
+						webmms.close();
+					} catch (SQLException e) {
+						
+						e.printStackTrace();
+					}
+						        		
+			}	
+			
+		}
 	
 	// save HD Data in webmmm
 	@SuppressWarnings("finally")
