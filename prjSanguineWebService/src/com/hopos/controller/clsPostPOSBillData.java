@@ -9869,7 +9869,8 @@ public class clsPostPOSBillData
 					+ ",strFireCommunication,dblUSDConverionRate,strDBBackupMailReceiver,strPrintMoveTableMoveKOTYN,strPrintQtyTotal"//222
 					+ ",strShowReportsInCurrency,strPOSToMMSPostingCurrency,strPOSToWebBooksPostingCurrency,strLockTableForWaiter,strReprintOnSettleBill,strTableReservationSMS,strSendTableReservationSMS,strMergeAllKOTSToBill,strEmailSmtpHost,strEmailSmtpPort,strSendDBBackupOnSanguineId,"//233
 					+ " strPrintOriginalOnBill,strPostSalesDataToExcise,strPrintFullVoidBill,strUserWiseShowBill,strDisplayTotalShowBill,strShowNotificationsOnTransaction,strBlankDayEndPrint," // 240
-					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd,strCashDenominationCompulsary,strCashManagementCompulsary,strShowItemCodeOnPLU,strDirectSettleOnSelection,strPrintOrderNoOnMakeKot) "//248
+					+ " strOnlineOrderNotification,strPostRoundOffToWebBooks,strShortNameOnDirectBillerAndBill,strClearAllTrasactionAtDayEnd,strCashDenominationCompulsary,strCashManagementCompulsary,strShowItemCodeOnPLU,strDirectSettleOnSelection,strPrintOrderNoOnMakeKot"
+					+ ",strPaxOnBilling,strDirectBillFromMakeKOTOnBarTable,strTakeFFModifierAmt,strImmediateSettlement) "//253
 					+ "values  ");
 
 			JSONObject dataObject = new JSONObject();
@@ -10077,7 +10078,6 @@ public class clsPostPOSBillData
 					String ShowPopUpForNextItemQuantity = dataObject.get("strShowPopUpForNextItemQuantity").toString().trim();// 171
 					String strJioMoneyIntegration = dataObject.get("strJioMoneyIntegration").toString().trim();// 172
 					String strJioWebServiceUrl = dataObject.get("strJioWebServiceUrl").toString().trim();// 173
-
 					String strJioMID = dataObject.get("strJioMID").toString().trim();// 174
 					String strJioTID = dataObject.get("strJioTID").toString().trim();// 175
 					String strJioActivationCode = dataObject.get("strJioActivationCode").toString().trim();// 176
@@ -10157,6 +10157,10 @@ public class clsPostPOSBillData
 					String strShowItemCodeOnPLU=dataObject.get("strShowItemCodeOnPLU").toString().trim();//247
 					String strDirectSettleOnSelection=dataObject.get("strDirectSettleOnSelection").toString().trim();//248
 					String strPrintOrderNoOnMakeKot=dataObject.get("strPrintOrderNoOnMakeKot").toString().trim();//249
+					String strPaxOnBilling=dataObject.get("strPaxOnBilling").toString().trim();//250
+					String strDirectBillFromMakeKOTOnBarTable=dataObject.get("strDirectBillFromMakeKOTOnBarTable").toString().trim();//251
+					String strTakeFFModifierAmt=dataObject.get("strTakeFFModifierAmt").toString().trim();//252
+					String strImmediateSettlement=dataObject.get("strImmediateSettlement").toString().trim();//253
 					
 					if (i == 0)
 					{
@@ -10186,7 +10190,8 @@ public class clsPostPOSBillData
 							+ ",'" + strPOSToMMSPostingCurrency + "','" + strPOSToWebBooksPostingCurrency + "','" + strLockTableForWaiter + "','" + strReprintOnSettleBill + "','" + strTableReservationSMS + "'" + ",'" + strSendTableReservationSMS + "','" + strMergeAllKOTSToBill + "','" + strEmailSmtpHost + "'"
 							+ ",'" + strEmailSmtpPort + "','" + strSendDBBackupOnSanguineId + "','" + strPrintOriginalOnBill + "','" + strPostSalesDataToExcise + "','" + strPrintFullVoidBill + "'" //236
 							+ ", '" + strUserWiseShowBill + "','" + strDisplayTotalShowBill + "','" + strShowNotificationsOnTransaction + "','" + strBlankDayEndPrint + "'," //240
-							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"','"+strCashDenominationCompulsary+"','"+strCashManagementCompulsary+"','"+strShowItemCodeOnPLU+"','"+strDirectSettleOnSelection+"','"+strPrintOrderNoOnMakeKot+"') "); // 249
+							+ "'" + strOnlineOrderNotification + "','" + strPostRoundOffToWebBooks + "','"+strShortNameOnDirectBillerAndBill+"','"+strClearAllTrasactionAtDayEnd+"','"+strCashDenominationCompulsary+"','"+strCashManagementCompulsary+"','"+strShowItemCodeOnPLU+"','"+strDirectSettleOnSelection+"',"
+							+ "'"+strPrintOrderNoOnMakeKot+"','"+strPaxOnBilling+"','"+strDirectBillFromMakeKOTOnBarTable+"','"+strTakeFFModifierAmt+"','"+strImmediateSettlement+"') "); // 253
 					flgData = true;
 				}
 			}

@@ -10,7 +10,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -633,10 +636,11 @@ public class clsSynchPOSDataWithMMS
 		
 		try
 		{
-		    webmms = clsDatabaseConnection.DBMMSCONNECTION;
+			 webmms = clsDatabaseConnection.DBMMSCONNECTION;
 		    st = webmms.createStatement();
 		    String sql = "", existOrderCode = "", SOCode = "";
 		    JSONArray mJsonArray = (JSONArray) objSalesData.get("OrderData");
+		    JSONArray mJsonArray1 = new JSONArray();
 		    JSONArray mJsonArraySOChar = (JSONArray) objSalesData.get("OrderCharData");
 		    String locCode = objSalesData.getString("LocCode");
 		    String clientCode = objSalesData.getString("WSClientCode");
@@ -646,6 +650,39 @@ public class clsSynchPOSDataWithMMS
 		    // String existSOCode=objSalesData.getString("SOCode");
 		    existOrderCode = objSalesData.getString("OrderCode");
 		    String POSClientCode = objSalesData.getString("ClientCode");
+		    if(orderType.equalsIgnoreCase("Advance Order"))
+		    {
+			    mJsonArray1 = (JSONArray) objSalesData.get("AdvanceOrderMessage");
+
+		    }
+		    
+		    
+		    JSONObject mJsonObject1 = new JSONObject();
+		    String strMessage="";
+		    String strAdvNo="";
+		    String strShape="",strNote="";
+		    List<String> listDetail = null;	    
+		    Map<String,List<String>> hmAdvOrderMessage = new HashMap<String,List<String>>();	    
+		    if(mJsonArray1!=null && mJsonArray1.length()>0){
+		    	for (int i = 0; i < mJsonArray1.length(); i++)
+			    {
+		    		mJsonObject1 = (JSONObject) mJsonArray1.get(i);
+		    		listDetail = new ArrayList<String>();
+		    		if(mJsonObject1.has("Message")){
+		    			listDetail.add(mJsonObject1.getString("Message"));
+		    		}
+		    		if(mJsonObject1.has("Shape")){
+		    			listDetail.add(mJsonObject1.getString("Shape"));
+		    		}
+		    		if(mJsonObject1.has("Note")){
+		    			listDetail.add(mJsonObject1.getString("Note"));
+		    		}
+		    		strAdvNo=mJsonObject1.getString("AdvanceOrderNo");
+			    	hmAdvOrderMessage.put(strAdvNo, listDetail);
+			    }
+		    }
+
+		    
 		    
 		    String custCode = "";
 		    int index = 0;
@@ -674,9 +711,9 @@ public class clsSynchPOSDataWithMMS
 		    
 		    clsUtilityFunctions objUtility = new clsUtilityFunctions();
 		    String date = objUtility.funGetCurrentDateTime("yyyy-MM-dd");
-		    String narration = "Sales Order From POS";
+		    String narration = "";
 		    double dblSubTotal=0;
-		    String sqlInsertSODtl = "insert into tblsalesorderdtl " + "(strSOCode,strProdCode,dblQty,dblWeight,strRemarks,intindex,strClientCode,dblAcceptQty,dblUnitPrice) " + "values ";
+		    String sqlInsertSODtl = "insert into tblsalesorderdtl " + "(strSOCode,strProdCode,dblQty,dblWeight,strRemarks,intindex,strClientCode,dblAcceptQty,dblUnitPrice,strMessage,strShape) " + "values ";
 		    JSONObject mJsonObject = new JSONObject();
 		    for (int i = 0; i < mJsonArray.length(); i++)
 		    {
@@ -688,23 +725,39 @@ public class clsSynchPOSDataWithMMS
 			if (orderType.equals("Normal Order"))
 			{
 			    remarks = "Stock=" + mJsonObject.getString("StockQty");
+			   
 			}
 			else if(orderType.equals("Daily Order"))
 			{
 				  remarks = "Daily Order";
+				  narration="Sales Order From POS(Daily Order)";
 			}
 			else
 			{
 			    remarks = mJsonObject.getString("AdvOrderNo");
+			    narration="Sales Order From POS(Advance Order)";
 			}
 			double dblProdPrice=funGetProductPrice( mJsonObject.getString("ProductCode"),custCode);
+			if(hmAdvOrderMessage.containsKey(remarks))
+				{
+					List<String> listDetails =hmAdvOrderMessage.get(remarks);
+					if(listDetails != null && listDetails.size()>0){
+						strMessage=listDetails.get(0);
+						if(listDetails.size()>1){
+							strShape=listDetails.get(1);
+						}
+						if(listDetails.size()>2){
+							strMessage=strMessage+"#"+listDetails.get(2); // message and note is append 
+						}
+					}
+				}
 			if (i == 0)
 			{
-				sqlInsertSODtl += "('" + SOCode + "','" + mJsonObject.getString("ProductCode") + "'" + ",'" + mJsonObject.getString("OrderQty") + "','" + mJsonObject.getString("Weight") + "','" + remarks + "'," + index + "" + ",'" + clientCode + "','" + mJsonObject.getString("OrderQty") + "',"+dblProdPrice+")";
+				sqlInsertSODtl += "('" + SOCode + "','" + mJsonObject.getString("ProductCode") + "'" + ",'" + mJsonObject.getString("OrderQty") + "','" + mJsonObject.getString("Weight") + "','" + remarks + "'," + index + "" + ",'" + clientCode + "','" + mJsonObject.getString("OrderQty") + "',"+dblProdPrice+",'"+strMessage+"','"+strShape+"')";
 			}
 			else
 			{
-			   sqlInsertSODtl += ",('" + SOCode + "','" + mJsonObject.getString("ProductCode") + "','" + mJsonObject.getString("OrderQty") + "'" + ",'" + mJsonObject.getString("Weight") + "','" + remarks + "'," + index + ",'" + clientCode + "','" + mJsonObject.getString("OrderQty") + "',"+dblProdPrice+")";
+			   sqlInsertSODtl += ",('" + SOCode + "','" + mJsonObject.getString("ProductCode") + "','" + mJsonObject.getString("OrderQty") + "'" + ",'" + mJsonObject.getString("Weight") + "','" + remarks + "'," + index + ",'" + clientCode + "','" + mJsonObject.getString("OrderQty") + "',"+dblProdPrice+",'"+strMessage+"','"+strShape+"')";
 			}
 			totalAmt += Double.parseDouble(mJsonObject.getString("OrderQty"));
 			
@@ -751,8 +804,9 @@ public class clsSynchPOSDataWithMMS
 		    st.executeUpdate(sqlInsertSOHd);
 		    if (existOrderCode.isEmpty())
 		    {
-			existOrderCode = "New";
+		    	existOrderCode = "New";
 		    }
+		   // res="";
 		    res = SOCode + "#" + fullFillmentDate + "#" + existOrderCode;
 		    // System.out.println("res:" +res);
 		}
