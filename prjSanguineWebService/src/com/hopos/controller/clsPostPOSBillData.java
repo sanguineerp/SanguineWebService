@@ -5696,7 +5696,7 @@ public class clsPostPOSBillData
 			// cmsCon = objDb.funOpenPOSCon("mysql", "master");
 			cmsCon = clsDatabaseConnection.DBPOSCONNECTION;
 			st = cmsCon.createStatement();
-			String sql = "select a.strItemCode,a.strItemName,right(b.strPropertyPOSCode,3),a.strMenuCode,a.strPopular" + " ,a.strPriceMonday,a.strPriceTuesday,a.strPriceWednesday,a.strPriceThursday,a.strPriceFriday" + " ,a.strPriceSaturday,a.strPriceSunday,a.dteFromDate,a.dteToDate" + " ,a.tmeTimeFrom,a.strAMPMFrom,a.tmeTimeTo,a.strAMPMTo,a.strCostCenterCode,a.strTextColor" + " ,a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited,a.strAreaCode" + " ,a.strSubMenuHeadCode,a.strHourlyPricing,a.longPricingId,a.strClientCode " + " from tblmenuitempricingdtl a, tblposmaster b " + " where a.strPOSCode = b.strPOSCode and (b.strPropertyPOSCode ='" + propertyPOSCode + "'" + " OR a.strPOSCode = 'All') and a.dteDateEdited > '" + lastModifiedDate + "'";
+			String sql = "select a.strItemCode,a.strItemName,right(b.strPropertyPOSCode,3),a.strMenuCode,a.strPopular" + " ,a.strPriceMonday,a.strPriceTuesday,a.strPriceWednesday,a.strPriceThursday,a.strPriceFriday" + " ,a.strPriceSaturday,a.strPriceSunday,a.dteFromDate,a.dteToDate" + " ,a.tmeTimeFrom,a.strAMPMFrom,a.tmeTimeTo,a.strAMPMTo,a.strCostCenterCode,a.strTextColor" + " ,a.strUserCreated,a.strUserEdited,a.dteDateCreated,a.dteDateEdited,a.strAreaCode" + " ,a.strSubMenuHeadCode,a.strHourlyPricing,a.longPricingId,a.strClientCode,strFontColor " + " from tblmenuitempricingdtl a, tblposmaster b " + " where a.strPOSCode = b.strPOSCode and (b.strPropertyPOSCode ='" + propertyPOSCode + "'" + " OR a.strPOSCode = 'All') and a.dteDateEdited > '" + lastModifiedDate + "'";
 			System.out.println(sql);
 			JSONArray arrObj = new JSONArray();
 
@@ -5734,6 +5734,7 @@ public class clsPostPOSBillData
 				obj.put("HourlyPricing", rsMasterData.getString(27));
 				obj.put("PricingId", rsMasterData.getString(28));
 				obj.put("ClientCode", rsMasterData.getString(29));
+				obj.put("FontColor", rsMasterData.getString(30));
 
 				arrObj.put(obj);
 			}
@@ -8034,7 +8035,7 @@ public class clsPostPOSBillData
 				obj.put("strExciseBrandName", rsItemMasterLinkUpDtl.getString(6));
 				obj.put("ClientCode", rsItemMasterLinkUpDtl.getString(7));
 				obj.put("DataPostFlag", rsItemMasterLinkUpDtl.getString(8));
-
+				obj.put("isModifier", "N");
 				arrObj.put(obj);
 			}
 			rsItemMasterLinkUpDtl.close();
