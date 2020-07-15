@@ -68,6 +68,10 @@ public class clsTextFileGenerator
 	@Autowired
 	clsTextFormat23ForBill objTextFormat23ForBill;
 	
+	@Autowired
+	clsJasperFormat4ForBill obJasperPrint4;
+	
+	
 	
 	public void funCreateTempFolder()
     {
@@ -127,6 +131,10 @@ public class clsTextFileGenerator
 		else if(billFormat.equalsIgnoreCase("Jasper 5")){
 			obJasperPrint.funCredateJasper(resp,billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
 		}
+		else if(billFormat.equalsIgnoreCase("Jasper 4")){
+			obJasperPrint4.funCreateJasper4(resp,billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);
+		}
+		
 		else if (billFormat.equalsIgnoreCase("Text 21"))
 		{
 			objTextFormat21ForBill.funGenerateTextFileForBillFormat21(billNo, posCode, clientCode,reprint,strServerBillPrinterName,multiBillPrint);

@@ -64,7 +64,9 @@ public class clsJasperBillPrinting {
 	 private ServletContext servletContext;
 	 
 	 @Autowired
-	clsTextFileGenerator obTextFileGenerator;
+	 clsTextFileGenerator obTextFileGenerator;
+	 
+	 
 	 
 	 clsUtilityFunctions obUtility;
 	 clsDatabaseConnection objDb = new clsDatabaseConnection();
@@ -114,6 +116,7 @@ public class clsJasperBillPrinting {
 			    {
 					billno = rs.getString(1);
 					tablName = rs.getString(2);
+			
 					waiterNo = rs.getString(3);
 					gdTotal = rs.getDouble(4);
 					sbTotal = rs.getDouble(5);
