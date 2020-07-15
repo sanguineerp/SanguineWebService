@@ -7246,7 +7246,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 			clsUtilityFunctions objUtility=new clsUtilityFunctions();
 			
 			
-				
+			
 			
 			insert_qry="INSERT INTO `tblbillhd` (`strBillNo`, "
 				+ "`strAdvBookingNo`, `dteBillDate`, `strPOSCode`, "
@@ -7259,7 +7259,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				+ " `intShiftCode`, `intPaxNo`, `strDataPostFlag`, "
 				+ "`strReasonCode`, `strRemarks`, `dblTipAmount`, "
 				+ "`dteSettleDate`, `strCounterCode`, `dblDeliveryCharges`, "
-				+ "`strCouponCode`,`strAreaCode`,`strDiscountRemark`,`strTakeAwayRemarks`,`strCardNo`,`dblRoundOff`,`dtBillDate`,`dblUSDConverionRate`) "
+				+ "`strCouponCode`,`strAreaCode`,`strDiscountRemark`,`strTakeAwayRemarks`,`strCardNo`,`dblRoundOff`,`dtBillDate`,`dblUSDConverionRate`,`intOrderNo`) "
 				+ "VALUES";
 			
 			
@@ -7346,7 +7346,8 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 				String cardNo=mJsonObject.get("CardNo").toString();
 				String billDateOnly=mJsonObject.get("BillDt").toString();
 				
-				    
+				int orderNo=funGetLastOrderNo();
+				
 				sql+=",('"+billNo+"','"+advBookingNo+"','"+billDate+"','"+POSCode+"','"+settelmentMode+"',"
 					+ "'"+discountAmt+"','"+discountPer+"','"+taxAmt+"','"+subTotal+"','"+grandTotal+"',"
 		    		+ "'"+takeAway+"','"+operationType+"','"+userCreated+"','"+userEdited+"','"+currentDate+"',"
@@ -7354,7 +7355,7 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 					+ "'"+manualBillNo+"','"+shiftCode+"','"+paxNo+"','N','"+reasonCode+"',"
 					+ "'"+remarks+"','"+tipAmount+"','"+settleDate+"','"+counterCode+"','"+deliveryCharges+"',"
 					+ "'"+couponCode+"','"+areaCode+"','"+discRemark+"','"+takeAwayRemark+"',"
-					+ "'"+cardNo+"','"+grandTotalRoundOffBy+"','"+billDateOnly+"','"+dblUSDConverionRate+"')";
+					+ "'"+cardNo+"','"+grandTotalRoundOffBy+"','"+billDateOnly+"','"+dblUSDConverionRate+"',"+orderNo+")";
 				flgData=true;	
 				
 				res=billNo+"#"+"NotHomeDelivery";
@@ -17792,6 +17793,35 @@ public JSONObject funSaveAllBillData(JSONObject objBillData,@QueryParam("billSer
 	return jObResponse; // Response.status(201).entity(response).build();
 }
 
+public int funGetLastOrderNo()
+{
+
+	int orderNo = 0;
+	clsDatabaseConnection objDb=new clsDatabaseConnection();
+	Connection cmsCon=null;
+	Statement st = null,st1 = null;
+	try
+	{
+		cmsCon=objDb.funOpenAPOSCon("mysql","transaction");
+		st = cmsCon.createStatement();
+		st1 = cmsCon.createStatement();
+			String sqlLastOrderNo = "select * from tblinternal a  where a.strTransactionType='OrderNo' ";
+		ResultSet rsLastCustomer = st.executeQuery(sqlLastOrderNo);
+		if (rsLastCustomer.next()) {
+			orderNo = rsLastCustomer.getInt(2);// llastOrderNo
+			orderNo++;
+			st1.executeUpdate("update tblinternal set dblLastNo=(dblLastNo+1) where strTransactionType='OrderNo' ");
+		}
+		rsLastCustomer.close();
+	} catch (Exception e) {
+		e.printStackTrace();
+	} finally {
+		return orderNo;
+	}
+	
+}
+
+
 private JSONArray funInsertDataBillSeriesWise(JSONObject objBillData,String strPOSCode){
 	
 		//JSONObject jObResponse=new JSONObject();
@@ -18674,7 +18704,11 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 		    mJsonObject =(JSONObject) mJsonArray.get(i);
 		    BillNo=mJsonObject.get("BillNo").toString();
 		    ClientCode=mJsonObject.get("ClientCode").toString();
-		    String taxCode=mJsonObject.get("TaxCode").toString();
+		    String taxCode="";
+		    if(mJsonObject.has("TaxCode")) {
+		    	 taxCode=mJsonObject.get("TaxCode").toString();	
+		    }
+		    
 		    taxAmount=Double.parseDouble(mJsonObject.get("TaxAmount").toString());
 		    String taxableAmount=mJsonObject.get("TaxableAmount").toString();
 		    String dataPostFlag=mJsonObject.get("DataPostFlag").toString();

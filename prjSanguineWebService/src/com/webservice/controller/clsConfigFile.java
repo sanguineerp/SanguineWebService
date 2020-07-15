@@ -51,86 +51,80 @@ public class clsConfigFile
 		    configData = new String[45];
 		    tempData = new String[45];
 		    
-		    file = new File(System.getProperty("user.dir") + "/DBConfigFile.txt");
-		    System.out.println("File Path= "+file.getAbsolutePath());
-		    System.out.println("File Path= "+System.getProperty("user.dir"));
-		    
-		   
-		    br = new BufferedReader(new FileReader(file));
-		    while ((fileData = br.readLine()) != null)
-		    {
-			String[] split = fileData.split("=");
-			if (split.length > 1)
-			{
-			    tempData[i] = split[0];
-			    configData[i] = split[1];
-			    i++;
-			}
-		    }
-		  
-		    posDBServerName = configData[0].trim();
-		    posDBName = configData[1].trim();
-		    posDBUserId = configData[2].trim();
-		    posDBPassword = configData[3].trim();
-		    posDBIPAddress = configData[4].trim();
-		    posDBPortNo = configData[5].trim();
-		    
-		    mmsDatabaseName = configData[6].trim();
-		    mmsDBUserId = configData[7].trim();
-		    mmsDBPassword = configData[8].trim();
-		    mmsDBIPAddress = configData[9].trim();
-		    mmsDBPortNo = configData[10].trim();
-		    
-		    cmsDBServerName = configData[11].trim();
-		    cmsDBName = configData[12].trim();
-		    cmsDBUserId = configData[13].trim();
-		    cmsDBPassword = configData[14].trim();
-		    cmsDBIpAddress = configData[15].trim();
-		    cmsDBPortNo = configData[16].trim();
-		    
-		    exciseDatabaseName = configData[17].trim();
-		    exciseDBUserId = configData[18].trim();
-		    exciseDBPassword = configData[19].trim();
-		    exciseDBIPAddress = configData[20].trim();
-		    exciseDBPortNo = configData[21].trim();
-		    
-		    webbooksDatabaseName = configData[22].trim();
-		    webbooksDBUserId = configData[23].trim();
-		    webbooksDBPassword = configData[24].trim();
-		    webbooksDBIPAddress = configData[25].trim();
-		    webbooksDBPortNo = configData[26].trim();
-		    
-		    aposDatabaseName = configData[27].trim();
-		    aposDBUserId = configData[28].trim();
-		    aposDBPassword = configData[29].trim();
-		    aposDBIPAddress = configData[30].trim();
-		    aposDBPortNo = configData[31].trim();
-		    
-		    webpmsDatabaseName = configData[32].trim();
-		    webpmsDBUserId = configData[33].trim();
-		    webpmsDBPassword = configData[34].trim();
-		    webpmsDBIPAddress = configData[35].trim();
-		    webpmsDBPortNo = configData[36].trim();
-		    
-		    onlineorderDatabaseName = configData[37].trim();
-		    onlineorderDBUserId = configData[38].trim();
-		    onlineorderDBPassword = configData[39].trim();
-		    onlineorderDBIPAddress = configData[40].trim();
-		    onlineorderDBPortNo = configData[41].trim();
-		    
-		    posDBBackupPath = configData[42].trim();
-		    posExcelReportExportPath = configData[43].trim();
-		   
-		    
-		    /*posDBServerName = "mysql";
-		    posDBName = "sanguine_sk";
-		    posDBUserId = "swapnil";
+			
+			  file = new File(System.getProperty("user.dir") + "/DBConfigFile.txt");
+			  System.out.println("File Path= "+file.getAbsolutePath());
+			  System.out.println("File Path= "+System.getProperty("user.dir"));
+			  
+			  
+			  br = new BufferedReader(new FileReader(file)); while ((fileData =
+			  br.readLine()) != null) { String[] split = fileData.split("="); if
+			  (split.length > 1) { tempData[i] = split[0]; configData[i] = split[1]; i++; }
+			  }
+			  
+			posDBServerName = configData[0].trim();
+			posDBName = configData[1].trim();
+			posDBUserId = configData[2].trim();
+			posDBPassword = configData[3].trim();
+			posDBIPAddress = configData[4].trim();
+			posDBPortNo = configData[5].trim();
+
+			mmsDatabaseName = configData[6].trim();
+			mmsDBUserId = configData[7].trim();
+			mmsDBPassword = configData[8].trim();
+			mmsDBIPAddress = configData[9].trim();
+			mmsDBPortNo = configData[10].trim();
+
+			cmsDBServerName = configData[11].trim();
+			cmsDBName = configData[12].trim();
+			cmsDBUserId = configData[13].trim();
+			cmsDBPassword = configData[14].trim();
+			cmsDBIpAddress = configData[15].trim();
+			cmsDBPortNo = configData[16].trim();
+
+			exciseDatabaseName = configData[17].trim();
+			exciseDBUserId = configData[18].trim();
+			exciseDBPassword = configData[19].trim();
+			exciseDBIPAddress = configData[20].trim();
+			exciseDBPortNo = configData[21].trim();
+
+			webbooksDatabaseName = configData[22].trim();
+			webbooksDBUserId = configData[23].trim();
+			webbooksDBPassword = configData[24].trim();
+			webbooksDBIPAddress = configData[25].trim();
+			webbooksDBPortNo = configData[26].trim();
+
+			aposDatabaseName = configData[27].trim();
+			aposDBUserId = configData[28].trim();
+			aposDBPassword = configData[29].trim();
+			aposDBIPAddress = configData[30].trim();
+			aposDBPortNo = configData[31].trim();
+
+			webpmsDatabaseName = configData[32].trim();
+			webpmsDBUserId = configData[33].trim();
+			webpmsDBPassword = configData[34].trim();
+			webpmsDBIPAddress = configData[35].trim();
+			webpmsDBPortNo = configData[36].trim();
+
+			onlineorderDatabaseName = configData[37].trim();
+			onlineorderDBUserId = configData[38].trim();
+			onlineorderDBPassword = configData[39].trim();
+			onlineorderDBIPAddress = configData[40].trim();
+			onlineorderDBPortNo = configData[41].trim();
+
+			posDBBackupPath = configData[42].trim();
+			posExcelReportExportPath = configData[43].trim();
+  
+		    /*
+		    posDBServerName = "mysql";
+		    posDBName = "sanguine_jpos";
+		    posDBUserId = "sanguine_root";
 		    posDBPassword = "sanguine";
 		    posDBIPAddress = "localhost";
 		    posDBPortNo = "3306";
 		    
 		    mmsDatabaseName = "sanguine_webmms";
-		    mmsDBUserId = "swapnil";
+		    mmsDBUserId = "sanguine_root";
 		    mmsDBPassword = "sanguine";
 		    mmsDBIPAddress = "localhost";
 		    mmsDBPortNo = "3306";
@@ -154,8 +148,8 @@ public class clsConfigFile
 		    webbooksDBIPAddress = "localhost";
 		    webbooksDBPortNo = "3306";
 		    
-		    aposDatabaseName = "sanguine_sk";
-		    aposDBUserId = "swapnil";
+		    aposDatabaseName = "sanguine_jpos";
+		    aposDBUserId = "sanguine_root";
 		    aposDBPassword = "sanguine";
 		    aposDBIPAddress = "localhost";
 		    aposDBPortNo = "3306";
@@ -173,8 +167,8 @@ public class clsConfigFile
 		    onlineorderDBPortNo = "";
 		    
 		    posDBBackupPath = "";
-		    posExcelReportExportPath = "";*/
-
+		    posExcelReportExportPath = "";
+*/
 //----------------------------------------------------------------------------------------
 	// Aria Hosting
 		    /*posDBServerName = "mysql";

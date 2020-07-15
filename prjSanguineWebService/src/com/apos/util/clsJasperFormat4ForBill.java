@@ -7,6 +7,7 @@ package com.apos.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -49,6 +50,7 @@ import com.webservice.controller.clsDatabaseConnection;
 import com.webservice.util.clsUtilityFunctions;
 
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -56,6 +58,8 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.export.JRPdfExporter;
+import net.sf.jasperreports.engine.export.JRPdfExporterParameter;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporter;
 import net.sf.jasperreports.engine.export.JRPrintServiceExporterParameter;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
@@ -99,7 +103,7 @@ public class clsJasperFormat4ForBill
     public void funCreateJasper4(ResponseBuilder resp, String billNo,String posCode,String clientCode,String reprint, String strServerBillPrinterName,String multiBillPrint)
     {
 
-
+    	strPOSCode=posCode;
 	HashMap hm = new HashMap();
 	DecimalFormat decimalFormat = new DecimalFormat("#.###");
 	String Linefor5 = "  --------------------------------------";
@@ -230,7 +234,7 @@ public class clsJasperFormat4ForBill
 		    if(!strBillDate.isEmpty()){
 		    	strBillDate=strBillDate.split(" ")[0];
 		    }
-		    DecimalFormat gDecimalFormatString= clsGlobalFunctions.funGetGlobalDecimalFormatter(noOfDecimalPlace);
+		    String gDecimalFormatString= clsGlobalFunctions.funGetGlobalDecimalFormatString(noOfDecimalPlace);
 
 	    if (clientCode.equals("117.001"))
 	    {
@@ -1111,6 +1115,19 @@ public class clsJasperFormat4ForBill
 	    	    exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PAGE_DIALOG, Boolean.FALSE);
 	    	    exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PRINT_DIALOG, Boolean.FALSE);
 	    	    exporter.exportReport();
+	    	    
+//
+//	            String filePath = System.getProperty("user.dir");
+//				 File pdfrpt = new File(filePath + "/Temp");
+//				    if (!pdfrpt.exists())
+//				    {
+//				    	pdfrpt.mkdirs();
+//				    }
+//				    
+//				JRExporter exporter1 = new JRPdfExporter();
+//				exporter1.setParameter(JRPdfExporterParameter.JASPER_PRINT, print);
+//				exporter1.setParameter(JRPdfExporterParameter.OUTPUT_STREAM, new FileOutputStream(filePath + "/Temp/jasper4bill.pdf")); // your output goes here
+//				exporter1.exportReport();
 
 	     } catch (Exception e) {
 	    	 
