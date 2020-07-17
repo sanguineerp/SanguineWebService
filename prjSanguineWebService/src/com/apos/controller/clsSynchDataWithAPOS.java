@@ -18670,13 +18670,136 @@ private String funGetBillSeriesDtlBillNos(List<clsBillSeriesBillDtl> listBillSer
 	 return jArrResponse;
  }
  
+ // changes done by vinayak p  new function committed and old function replaced because tax data not saved in bill 
+	/*
+	 * public int funInsertBillTaxDat(JSONArray mJsonArray) { clsDatabaseConnection
+	 * objDb=new clsDatabaseConnection(); Connection cmsCon=null; Statement st=null;
+	 * Statement st2=null; double subTotalForTax=0; double taxAmount=0.0; String
+	 * insert_qry=""; JSONObject jObj=new JSONObject(); int res=0; try {
+	 * 
+	 * String tableNo="",posCode="",areaCode="",operationType="";
+	 * cmsCon=objDb.funOpenAPOSCon("mysql","master"); st = cmsCon.createStatement();
+	 * st2 = cmsCon.createStatement(); List<clsItemDtlForTax> arrListItemDtls=new
+	 * ArrayList<clsItemDtlForTax>(); //JSONArray
+	 * mJsonArray=(JSONArray)objKOTTaxData.get("InsertTaxDtl"); String sql="";
+	 * String insertQuery1=""; int paxNo=0; String BillNo=""; String ClientCode="";
+	 * String billDate="";
+	 * 
+	 * boolean flgData=false; JSONObject mJsonObject = new JSONObject(); for (int i
+	 * = 0; i < mJsonArray.length(); i++) { clsItemDtlForTax objItemDtl=new
+	 * clsItemDtlForTax(); mJsonObject =(JSONObject) mJsonArray.get(i);
+	 * BillNo=mJsonObject.get("BillNo").toString();
+	 * ClientCode=mJsonObject.get("ClientCode").toString(); String taxCode="";
+	 * if(mJsonObject.has("TaxCode")) {
+	 * taxCode=mJsonObject.get("TaxCode").toString(); }
+	 * 
+	 * taxAmount=Double.parseDouble(mJsonObject.get("TaxAmount").toString()); String
+	 * taxableAmount=mJsonObject.get("TaxableAmount").toString(); String
+	 * dataPostFlag=mJsonObject.get("DataPostFlag").toString();
+	 * billDate=mJsonObject.get("BillDate").toString();
+	 * 
+	 * 
+	 * BillNo=mJsonObject.get("BillNo").toString();
+	 * ClientCode=mJsonObject.get("ClientCode").toString(); String
+	 * itemName=mJsonObject.get("ItemName").toString(); String
+	 * itemCode=mJsonObject.get("ItemCode").toString();
+	 * System.out.println(itemName); double
+	 * amt=Double.parseDouble(mJsonObject.get("Amount").toString());
+	 * billDate=mJsonObject.get("BillDate").toString();
+	 * 
+	 * objItemDtl.setItemCode(itemCode); objItemDtl.setItemName(itemName);
+	 * objItemDtl.setAmount(amt); objItemDtl.setDiscAmt(0);
+	 * objItemDtl.setDiscPer(0); arrListItemDtls.add(objItemDtl);
+	 * subTotalForTax+=amt;
+	 * 
+	 * 
+	 * // tableNo=mJsonObject.get("strTableNo").toString();
+	 * //posCode=mJsonObject.get("POSCode").toString();
+	 * 
+	 * sql="select strOperationType,strAreaCode from tblbillhd where strBillNo='"
+	 * +BillNo+"' "; ResultSet rs=st.executeQuery(sql); while(rs.next()) {
+	 * operationType=rs.getString(1); areaCode=rs.getString(2);
+	 * 
+	 * if(operationType.equals("DirectBiller")) { operationType="DineIn"; } }
+	 * 
+	 * rs.close();
+	 * 
+	 * sql=""; insert_qry =
+	 * "INSERT INTO `tblbilltaxdtl` (`strBillNo`, `strTaxCode`," +
+	 * " `dblTaxableAmount`, `dblTaxAmount`, `strClientCode`, " +
+	 * "`strDataPostFlag`,`dteBillDate`) VALUES";
+	 * 
+	 * String deleteSql="delete from tblbilltaxdtl " +
+	 * "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
+	 * st.executeUpdate(deleteSql);
+	 * 
+	 * //clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
+	 * System.out.println("Tax Dtl= "+taxCode+"\t"+taxAmount);
+	 * sql+=",('"+BillNo+"','"+taxCode+"','"+taxableAmount+"','"+taxAmount+"','"
+	 * +ClientCode+"','N','"+billDate+"')"; flgData=true; if(flgData) {
+	 * sql=sql.substring(1,sql.length()); insert_qry+=" "+sql;
+	 * System.out.println("Query="+insert_qry); try{
+	 * res=st.executeUpdate(insert_qry); } catch(Exception e){ e.printStackTrace();
+	 * } } else { res=1; }
+	 * 
+	 * }
+	 * 
+	 * Date dt=new Date(); String
+	 * date=(dt.getYear()+1900)+"-"+(dt.getMonth()+1)+"-"+dt.getDate();
+	 * clsTaxCalculation objTaxCalculation=new clsTaxCalculation(); List
+	 * <clsTaxCalculationDtls>
+	 * arrListTaxDtl=objTaxCalculation.funCalculateTax(arrListItemDtls,posCode ,
+	 * date, areaCode, operationType, subTotalForTax, 0,"");
+	 * 
+	 * sql=""; insert_qry =
+	 * "INSERT INTO `tblbilltaxdtl` (`strBillNo`, `strTaxCode`," +
+	 * " `dblTaxableAmount`, `dblTaxAmount`, `strClientCode`, " +
+	 * "`strDataPostFlag`,`dteBillDate`) VALUES";
+	 * 
+	 * String deleteSql="delete from tblbilltaxdtl " +
+	 * "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
+	 * st.executeUpdate(deleteSql);
+	 * 
+	 * //clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
+	 * System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+
+	 * obj.getTaxAmount()); taxAmt+=obj.getTaxAmount();
+	 * sql+=",('"+BillNo+"','"+obj.getTaxCode()+"','"+obj.getTaxableAmount()+"','"+
+	 * obj.getTaxAmount()+"','" +ClientCode+"','N','"+billDate+"')"; flgData=true;
+	 * 
+	 * sql=""; for(int cnt=0;cnt<arrListTaxDtl.size();cnt++) { String
+	 * deleteSql="delete from tblbilltaxdtl " +
+	 * "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
+	 * st.executeUpdate(deleteSql);
+	 * 
+	 * clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
+	 * System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+
+	 * obj.getTaxAmount()); taxAmt+=obj.getTaxAmount();
+	 * sql+=",('"+BillNo+"','"+obj.getTaxCode()+"','"+obj.getTaxableAmount()+"','"+
+	 * obj.getTaxAmount()+"','" +ClientCode+"','N','"+billDate+"')"; flgData=true;
+	 * 
+	 * 
+	 * }
+	 * 
+	 * 
+	 * cmsCon.close(); st.close();
+	 * 
+	 * 
+	 * //jObj.put("taxAmount", taxAmt);
+	 * 
+	 * } catch (Exception e) { // TODO Auto-generated catch block
+	 * e.printStackTrace(); } return
+	 * res;//Response.status(201).entity(taxAmt).build(); }
+	 * 
+	 */
+
 public int funInsertBillTaxData(JSONArray mJsonArray)
 {
 	clsDatabaseConnection objDb=new clsDatabaseConnection();
     Connection cmsCon=null;
     Statement st=null;
     Statement st2=null;
-	double subTotalForTax=0;
+	String taxAmt="";
+    double subTotalForTax=0;
 	double taxAmount=0.0;
 	String insert_qry="";
 	 JSONObject jObj=new JSONObject();   
@@ -18704,36 +18827,23 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 		    mJsonObject =(JSONObject) mJsonArray.get(i);
 		    BillNo=mJsonObject.get("BillNo").toString();
 		    ClientCode=mJsonObject.get("ClientCode").toString();
-		    String taxCode="";
-		    if(mJsonObject.has("TaxCode")) {
-		    	 taxCode=mJsonObject.get("TaxCode").toString();	
-		    }
-		    
-		    taxAmount=Double.parseDouble(mJsonObject.get("TaxAmount").toString());
-		    String taxableAmount=mJsonObject.get("TaxableAmount").toString();
-		    String dataPostFlag=mJsonObject.get("DataPostFlag").toString();
-		    billDate=mJsonObject.get("BillDate").toString();
-		    
-		    
-		    /*BillNo=mJsonObject.get("BillNo").toString();
-		    ClientCode=mJsonObject.get("ClientCode").toString();
 		    String itemName=mJsonObject.get("ItemName").toString();
 		    String itemCode=mJsonObject.get("ItemCode").toString();
 		    System.out.println(itemName);
 		    double amt=Double.parseDouble(mJsonObject.get("Amount").toString());
-		    billDate=mJsonObject.get("BillDate").toString();*/
+		    billDate=mJsonObject.get("BillDate").toString();
 	
-            /*objItemDtl.setItemCode(itemCode);
+            objItemDtl.setItemCode(itemCode);
             objItemDtl.setItemName(itemName);
             objItemDtl.setAmount(amt);
             objItemDtl.setDiscAmt(0);
             objItemDtl.setDiscPer(0);
             arrListItemDtls.add(objItemDtl);
-            subTotalForTax+=amt;*/
+            subTotalForTax+=amt;
 		   
 		    
 		   // tableNo=mJsonObject.get("strTableNo").toString();
-		    //posCode=mJsonObject.get("POSCode").toString();
+		    posCode=mJsonObject.get("POSCode").toString();
 		   
 		    sql="select strOperationType,strAreaCode from tblbillhd where strBillNo='"+BillNo+"' ";
 		    ResultSet rs=st.executeQuery(sql);
@@ -18746,65 +18856,26 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 			   {
 				   operationType="DineIn";
 			   }
+			   
+			   
 		    }
 		    
 		    rs.close();
 		    
-		    sql="";
-            insert_qry = "INSERT INTO `tblbilltaxdtl` (`strBillNo`, `strTaxCode`,"
-    				+ " `dblTaxableAmount`, `dblTaxAmount`, `strClientCode`, "
-    				+ "`strDataPostFlag`,`dteBillDate`) VALUES";
-            
-            String deleteSql="delete from tblbilltaxdtl "
-			    	+ "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
-			st.executeUpdate(deleteSql);
-			
-        	//clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
-        	System.out.println("Tax Dtl= "+taxCode+"\t"+taxAmount);
-        	sql+=",('"+BillNo+"','"+taxCode+"','"+taxableAmount+"','"+taxAmount+"','"
-				    +ClientCode+"','N','"+billDate+"')";				    
-			flgData=true;
-			if(flgData)
-			{
-				sql=sql.substring(1,sql.length());
-		        insert_qry+=" "+sql;
-		    	System.out.println("Query="+insert_qry);
-				try{
-					res=st.executeUpdate(insert_qry);
-				} catch(Exception e){
-					e.printStackTrace();
-				}
-			}
-			else
-			{
-				res=1;
-			}
-		    
 		}
 		
-		   /*Date dt=new Date();            
+		   Date dt=new Date();            
             String date=(dt.getYear()+1900)+"-"+(dt.getMonth()+1)+"-"+dt.getDate();            
             clsTaxCalculation objTaxCalculation=new clsTaxCalculation();
             List <clsTaxCalculationDtls> arrListTaxDtl=objTaxCalculation.funCalculateTax(arrListItemDtls,posCode
-                , date, areaCode, operationType, subTotalForTax, 0,"");*/
+                , date, areaCode, operationType, subTotalForTax, 0,"");
             
-			/*sql="";
             insert_qry = "INSERT INTO `tblbilltaxdtl` (`strBillNo`, `strTaxCode`,"
     				+ " `dblTaxableAmount`, `dblTaxAmount`, `strClientCode`, "
     				+ "`strDataPostFlag`,`dteBillDate`) VALUES";
             
-            String deleteSql="delete from tblbilltaxdtl "
-			    	+ "where strBillNo='"+BillNo+"' and strClientCode='"+ClientCode+"'";
-			st.executeUpdate(deleteSql);
-			
-        	//clsTaxCalculationDtls obj=arrListTaxDtl.get(cnt);
-        	System.out.println("Tax Dtl= "+obj.getTaxCode()+"\t"+obj.getTaxName()+"\t"+obj.getTaxAmount());
-        	taxAmt+=obj.getTaxAmount();
-            sql+=",('"+BillNo+"','"+obj.getTaxCode()+"','"+obj.getTaxableAmount()+"','"+obj.getTaxAmount()+"','"
-				    +ClientCode+"','N','"+billDate+"')";				    
-			flgData=true;*/
          
-            /*sql="";
+            sql="";
             for(int cnt=0;cnt<arrListTaxDtl.size();cnt++)
             {
             	String deleteSql="delete from tblbilltaxdtl "
@@ -18819,14 +18890,25 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
     			flgData=true;
     			
     		 	
-            }*/
+            }
             
-            
-       cmsCon.close();
-       st.close();
-       
-       
-       //jObj.put("taxAmount", taxAmt);
+            if(flgData)
+			{
+				sql=sql.substring(1,sql.length());
+		        insert_qry+=" "+sql;
+		    	System.out.println("Query="+insert_qry);
+				try{
+					res=st.executeUpdate(insert_qry);
+				} catch(Exception e){
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				res=1;
+			}
+      
+       jObj.put("taxAmount", taxAmt);
         
 	} catch (Exception e) 
 	{
@@ -18835,7 +18917,7 @@ public int funInsertBillTaxData(JSONArray mJsonArray)
 	}
 	return res;//Response.status(201).entity(taxAmt).build();
 }
-	
+
 private String funGenarateBillSeriesNo(String strPOSCode,String key){
 	JSONArray jAr=new JSONArray();
 	String billSeriesBillNo="";

@@ -313,12 +313,12 @@ public class clsConsolidatedKOTJasperGenerationForDirectBiller
 	    	    exporter.setParameter(JRPrintServiceExporterParameter.DISPLAY_PRINT_DIALOG, Boolean.FALSE);
 	    	    exporter.exportReport();
 	    	    
-	    	    DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
-	   	     	DocPrintJob job = printService[0].createPrintJob();
-	   		    FileInputStream fis = new FileInputStream(filename);
-	   		    DocAttributeSet das = new HashDocAttributeSet();
-	   		    Doc doc = new SimpleDoc(fis, flavor, das);
-	   		    //job.print(doc, printerReqAtt);
+//	    	    DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
+//	   	     	DocPrintJob job = printService[0].createPrintJob();
+//	   		    FileInputStream fis = new FileInputStream(filename);
+//	   		    DocAttributeSet das = new HashDocAttributeSet();
+//	   		    Doc doc = new SimpleDoc(fis, flavor, das);
+//	   		    //job.print(doc, printerReqAtt);
 	
 	     } catch (Exception e) {
 	    	 
