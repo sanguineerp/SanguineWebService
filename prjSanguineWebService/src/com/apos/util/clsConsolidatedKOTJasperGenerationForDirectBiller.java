@@ -81,12 +81,12 @@ public class clsConsolidatedKOTJasperGenerationForDirectBiller
 		    String printShortNameOnKOT="N";
 		    String printKOTYN="Y";
 		    String multipleKOTPrint="N";
-		    String multipleBillPrint="N";
+		    String multipleBillPrint="N",gPrintOrderNoOnBillYN="N";
 		    String clientCode="",userName="",strPrintDeviceAndUserDtlOnKOTYN="Y";
 	        int columnSize=40;
 	       
 		    String sql="select strAreaWisePricing,strPrintShortNameOnKOT,strPrintModifierQtyOnKOT,strNoOfLinesInKOTPrint"
-	       		+ ",strMultipleKOTPrintYN,strPrintKOTYN,strMultipleBillPrinting,intColumnSize,strClientCode,strPrintDeviceAndUserDtlOnKOTYN "
+	       		+ ",strMultipleKOTPrintYN,strPrintKOTYN,strMultipleBillPrinting,intColumnSize,strClientCode,strPrintDeviceAndUserDtlOnKOTYN,strPrintOrderNoOnBillYN "
 	       		+ "from tblsetup ";
 		    System.out.println(sql);
 		    ResultSet rsSetupValues=st.executeQuery(sql);
@@ -102,18 +102,21 @@ public class clsConsolidatedKOTJasperGenerationForDirectBiller
 		       columnSize=rsSetupValues.getInt(8);
 		       clientCode=rsSetupValues.getString(9);
 		       strPrintDeviceAndUserDtlOnKOTYN=rsSetupValues.getString(10);
+		       gPrintOrderNoOnBillYN=rsSetupValues.getString(11);
 		    }
 		    rsSetupValues.close();
 		    
-			String sql_PrintHomeDelivery = "select strOperationType,strKOTToBillNote from tblbillhd where strBillNo=? ";
+			String sql_PrintHomeDelivery = "select strOperationType,strKOTToBillNote,intOrderNo from tblbillhd where strBillNo=? ";
 			pst = con.prepareStatement(sql_PrintHomeDelivery);
 			pst.setString(1, billNo);
 			ResultSet rs_PrintHomeDelivery = pst.executeQuery();
 			String operationType = "", strBillOnNote = "";
+			String orderNo="";
 			if (rs_PrintHomeDelivery.next())
 			{
 				operationType = rs_PrintHomeDelivery.getString(1);
 				strBillOnNote = rs_PrintHomeDelivery.getString(2);
+				orderNo=rs_PrintHomeDelivery.getString(3);
 			}
 			rs_PrintHomeDelivery.close();
 
@@ -144,7 +147,11 @@ public class clsConsolidatedKOTJasperGenerationForDirectBiller
 					hm.put("Manual Token No: ", strBillOnNote);
 				}
 			}
+			if(gPrintOrderNoOnBillYN.equalsIgnoreCase("Y")) {
+				hm.put("OrderNo", "Your order no is " + orderNo);	
+			}
 			
+			//
 			String sql_DirectKOT_Date = "select dteBillDate from tblbilldtl where strBillNo=? ";
 			pst = con.prepareStatement(sql_DirectKOT_Date);
 			pst.setString(1, billNo);
