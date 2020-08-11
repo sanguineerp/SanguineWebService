@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -84,6 +85,7 @@ import com.apos.util.clsAPOSKOT;
 import com.apos.util.clsAPOSUtility;
 import com.apos.util.clsConsolidatedKOTJasperGenerationForDirectBiller;
 import com.apos.util.clsConsolidatedKOTJasperGenerationForMakeKOT;
+import com.apos.util.clsKOTJasperFileGenerationForDirectBiller;
 import com.apos.util.clsKOTJasperFileGenerationForMakeKOT;
 import com.apos.util.clsTextFileGenerator;
 import com.apos.util.clsTextFormatVoidKOT;
@@ -137,6 +139,9 @@ public class clsSynchDataWithAPOS implements intfSynchDataWithAPOS
 	
 	@Autowired
 	clsAPOSMasterController objAPOSMasterController;
+	
+	@Autowired
+	clsKOTJasperFileGenerationForDirectBiller objKOTJasperFileGenerationForDirectBiller;
 	
 	Map<String, List<Map<String, clsBillSettlementDtl>>> mapPOSDtlForSettlement;
 	Map<String, Map<String, clsBillItemDtl>> mapPOSItemDtl;
@@ -11033,10 +11038,14 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
 		   JSONObject jOb=new JSONObject();
 		   String status="status";
 		   String strPrintType="",strConsolidatePrint="";
+		   PreparedStatement pst=null;
 		   try 
 	       {
 			   aposCon=objDb.funOpenAPOSCon("mysql","master");
 		       st = aposCon.createStatement();
+		       
+		       
+
 			   String sql_Print="select a.strPrintType, a.strConsolidatedKOTPrinterPort from tblsetup a where a.strPOSCode='"+POSCode+"'  or a.strPOSCode='All' ";
                ResultSet rsPrinterType=st.executeQuery(sql_Print);
                if(rsPrinterType.next())
@@ -11046,10 +11055,82 @@ public JSONObject funAuthenticateUser(@QueryParam("strUserCode") String userCode
                }
                rsPrinterType.close();
                
-               if(strPrintType.equals("Jasper"))
-        		   objConsolidatedKOTJasperGenerationForDirectBiller.funConsolidatedKOTForDirectBillerJasperFileGeneration(areaCode, BillNo, reprint, POSCode,strConsolidatePrint);
-               else
-               objAPOSKOTPrint.funGenerateTextFileForKOTForDirectBiller(POSCode,areaCode,BillNo,reprint,"Y") ;
+		       
+			      String sql = "select a.strItemName,c.strCostCenterCode,c.strPrimaryPrinterPort "
+	                       + ",c.strSecondaryPrinterPort,c.strCostCenterName,d.strLabelOnKOT,d.intPrimaryPrinterNoOfCopies,d.intSecondaryPrinterNoOfCopies  "
+	                       + " from tblbilldtl  a,tblmenuitempricingdtl b,tblprintersetup c,tblcostcentermaster d,tblbillhd e"
+	                       + " where a.strBillNo=? "
+	                       + " and  a.strItemCode=b.strItemCode "
+	                       + " and b.strCostCenterCode=c.strCostCenterCode "
+	                       + " and b.strCostCenterCode=d.strCostCenterCode "
+	                       + " and (b.strPosCode=? or b.strPosCode='All') "
+	                       + " AND a.strBillNo=e.strBillNo AND b.strAreaCode=e.strAreaCode "
+	                       + " group by c.strCostCenterCode;";
+	
+	//7,8
+		    pst = aposCon.prepareStatement(sql);
+		    pst.setString(1, BillNo);
+		    pst.setString(2, POSCode);
+		    ResultSet rsPrintDirect = pst.executeQuery();
+		    while (rsPrintDirect.next())
+		    {
+			//funGenerateTextFileForKOTDirectBiller(rsPrintDirect.getString(2), "", clsGlobalVarClass.gDirectAreaCode, billNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5));
+			if (strPrintType.equalsIgnoreCase("Jasper"))
+			{
+				//public void funGenerateJasperForKOTDirectBiller(String CostCenterCode, String ShowKOT, String AreaCode, String BillNo, String Reprint, String primaryPrinterName, String secondaryPrinterName, String CostCenterName, String labelOnKOT,int primaryCopies,int secondaryCopies,String strPOSCode)
+			    objKOTJasperFileGenerationForDirectBiller.funGenerateJasperForKOTDirectBiller(rsPrintDirect.getString(2), "", areaCode, BillNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5), rsPrintDirect.getString(6),1, 1,POSCode);
+			    if(Integer.parseInt(rsPrintDirect.getString(7))>1)
+			    {
+				for(int i=0;i<Integer.parseInt(rsPrintDirect.getString(7))-1;i++)
+				    {
+					objKOTJasperFileGenerationForDirectBiller.funGenerateJasperForKOTDirectBiller(rsPrintDirect.getString(2), "", areaCode, BillNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5), rsPrintDirect.getString(6),rsPrintDirect.getInt(7)-1, 0,POSCode);
+				    }
+			    
+			    }
+			    if(Integer.parseInt(rsPrintDirect.getString(8))>1)
+				{
+				    for(int i=0;i<Integer.parseInt(rsPrintDirect.getString(8))-1;i++)
+				    {
+					objKOTJasperFileGenerationForDirectBiller.funGenerateJasperForKOTDirectBiller(rsPrintDirect.getString(2), "", areaCode, BillNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5), rsPrintDirect.getString(6),0, rsPrintDirect.getInt(8)-1,POSCode);
+					
+				    }
+				}
+			    
+			}
+				/*
+				 * else if (clsGlobalVarClass.gClientCode.equalsIgnoreCase("171.001") &&
+				 * clsGlobalVarClass.gPrintType.equals("Text File"))//menu head wise items kot
+				 * format {
+				 * objKOTTextFileGenerationForDirectBiller.funGenerateTextFileForKOTDirectBiller
+				 * (rsPrintDirect.getString(2), clsGlobalVarClass.gDineInAreaForDirectBiller,
+				 * billNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4),
+				 * rsPrintDirect.getString(5), rsPrintDirect.getString(6));
+				 * 
+				 * 
+				 * }
+				 */
+			else //if(clsGlobalVarClass.gPrintType.equals("Text File"))//default kot format
+			{
+				//objKOTJasperFileGenerationForDirectBiller.funGenerateTextFileForKOTDirectBiller(rsPrintDirect.getString(2), areaCode, BillNo, reprint, rsPrintDirect.getString(3), rsPrintDirect.getString(4), rsPrintDirect.getString(5), rsPrintDirect.getString(6),POSCode);
+				objAPOSKOTPrint.funGenerateTextFileForKOTForDirectBiller(POSCode,areaCode,BillNo,reprint,"Y") ;
+			    
+			}
+	
+		    }
+		    rsPrintDirect.close();
+		    pst.close();
+
+		       
+		       
+		       
+			
+			/*
+			 * if (strPrintType.equals("Jasper"))
+			 * 
+			 * objConsolidatedKOTJasperGenerationForDirectBiller.
+			 * funConsolidatedKOTForDirectBillerJasperFileGeneration( areaCode, BillNo,
+			 * reprint, POSCode, strConsolidatePrint);
+			 */
 			   
                jOb.put("result", status);
                aposCon.close();
