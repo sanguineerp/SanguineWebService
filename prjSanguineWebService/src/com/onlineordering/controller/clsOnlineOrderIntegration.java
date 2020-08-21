@@ -164,7 +164,7 @@ public class clsOnlineOrderIntegration {
 						jobMod.put("total", rsItemMod.getDouble(6));
 						
 						jobMod.put("total_pretty", rsItemMod.getDouble(6));
-						jobMod.put("sub_item_name", rsItemMod.getDouble(2));
+						jobMod.put("sub_item_name", rsItemMod.getString(2));
 						
 						aArrSub_item_content.put(jobMod);
 					}
@@ -357,7 +357,7 @@ public class clsOnlineOrderIntegration {
 						jobMod.put("total", rsItemMod.getDouble(6));
 						
 						jobMod.put("total_pretty", rsItemMod.getDouble(6));
-						jobMod.put("sub_item_name", rsItemMod.getDouble(2));
+						jobMod.put("sub_item_name", rsItemMod.getString(2));
 						
 						aArrSub_item_content.put(jobMod);
 					}
