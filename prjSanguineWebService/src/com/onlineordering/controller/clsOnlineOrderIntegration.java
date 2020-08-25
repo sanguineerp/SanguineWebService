@@ -2,6 +2,7 @@ package com.onlineordering.controller;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,7 +47,7 @@ public class clsOnlineOrderIntegration {
 			e.printStackTrace();
 		}
 		
-		System.out.println("Check Server Config...");
+		
 		return Response.status(201).entity(response).build();
 	}
 	
@@ -219,6 +220,10 @@ public class clsOnlineOrderIntegration {
 				jArrOrderData.put(jobOrder);
 			}
 			jobPending.put("orders",jArrOrderData);
+			st.close();
+			st1.close();
+			st2.close();
+			st3.close();
 		}
 		catch(Exception e)
 		{
@@ -232,9 +237,16 @@ public class clsOnlineOrderIntegration {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		finally {
+			try {
+				posCon.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		
 		
-		System.out.println("Check Server Config...");
 		return jobAllOrders;
 	}
 	
@@ -412,6 +424,10 @@ public class clsOnlineOrderIntegration {
 				jArrOrderData.put(jobOrder);
 			}
 			jobPending.put("orders",jArrOrderData);
+			st.close();
+			st1.close();
+			st2.close();
+			st3.close();
 		}
 		catch(Exception e)
 		{
@@ -425,9 +441,17 @@ public class clsOnlineOrderIntegration {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		finally {
+			try {
+				posCon.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		
 		
-		System.out.println("Check Server Config...");
+		
 		return jobAllOrders;
 	}
 	
@@ -453,12 +477,20 @@ public class clsOnlineOrderIntegration {
 	        String sqlPendingOrder="update tblonlineorderhd a set a.order_state='"+status+"' where a.strOrderId='"+orderID+"' and a.strClientCode='"+strClientCode+"'";
 	        
 	        st.executeUpdate(sqlPendingOrder);
-			
+			st.close();
 		}
 		catch(Exception e) {
 			strStatus="failed";
 			e.printStackTrace();
+		}finally {
+			try {
+				posCon.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+
         return strStatus;    
 	}
 
@@ -489,6 +521,15 @@ public class clsOnlineOrderIntegration {
 			strStatus="failed";
 			e.printStackTrace();
 		}
+        finally {
+			try {
+				posCon.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
         return strStatus;    
 	}
 

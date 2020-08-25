@@ -53,8 +53,8 @@ public class clsConfigFile
 		    
 			
 			  file = new File(System.getProperty("user.dir") + "/DBConfigFile.txt");
-			  System.out.println("File Path= "+file.getAbsolutePath());
-			  System.out.println("File Path= "+System.getProperty("user.dir"));
+			  //System.out.println("File Path= "+file.getAbsolutePath());
+			  //System.out.println("File Path= "+System.getProperty("user.dir"));
 			  
 			  
 			  br = new BufferedReader(new FileReader(file)); while ((fileData =
