@@ -84,14 +84,15 @@ public class clsOnlineOrderIntegration {
 	        JSONArray jArrOrderData=new JSONArray();
 	        
 	        String sqlPendingOrder="select a.strOrderId,a.dtOrderDate,a.delivery_datetime,a.order_state,a.order_type,a.orderMerchant_ref_id \r\n" + 
-	        		",a.custName,a.custPhone,a.custAddr1,a.custAddr2,a.custCity,a.instructions,a.order_subtotal,a.order_total"
+	        		",a.custName,a.custPhone,a.custAddr1,a.custAddr2,a.custCity,a.instructions,a.order_subtotal,a.order_total,a.channel,a.delivery_type,a.total_charges,a.total_taxes "
 	        		+ " from tblonlineorderhd a where a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate) ='"+currDate+"' \r\n" + 
 	        		" and a.order_state='Placed';";
 	        
 	        ResultSet rs=st.executeQuery(sqlPendingOrder);
 			while(rs.next())
 			{
-				double dblExtraAmount=0;
+				double dbltaxAmount=rs.getDouble(18);
+				double dblExtraAmount=rs.getDouble(17);
 				orderCount++;
 				JSONObject jobOrder=new JSONObject();
 				JSONObject order_info=new JSONObject();
@@ -104,6 +105,8 @@ public class clsOnlineOrderIntegration {
 				order_info.put("external_order_id", rs.getString(6));
 				order_info.put("delivery_instruction", rs.getString(12));
 				order_info.put("order_otp", "");
+				order_info.put("order_type", rs.getString(15));// channel name
+				order_info.put("delivery_type", rs.getString(16));// delivery type
 				
 				jobOrder.put("order_info", order_info);
 				
@@ -119,7 +122,7 @@ public class clsOnlineOrderIntegration {
 				
 				JSONArray jArrCart=new JSONArray();
 				
-				String sqlCart="select b.itemId,b.itemName,b.quantity,b.price,b.total,b.discount,b.total_with_tax, b.dblExtracharges,b.merchant_id"
+				String sqlCart="select b.itemId,b.itemName,b.quantity,b.price,b.total,b.discount,b.total_with_tax, b.dblExtracharges,b.merchant_id,b.strSequenceNo "
 						+ " from tblonlineorderhd a,tblonlineorderdtl b " + 
 						"where a.strOrderId=b.strOrderId and a.strClientCode=b.strClientCode and date(a.dtOrderDate)=date(b.dtOrderDate)\r\n" + 
 						"and b.strOrderId='"+orderId+"' and a.strClientCode='"+strClientCode+"'  and date(a.dtOrderDate)= '"+currDate+"' ;";
@@ -127,7 +130,7 @@ public class clsOnlineOrderIntegration {
 				ResultSet rsCart=st1.executeQuery(sqlCart);
 				while(rsCart.next()) {
 					JSONObject jobCardDtl=new JSONObject();
-					dblExtraAmount=dblExtraAmount+rsCart.getDouble(8);
+					//dblExtraAmount=dblExtraAmount+rsCart.getDouble(8);
 					
 					String itemCode=rsCart.getString(9);
 					jobCardDtl.put("pos_item_id", rsCart.getString(9));
@@ -142,13 +145,16 @@ public class clsOnlineOrderIntegration {
 					jobCardDtl.put("total_price", rsCart.getDouble(5));
 					jobCardDtl.put("total", rsCart.getDouble(7));
 					jobCardDtl.put("total_pretty", rsCart.getDouble(7));
-					
+		
+					String seqNo=rsCart.getString(10);
+					jobCardDtl.put("sequanceNo",seqNo );
+		
 					JSONObject jobSub_item=new JSONObject();
 					JSONArray aArrSub_item_content=new JSONArray();
 					
-					String sqlItemMod="select a.strModifierCode,a.strModifierName,a.strItemCode,a.strItemId,a.dblQuantity,a.dblAmount from tblonlineordermodifierdtl a,tblonlineorderhd b where a.strOrderId=b.strOrderId and a.strClientCode =b.strClientCode\r\n" + 
+					String sqlItemMod="select a.strModifierCode,a.strModifierName,a.strItemCode,a.strItemId,a.dblQuantity,a.dblAmount,a.strSequenceNo from tblonlineordermodifierdtl a,tblonlineorderhd b where a.strOrderId=b.strOrderId and a.strClientCode =b.strClientCode\r\n" + 
 							"and date(a.dtOrderDate)=date(b.dtOrderDate) and a.strOrderId='"+orderId+"' " + 
-							"and a.strItemCode='"+itemCode+"' and a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate)='"+currDate+"'";
+							"and a.strItemCode='"+itemCode+"'  and left(a.strSequenceNo,1)='" + seqNo + "'  and a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate)='"+currDate+"'";
 					
 					ResultSet rsItemMod=st2.executeQuery(sqlItemMod);
 					while(rsItemMod.next()) {
@@ -183,12 +189,12 @@ public class clsOnlineOrderIntegration {
 				JSONArray jArrDisc=new JSONArray();
 				String sqlDisc="select a.title,a.dblDiscAmt from tblonlineorderdiscdtl a ,tblonlineorderhd b where a.strOrderId=b.strOrderId and a.strClientCode =b.strClientCode\r\n" + 
 						"and date(a.dtOrderDate)=date(b.dtOrderDate) and  a.strOrderId='"+orderId+"' " + 
-						"and  a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate)='"+currDate+"'";
+						"and  a.strClientCode='"+strClientCode+"'  and date(a.dtOrderDate)='"+currDate+"'";
 				ResultSet rsDisc=st3.executeQuery(sqlDisc);
 				while(rsDisc.next()) {
 					JSONObject jobDisc=new JSONObject();
-					jobDisc.put("name", rsDisc.getString("1") );
-					jobDisc.put("amount", rsDisc.getDouble("2") );
+					jobDisc.put("name", rsDisc.getString(1) );
+					jobDisc.put("amount", rsDisc.getDouble(2));
 					jArrDisc.put(jobDisc);
 				}
 				
@@ -200,6 +206,11 @@ public class clsOnlineOrderIntegration {
 				
 				jobExtra.put("type", "Packaging Charge");
 				jobExtra.put("amount", dblExtraAmount);
+				jArrExtra.put(jobExtra);
+				
+				jobExtra=new JSONObject();
+				jobExtra.put("type", "Tax Charge");
+				jobExtra.put("amount", dbltaxAmount);
 				jArrExtra.put(jobExtra);
 				
 				jobOrder.put("extra", jArrExtra);
@@ -288,7 +299,7 @@ public class clsOnlineOrderIntegration {
 	        JSONArray jArrOrderData=new JSONArray();
 	        
 	        String sqlPendingOrder="select a.strOrderId,a.dtOrderDate,a.delivery_datetime,a.order_state,a.order_type,a.orderMerchant_ref_id \r\n" + 
-	        		",a.custName,a.custPhone,a.custAddr1,a.custAddr2,a.custCity,a.instructions,a.order_subtotal,a.order_total"
+	        		",a.custName,a.custPhone,a.custAddr1,a.custAddr2,a.custCity,a.instructions,a.order_subtotal,a.order_total,a.channel,a.delivery_type "
 	        		+ " from tblonlineorderhd a where a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate) ='"+currDate+"' \r\n" + 
 	        		" and a.order_state='"+status+"';";
 	        
@@ -308,6 +319,8 @@ public class clsOnlineOrderIntegration {
 				order_info.put("external_order_id", rs.getString(6));
 				order_info.put("delivery_instruction", rs.getString(12));
 				order_info.put("order_otp", "");
+				order_info.put("order_type", rs.getString(15));// channel name
+				order_info.put("delivery_type", rs.getString(16));// delivery type
 				
 				jobOrder.put("order_info", order_info);
 				
@@ -323,7 +336,7 @@ public class clsOnlineOrderIntegration {
 				
 				JSONArray jArrCart=new JSONArray();
 				
-				String sqlCart="select b.itemId,b.itemName,b.quantity,b.price,b.total,b.discount,b.total_with_tax, b.dblExtracharges,b.merchant_id"
+				String sqlCart="select b.itemId,b.itemName,b.quantity,b.price,b.total,b.discount,b.total_with_tax, b.dblExtracharges,b.merchant_id,b.strSequenceNo "
 						+ " from tblonlineorderhd a,tblonlineorderdtl b " + 
 						"where a.strOrderId=b.strOrderId and a.strClientCode=b.strClientCode and date(a.dtOrderDate)=date(b.dtOrderDate)\r\n" + 
 						"and b.strOrderId='"+orderId+"' and a.strClientCode='"+strClientCode+"'  and date(a.dtOrderDate)= '"+currDate+"' ;";
@@ -346,13 +359,14 @@ public class clsOnlineOrderIntegration {
 					jobCardDtl.put("total_price", rsCart.getDouble(5));
 					jobCardDtl.put("total", rsCart.getDouble(7));
 					jobCardDtl.put("total_pretty", rsCart.getDouble(7));
-					
+					String seqNo=rsCart.getString(10);
+					jobCardDtl.put("sequanceNo",seqNo );
 					JSONObject jobSub_item=new JSONObject();
 					JSONArray aArrSub_item_content=new JSONArray();
 					
 					String sqlItemMod="select a.strModifierCode,a.strModifierName,a.strItemCode,a.strItemId,a.dblQuantity,a.dblAmount from tblonlineordermodifierdtl a,tblonlineorderhd b where a.strOrderId=b.strOrderId and a.strClientCode =b.strClientCode\r\n" + 
 							"and date(a.dtOrderDate)=date(b.dtOrderDate) and a.strOrderId='"+orderId+"' " + 
-							"and a.strItemCode='"+itemCode+"' and a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate)='"+currDate+"'";
+							"and a.strItemCode='"+itemCode+"' and left(a.strSequenceNo,1)='" + seqNo + "'   and a.strClientCode='"+strClientCode+"' and date(a.dtOrderDate)='"+currDate+"'";
 					
 					ResultSet rsItemMod=st2.executeQuery(sqlItemMod);
 					while(rsItemMod.next()) {
@@ -391,8 +405,8 @@ public class clsOnlineOrderIntegration {
 				ResultSet rsDisc=st3.executeQuery(sqlDisc);
 				while(rsDisc.next()) {
 					JSONObject jobDisc=new JSONObject();
-					jobDisc.put("name", rsDisc.getString("1") );
-					jobDisc.put("amount", rsDisc.getDouble("2") );
+					jobDisc.put("name", rsDisc.getString(1) );
+					jobDisc.put("amount", rsDisc.getDouble(2) );
 					jArrDisc.put(jobDisc);
 				}
 				
