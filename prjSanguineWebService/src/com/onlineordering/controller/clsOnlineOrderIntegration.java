@@ -19,7 +19,7 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.mysql.cj.protocol.Resultset;
+//import com.mysql.cj.protocol.Resultset;
 import com.webservice.controller.clsDatabaseConnection;
 
 @Path("/OnlineOrder")
@@ -547,4 +547,276 @@ public class clsOnlineOrderIntegration {
         return strStatus;    
 	}
 
+	@SuppressWarnings("finally")
+    @POST 
+	@Path("/cataloguestatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetCatalogueStatus(@RequestBody JSONObject jobData)
+	{
+		
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection posCon=null;
+        Statement st=null;
+        JSONObject jobCatalogue=new JSONObject();
+        
+       
+		try
+		{
+			posCon=objDb.funOpenPOSCon("mysql","master");
+			st=posCon.createStatement();
+			
+			String strClientCode=jobData.get("clientCode").toString();			
+	        String authorization=jobData.get("Authorization").toString();
+	        
+	        Date date = new Date();
+	        String currDate= new SimpleDateFormat("yyyy-MM-dd").format(date);
+	        
+	        JSONObject jobStatus=new JSONObject();
+	        
+	        String sqlcatalogue="select a.catgUpdate,a.catgCreated,a.catgDeleted,a.catgError,a.itemUpdate,a.itemCreated,a.itemDeleted,a.itemError, "
+								+ " a.optionGrpUpdate,a.optionGrpCreated,a.optionGrpDeleted,a.optionGrpError,a.optionUpdate,  "
+								+ " a.optionCreated,a.optionDeleted,a.optionError  "
+								+ " from tblonlinecatalogueingestion a where DATE(a.dteCurrentDate)='2020-08-22' and a.strClientCode='"+strClientCode+"'";
+	        
+	       ResultSet rs=st.executeQuery(sqlcatalogue);
+			while(rs.next())
+			{
+				
+				jobCatalogue.put("updated", rs.getString(1));
+				jobCatalogue.put("created", rs.getString(2));
+				jobCatalogue.put("deleted", rs.getString(3));
+				jobCatalogue.put("errors", rs.getString(4));
+				
+				jobCatalogue.put("items updated", rs.getString(5));
+				jobCatalogue.put("items created", rs.getString(6));
+				jobCatalogue.put("items deleted", rs.getString(7));
+				jobCatalogue.put("items errors", rs.getString(8));
+				
+				jobCatalogue.put("optionGroup updated", rs.getString(9));
+				jobCatalogue.put("optionGroup created", rs.getString(10));
+				jobCatalogue.put("optionGroup deleted", rs.getString(11));
+				jobCatalogue.put("optionGroup errors", rs.getString(12));
+				
+				jobCatalogue.put("option updated", rs.getString(13));
+				jobCatalogue.put("option created", rs.getString(14));
+				jobCatalogue.put("option deleted", rs.getString(15));
+				jobCatalogue.put("option errors", rs.getString(16));
+				
+           }	
+			
+			
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	
+		System.out.println("Check Server Config...");
+		return jobCatalogue;
+	}
+	
+	@SuppressWarnings("finally")
+    @POST 
+	@Path("/storeactionstatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetStoreActionStatus(@RequestBody JSONObject jobData)
+	{
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection posCon=null;
+        Statement st=null;
+        JSONObject jobStoreAction=new JSONObject();
+       
+		try
+		{
+			posCon=objDb.funOpenPOSCon("mysql","master");
+			st=posCon.createStatement();
+			String strClientCode=jobData.get("clientCode").toString();	
+			String authorization=jobData.get("Authorization").toString();
+	       
+	        Date date = new Date();
+	        String currDate= new SimpleDateFormat("yyyy-MM-dd").format(date);
+	        
+	        JSONObject jobStatus=new JSONObject();
+	        
+	        String sqlstoreaction="select a.strAction,a.strPlatform ,a.strStatus "
+	        					+ " from tblonlineorderstoreaction a where Date(a.ts_utc)='2020-08-17' and  a.strClientCode='"+strClientCode+"' ";
+	        
+	        	        
+	        ResultSet rs=st.executeQuery(sqlstoreaction);
+			while(rs.next())
+			{
+				jobStoreAction.put("action", rs.getString(1));
+				jobStoreAction.put("platform", rs.getString(2));
+				jobStoreAction.put("status", rs.getString(3));
+				
+		    }	
+		
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	   return jobStoreAction;
+	}
+	
+	@SuppressWarnings("finally")
+    @POST 
+	@Path("/itemactionstatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetItemActionStatus(@RequestBody JSONObject jobData)
+	{
+		//JSONObject objPendingOrders=new JSONObject();
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection posCon=null;
+        Statement st=null;
+        JSONObject jobItemAction=new JSONObject();
+        JSONObject itemaction=new JSONObject();
+		try
+		{
+			posCon=objDb.funOpenPOSCon("mysql","master");
+			st=posCon.createStatement();
+			
+			String strClientCode=jobData.get("clientCode").toString();			
+	        String authorization=jobData.get("Authorization").toString();
+	        
+	        Date date = new Date();
+	        String currDate= new SimpleDateFormat("yyyy-MM-dd").format(date);
+	        
+	        JSONObject jobStatus=new JSONObject();
+	        
+	        String sqlitemaction="select a.strAction,a.strPlatform,a.strItemStatus  "
+	        		+ "from tblonlineorderitemaction a where Date(a.ts_utc)='2019-09-24 ' and a.strClientCode='"+strClientCode+"'  ";
+	       
+	        ResultSet rs=st.executeQuery(sqlitemaction);
+			while(rs.next())
+			{
+				
+				itemaction.put("action", rs.getString(1));
+				itemaction.put("platform", rs.getString(2));
+				itemaction.put("status", rs.getString(3));
+				
+				//jobStatus.put("options",option);
+           }	
+			
+			
+			//jobItemAction.put("stats",jobStatus);
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+      return itemaction;
+	}
+	
+	@SuppressWarnings("finally")
+    @POST 
+	@Path("/storeaddupdatestatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetStoreAddUpdate(@RequestBody JSONObject jobData)
+	{
+		//JSONObject objPendingOrders=new JSONObject();
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection posCon=null;
+        Statement st=null;
+        JSONObject jobItemAction=new JSONObject();
+        JSONObject storeAddUpdate=new JSONObject();
+		try
+		{
+			posCon=objDb.funOpenPOSCon("mysql","master");
+			st=posCon.createStatement();
+			
+			String strClientCode=jobData.get("clientCode").toString();			
+	        String authorization=jobData.get("Authorization").toString();
+	        
+	        Date date = new Date();
+	        String currDate= new SimpleDateFormat("yyyy-MM-dd").format(date);
+	        
+	        JSONObject jobStatus=new JSONObject();
+	        
+	        String sqlitemaction="select a.updatedStore,a.errorsStore,a.createdStore "
+	        		+ "from tblonlineorderstoreaddupdate a where Date(a.dteCurrentDate)='2020-08-20' and a.strClientCode='"+strClientCode+"' ";
+	       
+	        ResultSet rs=st.executeQuery(sqlitemaction);
+			while(rs.next())
+			{
+				
+				storeAddUpdate.put("action", rs.getString(1));
+				storeAddUpdate.put("platform", rs.getString(2));
+				storeAddUpdate.put("status", rs.getString(3));
+				
+				//jobStatus.put("options",option);
+           }	
+			
+			
+			//jobItemAction.put("stats",jobStatus);
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+      return storeAddUpdate;
+	}
+	
+	@SuppressWarnings("finally")
+    @POST 
+	@Path("/riderstatus")
+	@Produces(MediaType.APPLICATION_JSON)
+	public JSONObject funGetRiderStatus(@RequestBody JSONObject jobData)
+	{
+		
+		clsDatabaseConnection objDb=new clsDatabaseConnection();
+        Connection posCon=null;
+        Statement st=null;
+        JSONObject riderStatus=new JSONObject();
+		try
+		{
+			posCon=objDb.funOpenPOSCon("mysql","master");
+			st=posCon.createStatement();
+			
+			String strClientCode=jobData.get("clientCode").toString();			
+	        String authorization=jobData.get("Authorization").toString();
+	        
+	        Date date = new Date();
+	        String currDate= new SimpleDateFormat("yyyy-MM-dd").format(date);
+	        
+	        JSONObject jobStatus=new JSONObject();
+	        
+	        String sqlitemaction="select a.channel,a.orderState,a.riderMode,a.assignStatus,a.assignComments,a.unassignStatus,a.unassignComments, "
+	        					 + " a.reAssignStatus,a.reassignComments,a.atstoreStatus,a.atStoreCommits,a.outForDelStatus,a.outForDelComments, "
+	        					 + " a.deliverdStatus,a.deliveredComments "
+	        					 + " from tblonlineriderstatus a where Date(a.dteDelivered)='2019-08-29' and a.strClientCode='"+strClientCode+"'";
+	       
+	        ResultSet rs=st.executeQuery(sqlitemaction);
+			while(rs.next())
+			{
+				
+				riderStatus.put("name", rs.getString(1));
+				riderStatus.put("current_state", rs.getString(2));
+				riderStatus.put("mode", rs.getString(3));
+				riderStatus.put("assign status", rs.getString(4));
+				riderStatus.put("assign comments", rs.getString(5));
+				riderStatus.put("unassign status", rs.getString(6));
+				riderStatus.put("unassign comments", rs.getString(7));
+				riderStatus.put("reassign status", rs.getString(8));
+				riderStatus.put("reassign comments", rs.getString(9));
+				riderStatus.put("atstore status", rs.getString(10));
+				riderStatus.put("atstore comments", rs.getString(11));
+				riderStatus.put("outfordelivery status ", rs.getString(12));
+				riderStatus.put("outfordelivery comments", rs.getString(13));
+				riderStatus.put("delivered status", rs.getString(14));
+				riderStatus.put("delivered comments", rs.getString(15));
+             }	
+			
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+      return riderStatus;
+	}
+	
 }
