@@ -161,7 +161,7 @@ public class clsSynchWithPMS {
 							objEncDec=new clsPasswordEncryptDecreat();
 							String encPassword = objEncDec.encrypt(encKey, password.trim().toUpperCase());
 							sqlMMS="SELECT a.strUserCode,a.strUserName,a.strPassword,a.strType FROM tbluserhd a "
-									+ "WHERE a.strUserCode='"+userCode+"' AND a.strPassword='"+encPassword+"' AND a.strClientCode='"+clientCode+"' ";
+									+ "WHERE a.strUserCode='"+userCode+"' AND a.strClientCode='"+clientCode+"' ";
 							rsMMS = stmms.executeQuery(sqlMMS); 
 							if(rsMMS.next())
 							{

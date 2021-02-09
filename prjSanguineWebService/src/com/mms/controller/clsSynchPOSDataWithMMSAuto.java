@@ -131,11 +131,11 @@ public class clsSynchPOSDataWithMMSAuto {
         				mJsonObject =(JSONObject) mJsonArray.get(i);
         				clientCode=mJsonObject.get("clientCode").toString();
         				rate=Double.parseDouble(mJsonObject.get("rate").toString());
-        				 billDate=mJsonObject.get("billDate").toString();
-        				 posCode=mJsonObject.get("posCode").toString();
-        				 posName=mJsonObject.get("posName").toString();
-        				 itemTotAmt=Double.parseDouble(mJsonObject.get("Amount").toString());
-        				 itemPerAmt=Double.parseDouble(mJsonObject.get("DiscAmt").toString());
+        				billDate=mJsonObject.get("billDate").toString();
+        				posCode=mJsonObject.get("posCode").toString();
+        				posName=mJsonObject.get("posName").toString();
+        				itemTotAmt=Double.parseDouble(mJsonObject.get("Amount").toString());
+        				itemPerAmt=Double.parseDouble(mJsonObject.get("DiscAmt").toString());
         				totAmt=totAmt+(itemTotAmt-itemPerAmt);
         				
         			}
@@ -372,7 +372,7 @@ public class clsSynchPOSDataWithMMSAuto {
 				rs.close();
 				
 			// Check product is Recipe or Not	
-				if(wsProductType.equals("Produced") || wsProductType.equals("Semi Finished"))
+				if(wsProductType.equals("Produced"))
 				{
 					String sql_ProducedItems="select a.strChildCode,a.dblQty,b.dblCostRM,c.strBOMCode,c.strParentCode,b.strProdType "
 						+ " from tblbommasterdtl a,tblproductmaster b ,tblbommasterhd c "
@@ -418,6 +418,9 @@ public class clsSynchPOSDataWithMMSAuto {
 						double finalRate = dblCostRM*finalQty ;	
 						String tempDisQty[]=finalQty.toString().split("\\.");
 						String Displyqty="";
+						
+						DecimalFormat df= new DecimalFormat("#.#####");
+						finalQty= Double.parseDouble(df.format(finalQty));
 						/*if(tempDisQty[0].equals("0"))
 						{
 							Displyqty=Math.round(Float.parseFloat("0."+tempDisQty[1])*(recipe.floatValue()))+" "+strRecipeUOM;
