@@ -19,7 +19,7 @@ import org.springframework.stereotype.Controller;
 import com.apos.service.clsPOSReportService;
 
 @Controller
-@Path("/WebPOSReport")
+@Path("/WebPOSReport") 
 public class clsReportsController {
 	
 	
@@ -979,6 +979,8 @@ public class clsReportsController {
 	
 	
 	
+	
+	
 	@POST
 	@Path("/funDailyCollectionReport")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -1287,7 +1289,26 @@ public class clsReportsController {
 			 return Response.status(201).entity(jObjRptData).build();
 		}
 
-
+		@GET
+		@Path("/funBillWiseDetailInfo")
+		@Produces(MediaType.APPLICATION_JSON)
+		public Response funBillWiseDetailInfo(@QueryParam("fromDate")String fromDate,@QueryParam("strToDate")String strToDate,@QueryParam("posCode")String posCode,@QueryParam("OutletName")String strShiftNo,@QueryParam("ClientCode")String ClientCode)
+		{
+			
+			 JSONObject jObjRptData = new JSONObject();
+			 List listRet=null;;
+			try {
+				jObjRptData = objPOSReportService.funBillWiseReport(fromDate,
+						strToDate, posCode, 
+						"APIInfoForThirdParty", ClientCode);
+			 //jObjRptData.put("listRptData", listRet);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			 
+			 return Response.status(201).entity(jObjRptData).build();
+		}
 
 }
 

@@ -1263,8 +1263,12 @@ public class clsPOSReportDao
 	        if (!strPOSCode.equalsIgnoreCase("All")) {
 				sqlBuilder.append("and a.strPOSCode='" + strPOSCode + "' ");
 			}
-			if (!strShiftNo.equalsIgnoreCase("All")) {
+			if (!strShiftNo.equalsIgnoreCase("All") && !strShiftNo.equalsIgnoreCase("APIInfoForThirdParty")) {
 				sqlBuilder.append("and a.intShiftCode='" + strShiftNo + "'  ");
+			}
+			if(strShiftNo.equalsIgnoreCase("APIInfoForThirdParty"))
+			{
+				sqlBuilder.append("and a.strClientCode='" + strUserCode + "' ");
 			}
 			sqlBuilder.append("group BY a.strClientCode,a.strBillNo,d.strSettelmentCode "
 							+ "ORDER BY a.strBillNo ASC ");
@@ -1303,15 +1307,18 @@ public class clsPOSReportDao
 			if (!strPOSCode.equalsIgnoreCase("All")) {
 				sqlBuilder.append("and a.strPOSCode='" + strPOSCode + "' ");
 			}
-			if (!strShiftNo.equalsIgnoreCase("All")) {
+			if (!strShiftNo.equalsIgnoreCase("All") && !strShiftNo.equalsIgnoreCase("APIInfoForThirdParty")) {
 				sqlBuilder.append("and a.intShiftCode='" + strShiftNo + "'  ");
+			}
+			if(strShiftNo.equalsIgnoreCase("APIInfoForThirdParty"))
+			{
+				sqlBuilder.append("and a.strClientCode='" + strUserCode + "' ");
 			}
 			sqlBuilder
 					.append("group BY a.strClientCode,a.strBillNo,d.strSettelmentCode "
 							+ "ORDER BY a.strBillNo ASC ");
 
-			Query queryQSqlLive = webPOSSessionFactory.getCurrentSession()
-					.createSQLQuery(sqlBuilder.toString());
+			Query queryQSqlLive = webPOSSessionFactory.getCurrentSession().createSQLQuery(sqlBuilder.toString());
 			List listQSqlLive = queryQSqlLive.list();
 			if (listQSqlLive.size() > 0) {
 
